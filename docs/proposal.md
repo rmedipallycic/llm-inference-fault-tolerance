@@ -6,7 +6,7 @@ Rajshekar Medipally · October 2026
 
 ## Abstract
 
-Large language model (LLM) inference servers stream tokens to clients over requests that can last tens of seconds, while holding gigabytes of per-request key-value (KV) cache in accelerator memory. When a worker fails mid-generation, today's systems mostly restart the request from the prompt, discarding the KV cache and any partially streamed output. This proposal studies two questions that the stream processing literature has answered for dataflow systems but not for LLM serving. First, what delivery guarantee does a streaming client actually receive across a worker failure: are tokens lost, duplicated, or replaced by a divergent continuation? Second, when is it worth checkpointing KV cache state rather than recomputing it, and can an adaptive policy choose per request better than any static one? The planned work is a fault-injection characterization study on an open-source serving engine, a token-level exactly-once delivery protocol, and an adaptive KV checkpoint policy evaluated against recompute-only and fixed-interval baselines.
+Large language model (LLM) inference servers stream tokens to clients over requests that can last tens of seconds, while holding gigabytes of per-request key-value (KV) cache in accelerator memory. When a worker fails mid-generation, today's systems mostly restart the request from the prompt, discarding the KV cache and any partially streamed output. This proposal studies two questions that the stream processing literature has answered for dataflow systems but not for LLM serving. First, what delivery guarantee does a streaming client actually receive across a worker failure: are tokens lost, duplicated, or replaced by a divergent continuation? Second, when is it worth checkpointing KV cache state rather than recomputing it, and can an adaptive policy choose per request better than any static one? The planned work is a fault-injection characterization study on two open-source serving engines (vLLM and SGLang), a token-level exactly-once delivery protocol, and an adaptive KV checkpoint policy evaluated against recompute-only and fixed-interval baselines.
 
 ## 1. Introduction
 
@@ -18,7 +18,7 @@ The stream processing community has spent two decades on exactly this pair of pr
 
 The planned contributions are:
 
-1. A fault-injection characterization of how an open-source serving engine behaves when a worker fails mid-generation, measuring recovery latency, wasted compute, and client-visible token anomalies.
+1. A fault-injection characterization of how two open-source serving engines (vLLM and SGLang) behave when a worker fails mid-generation, measuring recovery latency, wasted compute, and client-visible token anomalies.
 2. A definition of exactly-once token delivery for streamed generation, and a lightweight protocol (sequence-numbered tokens, a persisted token log, and preserved sampler state) that provides it.
 3. An adaptive KV checkpoint policy that decides per request whether to checkpoint, and how often, based on context length, tokens generated, and observed failure rate, evaluated against recompute-only and fixed-interval baselines.
 
@@ -43,8 +43,6 @@ The novelty here is narrow, and the proposal should say so. KV-cache replication
 **Serving engines.** Orca (Yu et al., OSDI 2022) introduced iteration-level scheduling. vLLM (Kwon et al., SOSP 2023) introduced block-based KV memory management, which is what makes partial, block-granular checkpointing plausible.
 
 **Checkpointing and exactly-once in stream processing.** Chandy and Lamport (1985) define consistent snapshots. Elnozahy et al. (2002) survey rollback-recovery, including output commit. Young (1974) and Daly (2006) derive optimal checkpoint intervals from checkpoint cost and mean time to failure. Carbone et al. describe Flink's asynchronous barrier snapshots, and Armbrust et al. (SIGMOD 2018) describe Spark Structured Streaming's end-to-end exactly-once model. These supply the formal baseline the adaptive policy will be compared against.
-
-*Verification note:* the DéjàVu citation was checked against its published proceedings page in October 2026. All other citations are from memory and must be checked against the original papers before this proposal is shared.
 
 ## 4. Research questions and hypotheses
 
@@ -135,16 +133,14 @@ No results yet. This section will be written only from measured runs whose raw l
 
 ## References
 
-Only \[1\] was checked against its source in October 2026. Check \[2\] to \[11\] against the original papers before sharing.
-
-1. F. Strati, S. McAllister, A. Phanishayee, J. Tarnawski, A. Klimovic. DéjàVu: KV-cache Streaming for Fast, Fault-tolerant Generative LLM Serving. ICML 2024, PMLR 235. [Proceedings page](https://proceedings.mlr.press/v235/strati24a.html)
-2. X. Miao et al. SpotServe: Serving Generative Large Language Models on Preemptible Instances. ASPLOS 2024.
-3. B. Sun et al. Llumnix: Dynamic Scheduling for Large Language Model Serving. OSDI 2024.
-4. G.-I. Yu et al. Orca: A Distributed Serving System for Transformer-Based Generative Models. OSDI 2022.
-5. W. Kwon et al. Efficient Memory Management for Large Language Model Serving with PagedAttention. SOSP 2023.
-6. K. M. Chandy, L. Lamport. Distributed Snapshots: Determining Global States of Distributed Systems. ACM TOCS, 1985.
-7. E. N. Elnozahy, L. Alvisi, Y.-M. Wang, D. B. Johnson. A Survey of Rollback-Recovery Protocols in Message-Passing Systems. ACM Computing Surveys, 2002.
-8. J. W. Young. A First Order Approximation to the Optimum Checkpoint Interval. Communications of the ACM, 1974.
-9. J. T. Daly. A Higher Order Estimate of the Optimum Checkpoint Interval for Restart Dumps. Future Generation Computer Systems, 2006.
-10. P. Carbone et al. Lightweight Asynchronous Snapshots for Distributed Dataflows. arXiv, 2015.
-11. M. Armbrust et al. Structured Streaming: A Declarative API for Real-Time Applications in Apache Spark. SIGMOD 2018.
+1. F. Strati, S. McAllister, A. Phanishayee, J. Tarnawski, A. Klimovic. DéjàVu: KV-cache Streaming for Fast, Fault-tolerant Generative LLM Serving. *ICML 2024*, PMLR 235, pp. 46745–46771. [Link](https://proceedings.mlr.press/v235/strati24a.html)
+2. X. Miao, C. Shi, J. Duan, X. Xi, D. Lin, B. Cui, Z. Jia. SpotServe: Serving Generative Large Language Models on Preemptible Instances. *ASPLOS 2024*, pp. 1112–1127. [arXiv:2311.15566](https://arxiv.org/abs/2311.15566)
+3. B. Sun, Z. Huang, H. Zhao, W. Xiao, X. Zhang, Y. Li, W. Lin. Llumnix: Dynamic Scheduling for Large Language Model Serving. *OSDI 2024*. [Link](https://www.usenix.org/conference/osdi24/presentation/sun-biao)
+4. G.-I. Yu, J. S. Jeong, G.-W. Kim, S. Kim, B.-G. Chun. Orca: A Distributed Serving System for Transformer-Based Generative Models. *OSDI 2022*, pp. 521–538. [Link](https://www.usenix.org/conference/osdi22/presentation/yu)
+5. W. Kwon, Z. Li, S. Zhuang, Y. Sheng, L. Zheng, C. H. Yu, J. E. Gonzalez, H. Zhang, I. Stoica. Efficient Memory Management for Large Language Model Serving with PagedAttention. *SOSP 2023*. [arXiv:2309.06180](https://arxiv.org/abs/2309.06180)
+6. K. M. Chandy, L. Lamport. Distributed Snapshots: Determining Global States of Distributed Systems. *ACM Transactions on Computer Systems* 3(1), pp. 63–75, 1985. [doi:10.1145/214451.214456](https://doi.org/10.1145/214451.214456)
+7. E. N. Elnozahy, L. Alvisi, Y.-M. Wang, D. B. Johnson. A Survey of Rollback-Recovery Protocols in Message-Passing Systems. *ACM Computing Surveys* 34(3), pp. 375–408, 2002. [doi:10.1145/568522.568525](https://doi.org/10.1145/568522.568525)
+8. J. W. Young. A First Order Approximation to the Optimum Checkpoint Interval. *Communications of the ACM* 17(9), pp. 530–531, 1974.
+9. J. T. Daly. A Higher Order Estimate of the Optimum Checkpoint Interval for Restart Dumps. *Future Generation Computer Systems* 22(3), pp. 303–312, 2006.
+10. P. Carbone, G. Fóra, S. Ewen, S. Haridi, K. Tzoumas. Lightweight Asynchronous Snapshots for Distributed Dataflows. arXiv:1506.08603, 2015. [Link](https://arxiv.org/abs/1506.08603)
+11. M. Armbrust, T. Das, J. Torres, B. Yavuz, S. Zhu, R. Xin, A. Ghodsi, I. Stoica, M. Zaharia. Structured Streaming: A Declarative API for Real-Time Applications in Apache Spark. *SIGMOD 2018*, pp. 601–613.
