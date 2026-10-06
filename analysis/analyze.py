@@ -7,6 +7,11 @@ Per trial, comparing what the client saw against the failure-free reference:
   exact_match         client view == reference text
   duplicated_chars    length of the already-delivered prefix that the
                       recovery stream sent again (naive retry re-sends it)
+  duplicated_fraction duplicated_chars / delivered_chars; 1.0 means the
+                      client received everything it already had a second time
+  recovery_equals_reference
+                      the recovery stream alone reproduced the reference
+                      (expected for naive retry when output is deterministic)
   first_divergence    first character index where client view and
                       reference differ (None if one is a prefix of the other)
   recovery_latency_s  kill -> first token delivered after recovery
@@ -33,6 +38,7 @@ def analyze_trial(trial, reference_text):
     delivered = "".join(c["text"] for c in trial["pre_kill_chunks"])
     recovered = "".join(c["text"] for c in trial["recovery_chunks"])
     view = trial["client_view_text"]
+    dup = common_prefix_len(recovered, delivered)
     cp = common_prefix_len(view, reference_text)
     diverged = cp < min(len(view), len(reference_text))
     return {
@@ -41,7 +47,10 @@ def analyze_trial(trial, reference_text):
         "delivered_chunks": len(trial["pre_kill_chunks"]),
         "recovered_chunks": len(trial["recovery_chunks"]),
         "exact_match": view == reference_text,
-        "duplicated_chars": common_prefix_len(recovered, delivered),
+        "delivered_chars": len(delivered),
+        "duplicated_chars": dup,
+        "duplicated_fraction": (dup / len(delivered)) if delivered else None,
+        "recovery_equals_reference": recovered == reference_text,
         "first_divergence": cp if diverged else None,
         "client_len": len(view),
         "reference_len": len(reference_text),
@@ -72,10 +81,18 @@ def main():
         lat = [r["recovery_latency_s"] for r in per if r["recovery_latency_s"] is not None]
         print(f"\n{run['run_id']}  ({run['run_type']}, commit {str(run['environment']['git_commit'])[:8]})")
         print(f"  reference reproducible across two clean runs: {run['reference_repeat_identical']}")
+        if not run["reference_repeat_identical"]:
+            print("  WARNING: clean runs disagree, so divergence in this run is not interpretable")
         print(f"  trials: {len(per)}")
         if per:
             print(f"  exact match with reference: {sum(r['exact_match'] for r in per)}/{len(per)}")
-            print(f"  trials with duplicated text: {sum(r['duplicated_chars'] > 0 for r in per)}/{len(per)}")
+            full = sum(r["duplicated_fraction"] == 1.0 for r in per)
+            print(f"  re-sent the entire delivered prefix: {full}/{len(per)}")
+            print(f"  duplicated fraction per trial: "
+                  + ", ".join("n/a" if r["duplicated_fraction"] is None
+                              else f"{r['duplicated_fraction']:.2f}" for r in per))
+            print(f"  recovery stream identical to reference: "
+                  f"{sum(r['recovery_equals_reference'] for r in per)}/{len(per)}")
             print(f"  trials with divergence:      {sum(r['first_divergence'] is not None for r in per)}/{len(per)}")
         if lat:
             print(f"  recovery latency (s): median {statistics.median(lat):.2f}, "
