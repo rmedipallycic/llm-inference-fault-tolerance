@@ -44,16 +44,43 @@ def sh(cmd):
         return None
 
 
+def package_versions():
+    """Versions of the serving stack, if installed in this Python environment."""
+    from importlib import metadata
+    out = {}
+    for pkg in ("vllm", "sglang", "torch", "transformers", "requests"):
+        try:
+            out[pkg] = metadata.version(pkg)
+        except metadata.PackageNotFoundError:
+            out[pkg] = None
+    return out
+
+
+def gpu_inventory():
+    """One entry per GPU from nvidia-smi; empty list if no NVIDIA GPU."""
+    raw = sh(["nvidia-smi", "--query-gpu=index,name,memory.total,driver_version",
+              "--format=csv,noheader"])
+    gpus = []
+    for line in (raw or "").splitlines():
+        parts = [x.strip() for x in line.split(",")]
+        if len(parts) == 4:
+            gpus.append({"index": parts[0], "name": parts[1],
+                         "memory_total": parts[2], "driver": parts[3]})
+    return gpus
+
+
 def environment():
+    gpus = gpu_inventory()
     return {
+        "packages": package_versions(),
+        "gpu_count": len(gpus),
+        "gpus": gpus,
         "git_commit": sh(["git", "rev-parse", "HEAD"]),
         "git_dirty": bool(sh(["git", "status", "--porcelain"])),
         "argv": sys.argv,
         "python": sys.version,
         "platform": platform.platform(),
         "hostname": socket.gethostname(),
-        "gpu": sh(["nvidia-smi", "--query-gpu=name,memory.total,driver_version",
-                   "--format=csv,noheader"]),
         "started_utc": datetime.now(timezone.utc).isoformat(),
     }
 

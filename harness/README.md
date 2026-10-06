@@ -55,6 +55,19 @@ python analysis/analyze.py --smoke
      --max-tokens 256 --kill-at 128 --trials 10
    python analysis/analyze.py --csv experiments/summary.csv
    ```
+   For SGLang, install it instead of vLLM and change only the server command:
+   ```bash
+   --engine sglang \
+   --server-cmd "python -m sglang.launch_server --model-path meta-llama/Llama-3.1-8B-Instruct --port 8000"
+   ```
+   Run vLLM and SGLang in separate Python environments; `run.json` records which
+   versions of vllm, sglang, torch, and transformers were installed, plus every GPU.
+
+   **Prefix caching:** both engines can reuse cached KV blocks for repeated prompt
+   prefixes. That does not change the text, but it can shorten latency for later
+   requests on the same server (for example the second reference run). A restarted
+   server starts with an empty cache. Keep the engine flags fixed within a
+   comparison, and since the full `--server-cmd` is logged, any flag you set is on record.
 5. Commit everything in `experiments/` (raw JSON plus `server.log`) together
    with the code version that produced it.
 6. **Stop the instance when finished.** GPU instances bill by the hour while running.
