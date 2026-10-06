@@ -107,11 +107,11 @@ Each question has a stated hypothesis in [`docs/proposal.md`](docs/proposal.md) 
 
 ## Key Findings (preliminary)
 
-**None yet.** No experiments have been run. This section will be filled only from measured runs with raw logs committed to `experiments/`.
+**None yet.** No measured experiments have been run. The harness has been smoke-tested on a laptop CPU to confirm it works; see the [validation note](docs/harness-validation.md). Those smoke numbers are not findings. This section will be filled only from measured runs with raw logs committed to `experiments/`.
 
 | Phase | Gate to pass before the next phase | Status |
 | --- | --- | --- |
-| 1. Harness and baselines | Fault injection runs end to end on unmodified vLLM and SGLang, logs committed | Not started |
+| 1. Harness and baselines | Fault injection runs end to end on unmodified vLLM and SGLang, logs committed | Harness built and smoke-tested on CPU ([validation note](docs/harness-validation.md)); measured runs pending |
 | 2. RQ1 characterization | Measured anomaly counts for naive retry and recompute | Not started |
 | 3. Exactly-once gateway (RQ2) | Zero client anomalies across injected trials, overhead measured | Not started |
 | 4. Checkpoint microbenchmarks (RQ3) | Measured recompute-cost and checkpoint-cost curves | Not started |
@@ -125,17 +125,19 @@ llm-inference-fault-tolerance/
 ├── LICENSE                  # Apache-2.0
 ├── .gitignore
 ├── docs/
-│   └── proposal.md          # full research proposal
-├── harness/                 # fault-injection harness (planned)
+│   ├── proposal.md          # full research proposal
+│   └── harness-validation.md # smoke-test note
+├── harness/                 # fault-injection harness (Phase 1)
 ├── gateway/                 # exactly-once token gateway (planned)
 ├── policies/                # fixed and adaptive checkpoint policies (planned)
 ├── experiments/             # raw logs from measured runs only (empty)
-└── analysis/                # single script computing all reported statistics (planned)
+├── analysis/                # single script computing all reported statistics
+└── smoke_tests/summary.csv  # harness smoke test only, not results
 ```
 
 ## How to Reproduce
 
-Nothing to reproduce yet. Once Phase 1 lands, this section will contain:
+No measured results to reproduce yet. The Phase 1 harness can already be run; setup for a laptop smoke test and for GPU runs is in [`harness/README.md`](harness/README.md). Once measured runs exist, this section will contain:
 
 1. Exact environment (GPU, driver, CUDA, engine versions, model revision)
 2. One command to run the fault-injection harness
