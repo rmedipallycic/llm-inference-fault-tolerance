@@ -2,7 +2,7 @@
 
 **Recovery semantics, exactly-once token delivery, and adaptive KV-cache checkpointing for LLM serving engines (vLLM, SGLang).**
 
-> **Status: research proposal (October 2026).** No experiments have been run yet.
+> **Status (October 2026):** Phase 1 harness built and smoke-tested; measured GPU runs pending. No results yet. A [paper draft](paper/main.pdf) has complete methods, with every results section marked pending. Every number added later will link to the raw logs and the exact command that produced it.
 > This repository contains no results. Every number added later will link to the raw logs and the exact command that produced it.
 
 ---
@@ -50,7 +50,7 @@ Each question has a stated hypothesis in [`docs/proposal.md`](docs/proposal.md) 
                  └───────────────┬──────────────────────────────┘
                                  │
                  ┌───────────────▼──────────────────────────────┐
-                 │  Fault injector (planned)                    │
+                 │  Fault injector (built, harness/)            │
                  │  - kills worker at a chosen token position   │
                  │  - records full client-side token stream     │
                  └──────────────────────────────────────────────┘
@@ -132,6 +132,8 @@ llm-inference-fault-tolerance/
 ├── policies/                # fixed and adaptive checkpoint policies (planned)
 ├── experiments/             # raw logs from measured runs only (empty)
 ├── analysis/                # single script computing all reported statistics
+├── scripts/run_matrix.sh    # runs the full measurement grid for one engine
+├── paper/                   # paper draft: methods complete, results pending
 └── smoke_tests/summary.csv  # harness smoke test only, not results
 ```
 
@@ -152,15 +154,15 @@ No measured results to reproduce yet. The Phase 1 harness can already be run; se
 
 ## Citation
 
-There is no paper yet. To reference this repository:
+A paper draft is in [`paper/`](paper/main.pdf) (methods complete, results pending; not for citation as results). To reference this repository:
 
 ```bibtex
 @misc{medipally2026llmft,
   author       = {Medipally, Rajshekar},
-  title        = {Fault-Tolerant {LLM} Inference Systems: Research Proposal},
+  title        = {What Does a Streaming Client See When an {LLM} Server Crashes? A Fault-Injection Study of Client-Visible Token Anomalies in {vLLM} and {SGLang}},
   year         = {2026},
   howpublished = {\url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}},
-  note         = {Proposal stage; no experimental results}
+  note         = {Draft; measured results pending}
 }
 ```
 
