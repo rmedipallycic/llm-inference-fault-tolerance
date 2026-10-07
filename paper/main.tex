@@ -1,0 +1,341 @@
+\documentclass[10pt,twocolumn]{article}
+\usepackage[margin=0.85in]{geometry}
+\IfFileExists{lmodern.sty}{\usepackage[T1]{fontenc}\usepackage{lmodern}\usepackage{microtype}}{}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=black}
+
+% Every result-dependent passage is marked with \pending{...}.
+% Rule: a \pending box is replaced only with numbers produced by
+% analysis/analyze.py from raw logs committed under experiments/.
+\newcommand{\pending}[1]{\par\noindent\fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\small\textbf{PENDING MEASURED DATA.} #1}}\par}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{\small DRAFT --- methods complete, results pending measured runs. Not for citation.}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+
+\title{What Does a Streaming Client See When an LLM Server Crashes?\\
+\large A Fault-Injection Study of Client-Visible Token Anomalies in vLLM and SGLang}
+\author{Rajshekar Medipally\\
+\small Independent researcher, Richmond, VA\\
+\small \url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}}
+\date{Draft, October 2026}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+
+\begin{abstract}
+LLM inference servers stream generated tokens to clients over requests that
+last seconds to minutes. When a serving process fails mid-generation, the
+client is left holding a partial response, and the recovery it performs
+determines what it ultimately shows to a user or passes to a downstream agent.
+Prior work on fault-tolerant LLM serving measures server-side recovery time.
+This paper instead measures what the client receives. We define three
+client-visible anomalies (duplicated, missing, and divergent text) relative to
+a failure-free reference, build an open-source fault-injection harness that
+SIGKILLs an unmodified OpenAI-compatible server at a chosen token position and
+records every streamed chunk, and apply it to vLLM and SGLang serving
+Llama~3.1~8B~Instruct on a single GPU. We compare the two recovery strategies
+available to a client of an unmodified engine: naive retry, which resubmits
+the original prompt, and recompute, which resubmits the prompt plus the text
+already delivered.
+\pending{One to two sentences stating the measured anomaly rates and recovery
+latencies for each engine, strategy, and temperature.}
+All raw logs and the single analysis script are public.
+\end{abstract}
+
+\section{Introduction}
+
+LLM serving has become stateful streaming infrastructure. A generation request
+holds a growing key-value (KV) cache on an accelerator and emits tokens to the
+client incrementally. Failure handling, however, is still largely stateless:
+if the serving process dies, the client or a load balancer resubmits the
+request and generation starts again.
+
+That recovery has a cost that server-side metrics miss. A client that has
+already displayed 128 tokens may receive those 128 tokens a second time, may
+receive a continuation that disagrees with what it already showed, or may lose
+text at the boundary. For a chat interface this is a visible glitch. For an
+agent that has already acted on a partial tool call or a partial plan, it is a
+correctness problem. Stream processing systems name this property
+\emph{delivery semantics} and engineer exactly-once output deliberately
+\cite{elnozahy2002survey,carbone2015lightweight,armbrust2018structured}. LLM
+serving has no equivalent definition, and to our knowledge no measurement of
+what clients actually receive.
+
+This paper makes three contributions:
+\begin{enumerate}
+  \item \textbf{Definitions.} Token-level delivery semantics for streamed
+    generation, and three measurable client-visible anomalies: duplication,
+    loss, and divergence (Section~\ref{sec:model}).
+  \item \textbf{A fault-injection harness} for any OpenAI-compatible server,
+    which kills the full server process tree at a chosen chunk, restarts it,
+    applies a client recovery strategy, and records every chunk with
+    timestamps, the code commit, package versions, and GPU inventory
+    (Section~\ref{sec:harness}).
+  \item \textbf{A measurement study} of naive retry and recompute on vLLM and
+    SGLang at temperature 0 and 0.8, at three kill positions
+    (Sections~\ref{sec:method}--\ref{sec:results}).
+\end{enumerate}
+
+The study deliberately uses unmodified engines and client-side recovery only.
+It establishes the baseline that a server-side exactly-once protocol, the next
+stage of this project, would have to improve on.
+
+\section{Background}
+
+\paragraph{Autoregressive serving.}
+A request runs a prefill phase, which processes the prompt in parallel and
+builds the KV cache, followed by a decode phase that produces one token per
+step and streams it to the client. Engines such as vLLM \cite{kwon2023pagedattention}
+and SGLang \cite{zheng2024sglang} batch requests at iteration granularity
+\cite{yu2022orca} and manage the KV cache in fixed-size blocks.
+
+\paragraph{The state lost on failure.}
+The KV cache is a deterministic function of the weights and the token
+sequence, so it can always be rebuilt by prefill. What cannot be rebuilt from
+the prompt alone is the \emph{sampling path}: at temperature above zero, the
+continuation depends on random draws whose state lives in the dead process.
+
+\paragraph{Rollback-recovery vocabulary.}
+Classic rollback-recovery distinguishes checkpointing from logging and defines
+\emph{output commit}: a message to the outside world must not be released
+until the state that produced it is recoverable \cite{elnozahy2002survey}.
+Mapped onto LLM serving, the token sequence is a replayable input log, the KV
+cache is derived operator state, and the streaming client is the external
+sink where delivery semantics are decided.
+
+\section{Delivery model and anomalies}
+\label{sec:model}
+
+Let $G$ be the failure-free reference output for a request, recorded on the
+same server configuration. A failure occurs after the client has received
+delivered text $D$. After recovery the client receives recovery text $R$ and
+its final view is $V = D \cdot R$ (concatenation), which is what a typical
+client displays.
+
+We measure:
+\begin{itemize}
+  \item \textbf{Duplication}: the length of the longest common prefix of $R$
+    and $D$, reported as the fraction $\textit{dup} = |\mathrm{lcp}(R, D)| / |D|$.
+    $\textit{dup}=1$ means the client received all of $D$ a second time.
+  \item \textbf{Divergence}: the first character index at which $V$ and $G$
+    disagree, if one is not a prefix of the other.
+  \item \textbf{Exact match}: $V = G$, i.e.\ the failure was invisible in the
+    final text.
+  \item \textbf{Recovery latency}: wall time from the kill to the first chunk
+    delivered after recovery, including server restart.
+\end{itemize}
+
+Under this model, \emph{at-least-once} delivery shows as $\textit{dup}>0$,
+\emph{at-most-once} as $V$ being a strict prefix of $G$, and
+\emph{exactly-once} as $V=G$. Comparison is on text, not token ids, because
+the OpenAI-compatible streaming API does not guarantee one token per chunk.
+
+A comparison against $G$ is only meaningful if the server is reproducible
+without failures. The harness therefore records two failure-free references per
+run and flags the run when they differ (Section~\ref{sec:harness}).
+
+\paragraph{Client recovery strategies.}
+\textbf{Naive retry} resubmits the original prompt with the original
+\texttt{max\_tokens}; many client libraries' retry wrappers do this.
+\textbf{Recompute} resubmits the prompt concatenated with $D$ and requests the
+remaining token budget, so the server rebuilds the KV cache by prefill and
+continues. Neither requires engine changes.
+
+\section{Fault-injection harness}
+\label{sec:harness}
+
+The harness (\texttt{harness/}, about 340 lines of Python) has three parts.
+
+\paragraph{Server lifecycle.} The server command is started in its own process
+group and declared ready when \texttt{GET /v1/models} returns 200. A fault is a
+\texttt{SIGKILL} of the whole process group, since vLLM and SGLang spawn worker
+processes that otherwise keep holding GPU memory and the port. On Windows,
+used only for laptop smoke tests, the equivalent is \texttt{taskkill /F /T}.
+
+\paragraph{Streaming client.} Requests go to \texttt{/v1/completions} with
+\texttt{stream=true}. Every server-sent event with non-empty text is recorded
+as a chunk with wall-clock and monotonic timestamps. The kill fires from the
+chunk callback when the configured chunk count is reached, and the client
+keeps reading, so chunks the server had already sent before dying are recorded
+as in-flight rather than lost.
+
+\paragraph{Trial protocol.} Each run (one engine, strategy, temperature, and
+kill position) starts the server, records two failure-free references $G$ and
+$G'$, then for each trial: streams the request, kills at the kill point,
+restarts the server and waits for readiness, issues the recovery request,
+and writes a JSON record containing every chunk, the kill time, the restart
+time, and the client view $V$.
+
+\paragraph{Provenance.} Each run records the git commit and whether the
+working tree was dirty, the full command line, installed versions of
+\texttt{vllm}, \texttt{sglang}, \texttt{torch}, and \texttt{transformers}, the
+GPU model, memory, and driver from \texttt{nvidia-smi}, and the full server
+log. Measured runs are written to \texttt{experiments/} and committed; harness
+smoke tests are written to a separate, git-ignored directory and are never
+reported. All statistics in this paper are produced by one script,
+\texttt{analysis/analyze.py}, from those committed files.
+
+\paragraph{Validation.} The harness was exercised end to end on a laptop CPU
+with llama.cpp and a 0.5B model before any GPU run. That check, documented in
+the repository as a mechanics check rather than a result, led to two changes:
+a duplication metric based on shared prefix fraction rather than any shared
+character, and the reference-reproducibility check, after two clean seeded
+runs on that server disagreed at temperature 0.8.
+
+\section{Methodology}
+\label{sec:method}
+
+\paragraph{Setup.} One AWS \texttt{g5.xlarge} instance (one NVIDIA A10G, 24\,GB),
+Llama~3.1~8B~Instruct in bf16, vLLM and SGLang each in a separate Python
+environment with default engine flags. Exact versions are recorded per run.
+
+\pending{Engine, torch, CUDA and driver versions and model revision hash,
+copied from \texttt{run.json}.}
+
+\paragraph{Grid.} For each engine: strategy $\in$ \{naive retry, recompute\}
+$\times$ temperature $\in \{0, 0.8\}$ $\times$ kill point $\in$ \{25, 128, 230\}
+chunks (about 10\%, 50\%, and 90\% of a 256-token budget), with 10 trials
+per cell and a fixed per-request seed (1234). That is 12 runs and 120 trials
+per engine, 240 in total, produced by \texttt{scripts/run\_matrix.sh}.
+Requests are issued one at a time, so there is no batching interference.
+
+\paragraph{Hypotheses.} Stated in advance so that the data can refute them:
+\begin{description}
+  \item[H1] At temperature 0, naive retry yields $\textit{dup}=1$ in every
+    trial and recompute yields $V=G$ in every trial.
+  \item[H2] At temperature 0.8 with a fixed seed, both engines reproduce $G$
+    across clean runs; if so, naive retry still yields full duplication and
+    recompute yields divergence from $G$ after the kill point, because the
+    sampler restarts from a different random state.
+  \item[H3] Recovery latency is dominated by server restart, not by prefill
+    of the delivered text.
+\end{description}
+
+\section{Results}
+\label{sec:results}
+
+\pending{\textbf{Reproducibility first.} For each engine and temperature,
+report whether the two failure-free references matched (\texttt{reference
+repeat identical}). Any cell where they did not is marked uninterpretable for
+divergence and excluded from Table~\ref{tab:anomalies}, with the count stated.}
+
+\begin{table}[t]
+\centering\small
+\caption{Client-visible anomalies per cell (10 trials each). Values to be
+filled only from \texttt{experiments/summary\_*.csv}.}
+\label{tab:anomalies}
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}llrccc@{}}
+\toprule
+Engine & Strategy & $T$ & $V{=}G$ & Full dup & Diverged \\
+\midrule
+vLLM   & naive    & 0   & -- & -- & -- \\
+vLLM   & naive    & 0.8 & -- & -- & -- \\
+vLLM   & recomp.  & 0   & -- & -- & -- \\
+vLLM   & recomp.  & 0.8 & -- & -- & -- \\
+SGLang & naive    & 0   & -- & -- & -- \\
+SGLang & naive    & 0.8 & -- & -- & -- \\
+SGLang & recomp.  & 0   & -- & -- & -- \\
+SGLang & recomp.  & 0.8 & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering\small
+\caption{Restart and recovery latency, median (min--max), seconds.}
+\label{tab:latency}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Engine & Server restart & Kill $\to$ first recovered token \\
+\midrule
+vLLM   & -- & -- \\
+SGLang & -- & -- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\pending{\textbf{H1, H2 outcomes} by kill position, with the raw counts.
+State plainly where a hypothesis was refuted.}
+
+\pending{\textbf{H3}: restart time versus recovery latency, and whether
+recompute is measurably slower than naive retry to first token at the 90\%
+kill point.}
+
+\section{Discussion}
+
+\pending{What the measured anomalies mean for chat clients and for agents
+that act on partial output; which strategy a client should use for each
+temperature; whether the difference between engines matters.}
+
+\paragraph{Why client-side recovery is not enough.} Even in the best case for
+recompute, the client cannot restore the sampler's random state, so above
+temperature 0 it can at most hide duplication, not guarantee the continuation
+the original request would have produced. Exactly-once delivery therefore
+requires state the client does not hold: a sequence-numbered token log and the
+sampler state, committed before tokens are released. That protocol is the
+next stage of this project.
+
+\section{Related work}
+
+\textbf{Fault-tolerant LLM serving.} D\'ej\`aVu \cite{strati2024dejavu}
+streams and replicates KV cache to recover from failures and reports
+server-side recovery time; it does not characterize what streaming clients
+receive. SpotServe \cite{miao2024spotserve} migrates in-flight context when
+preemptible instances are reclaimed with warning, and Llumnix
+\cite{sun2024llumnix} live-migrates requests for load balancing. Both handle
+planned moves; this study targets unplanned fail-stop crashes.
+\textbf{Serving engines.} Orca \cite{yu2022orca} introduced iteration-level
+scheduling, vLLM \cite{kwon2023pagedattention} block-managed KV memory, and
+SGLang \cite{zheng2024sglang} prefix sharing via RadixAttention.
+\textbf{Delivery semantics.} Chandy and Lamport \cite{chandy1985snapshots}
+define consistent snapshots, Elnozahy et al.\ \cite{elnozahy2002survey}
+output commit, and Flink \cite{carbone2015lightweight} and Spark Structured
+Streaming \cite{armbrust2018structured} build exactly-once sinks on them.
+Optimal checkpoint intervals \cite{young1974first,daly2006higher} motivate
+later stages of this project.
+
+\section{Threats to validity}
+
+\begin{itemize}
+  \item \textbf{One model, one GPU, one prompt.} Results are scoped to
+    Llama~3.1~8B on an A10G with a single explanatory prompt. Tensor-parallel
+    serving and other prompts may differ.
+  \item \textbf{Re-tokenization in recompute.} Recompute sends $D$ as text, and
+    the engine re-tokenizes it. If the boundary tokenizes differently than the
+    original output tokens, the continuation can diverge at temperature 0 for
+    a reason unrelated to sampling. Any such divergence is reported with its
+    position relative to the kill point.
+  \item \textbf{Fail-stop only.} \texttt{SIGKILL} is a clean crash; GPU hangs,
+    NCCL stalls, and silent corruption are not modeled.
+  \item \textbf{Latency includes restart.} With a single instance, recovery
+    latency includes model reload; failover to a warm standby would be faster.
+  \item \textbf{Chunks are approximate tokens.} Kill points are set in chunks,
+    which are usually but not always one token.
+\end{itemize}
+
+\section{Conclusion and future work}
+
+\pending{Two-sentence summary of measured findings.}
+
+Next stages: (1) a gateway that assigns sequence numbers, logs tokens and
+sampler state before release, and deduplicates on recovery, evaluated on the
+same harness for zero anomalies and per-token overhead; (2) measured
+recompute-versus-checkpoint cost curves for the KV cache; (3) an adaptive
+per-request checkpoint policy.
+
+\paragraph{Artifact.} Code, raw logs, and the analysis script are at
+\url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}
+(Apache-2.0). Every number above traces to a committed log file.
+
+\bibliographystyle{plain}
+\bibliography{refs}
+\end{document}
