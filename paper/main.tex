@@ -26,6 +26,27 @@
 \small \url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}}
 \date{Draft, October 2026}
 
+% Table rows come from paper/tables/*.tex, written by analysis/make_tables.py
+% from the committed raw logs. Until those files exist, placeholders show.
+% (\@@input is the expandable primitive, so it is safe inside tabular.)
+\makeatletter
+\IfFileExists{tables/anomalies.tex}{\def\AnomRows{\@@input tables/anomalies.tex }}{\def\AnomRows{%
+vLLM   & naive    & 0   & -- & -- & -- \\
+vLLM   & naive    & 0.8 & -- & -- & -- \\
+vLLM   & recomp.  & 0   & -- & -- & -- \\
+vLLM   & recomp.  & 0.8 & -- & -- & -- \\
+SGLang & naive    & 0   & -- & -- & -- \\
+SGLang & naive    & 0.8 & -- & -- & -- \\
+SGLang & recomp.  & 0   & -- & -- & -- \\
+SGLang & recomp.  & 0.8 & -- & -- & -- \\
+}}
+\IfFileExists{tables/latency.tex}{\def\LatRows{\@@input tables/latency.tex }}{\def\LatRows{%
+vLLM   & -- & -- \\
+SGLang & -- & -- \\
+}}
+\IfFileExists{tables/env.tex}{\def\EnvRows{\@@input tables/env.tex }}{\def\EnvRows{}}
+\makeatother
+
 \begin{document}
 \maketitle
 \thispagestyle{fancy}
@@ -125,8 +146,13 @@ We measure:
   \item \textbf{Duplication}: the length of the longest common prefix of $R$
     and $D$, reported as the fraction $\textit{dup} = |\mathrm{lcp}(R, D)| / |D|$.
     $\textit{dup}=1$ means the client received all of $D$ a second time.
-  \item \textbf{Divergence}: the first character index at which $V$ and $G$
-    disagree, if one is not a prefix of the other.
+  \item \textbf{Divergence}: whether the client's text disagrees with $G$
+    after the duplicated prefix is removed, i.e.\ whether
+    $V' = D \cdot R[\textit{dup}{:}]$ and $G$ differ at some position before
+    either ends. Removing the duplicate first keeps the two anomalies
+    separate: a retry that re-sends identical text is duplication, not
+    divergence. The first differing index is recorded and compared with
+    $|D|$, the kill boundary.
   \item \textbf{Exact match}: $V = G$, i.e.\ the failure was invisible in the
     final text.
   \item \textbf{Recovery latency}: wall time from the kill to the first chunk
@@ -193,12 +219,28 @@ runs on that server disagreed at temperature 0.8.
 \section{Methodology}
 \label{sec:method}
 
-\paragraph{Setup.} One AWS \texttt{g5.xlarge} instance (one NVIDIA A10G, 24\,GB),
-Llama~3.1~8B~Instruct in bf16, vLLM and SGLang each in a separate Python
-environment with default engine flags. Exact versions are recorded per run.
+\paragraph{Setup.} One cloud machine with a single NVIDIA GPU of at least
+24\,GB, Llama~3.1~8B~Instruct in bf16, vLLM and SGLang each in a separate
+Python environment with default engine flags. The GPU model, driver, and
+package versions are recorded by the harness in every run and reported as
+recorded\IfFileExists{tables/env.tex}{ (Table~\ref{tab:env})}{}.
 
-\pending{Engine, torch, CUDA and driver versions and model revision hash,
-copied from \texttt{run.json}.}
+\IfFileExists{tables/env.tex}{%
+\begin{table}[h]
+\centering\small
+\caption{Software and hardware, from \texttt{run.json}.}
+\label{tab:env}
+\begin{tabular}{@{}lllp{0.38\linewidth}@{}}
+\toprule
+Engine & Version & torch & GPU \\
+\midrule
+\EnvRows
+\bottomrule
+\end{tabular}
+\end{table}
+\IfFileExists{tables/provenance.tex}{\noindent\small\input{tables/provenance.tex}\par}{}%
+}{\pending{Engine, torch, CUDA and driver versions and model revision hash,
+generated from \texttt{run.json} by \texttt{analysis/make\_tables.py}.}}
 
 \paragraph{Grid.} For each engine: strategy $\in$ \{naive retry, recompute\}
 $\times$ temperature $\in \{0, 0.8\}$ $\times$ kill point $\in$ \{25, 128, 230\}
@@ -229,22 +271,16 @@ divergence and excluded from Table~\ref{tab:anomalies}, with the count stated.}
 
 \begin{table}[t]
 \centering\small
-\caption{Client-visible anomalies per cell (10 trials each). Values to be
-filled only from \texttt{experiments/summary\_*.csv}.}
+\caption{Client-visible anomalies per cell (10 trials each), generated from
+the raw logs by \texttt{analysis/make\_tables.py}. Diverged$'$ is counted
+after removing duplicated text (Section~\ref{sec:model}).}
 \label{tab:anomalies}
 \setlength{\tabcolsep}{3.5pt}
 \begin{tabular}{@{}llrccc@{}}
 \toprule
-Engine & Strategy & $T$ & $V{=}G$ & Full dup & Diverged \\
+Engine & Strategy & $T$ & $V{=}G$ & Full dup & Diverged$'$ \\
 \midrule
-vLLM   & naive    & 0   & -- & -- & -- \\
-vLLM   & naive    & 0.8 & -- & -- & -- \\
-vLLM   & recomp.  & 0   & -- & -- & -- \\
-vLLM   & recomp.  & 0.8 & -- & -- & -- \\
-SGLang & naive    & 0   & -- & -- & -- \\
-SGLang & naive    & 0.8 & -- & -- & -- \\
-SGLang & recomp.  & 0   & -- & -- & -- \\
-SGLang & recomp.  & 0.8 & -- & -- & -- \\
+\AnomRows
 \bottomrule
 \end{tabular}
 \end{table}
@@ -257,8 +293,7 @@ SGLang & recomp.  & 0.8 & -- & -- & -- \\
 \toprule
 Engine & Server restart & Kill $\to$ first recovered token \\
 \midrule
-vLLM   & -- & -- \\
-SGLang & -- & -- \\
+\LatRows
 \bottomrule
 \end{tabular}
 \end{table}
@@ -307,7 +342,7 @@ later stages of this project.
 
 \begin{itemize}
   \item \textbf{One model, one GPU, one prompt.} Results are scoped to
-    Llama~3.1~8B on an A10G with a single explanatory prompt. Tensor-parallel
+    Llama~3.1~8B on one single-GPU machine with a single explanatory prompt. Tensor-parallel
     serving and other prompts may differ.
   \item \textbf{Re-tokenization in recompute.} Recompute sends $D$ as text, and
     the engine re-tokenizes it. If the boundary tokenizes differently than the
