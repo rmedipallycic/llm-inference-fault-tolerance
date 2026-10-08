@@ -3,7 +3,6 @@
 **Recovery semantics, exactly-once token delivery, and adaptive KV-cache checkpointing for LLM serving engines (vLLM, SGLang).**
 
 > **Status (October 2026):** Phase 1 harness built and smoke-tested; measured GPU runs pending. No results yet. A [paper draft](paper/main.pdf) has complete methods, with every results section marked pending. Every number added later will link to the raw logs and the exact command that produced it.
-> This repository contains no results. Every number added later will link to the raw logs and the exact command that produced it.
 
 ---
 
@@ -131,7 +130,7 @@ llm-inference-fault-tolerance/
 ├── gateway/                 # exactly-once token gateway (planned)
 ├── policies/                # fixed and adaptive checkpoint policies (planned)
 ├── experiments/             # raw logs from measured runs only (empty)
-├── analysis/                # single script computing all reported statistics
+├── analysis/                # analyze.py (per-trial metrics) and make_tables.py (paper tables), both from raw logs
 ├── scripts/run_matrix.sh    # runs the full measurement grid for one engine
 ├── paper/                   # paper draft: methods complete, results pending
 └── smoke_tests/summary.csv  # harness smoke test only, not results
@@ -139,11 +138,15 @@ llm-inference-fault-tolerance/
 
 ## How to Reproduce
 
-No measured results to reproduce yet. The Phase 1 harness can already be run; setup for a laptop smoke test and for GPU runs is in [`harness/README.md`](harness/README.md). Once measured runs exist, this section will contain:
+No measured results to reproduce yet. Setup for a laptop smoke test and for GPU runs (AWS or any Linux GPU machine) is in [`harness/README.md`](harness/README.md). The pipeline is already in place:
 
-1. Exact environment (GPU, driver, CUDA, engine versions, model revision)
-2. One command to run the fault-injection harness
-3. One command to regenerate every table and figure from `experiments/`
+```bash
+bash scripts/run_matrix.sh vllm          # full grid for one engine -> raw logs in experiments/
+python analysis/make_tables.py           # every paper table, regenerated from experiments/
+cd paper && latexmk -pdf main.tex        # paper picks up the generated tables
+```
+
+Once measured runs exist, this section will also list the exact environment (GPU, driver, CUDA, engine versions, model revision) recorded in each `run.json`.
 
 ## Related Work
 
