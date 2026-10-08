@@ -14,6 +14,13 @@ Per trial, comparing what the client saw against the failure-free reference:
                       (expected for naive retry when output is deterministic)
   first_divergence    first character index where client view and
                       reference differ (None if one is a prefix of the other)
+  diverged_after_dedup
+                      after removing the re-sent prefix from the recovery
+                      text, does the client view still disagree with the
+                      reference? Separates divergence from duplication.
+  kill_char_offset    characters delivered before the kill, to compare with
+                      dedup_first_divergence (divergence right at the kill
+                      boundary can come from re-tokenization in recompute)
   recovery_latency_s  kill -> first token delivered after recovery
                       (includes server restart time)
 """
@@ -41,6 +48,11 @@ def analyze_trial(trial, reference_text):
     dup = common_prefix_len(recovered, delivered)
     cp = common_prefix_len(view, reference_text)
     diverged = cp < min(len(view), len(reference_text))
+    # Remove the re-sent prefix, as an idempotent client could, then compare.
+    # This separates divergence (different text) from duplication (same text twice).
+    dedup_view = delivered + recovered[dup:]
+    cpd = common_prefix_len(dedup_view, reference_text)
+    diverged_dedup = cpd < min(len(dedup_view), len(reference_text))
     return {
         "trial": trial["trial"],
         "chunks_at_kill": trial.get("chunks_at_kill"),
@@ -52,6 +64,9 @@ def analyze_trial(trial, reference_text):
         "duplicated_fraction": (dup / len(delivered)) if delivered else None,
         "recovery_equals_reference": recovered == reference_text,
         "first_divergence": cp if diverged else None,
+        "diverged_after_dedup": diverged_dedup,
+        "dedup_first_divergence": cpd if diverged_dedup else None,
+        "kill_char_offset": len(delivered),
         "client_len": len(view),
         "reference_len": len(reference_text),
         "restart_s": trial["restart_s"],
@@ -94,6 +109,7 @@ def main():
             print(f"  recovery stream identical to reference: "
                   f"{sum(r['recovery_equals_reference'] for r in per)}/{len(per)}")
             print(f"  trials with divergence:      {sum(r['first_divergence'] is not None for r in per)}/{len(per)}")
+            print(f"  diverged after removing duplication: {sum(r['diverged_after_dedup'] for r in per)}/{len(per)}")
         if lat:
             print(f"  recovery latency (s): median {statistics.median(lat):.2f}, "
                   f"min {min(lat):.2f}, max {max(lat):.2f}")

@@ -72,6 +72,27 @@ python analysis/analyze.py --smoke
    with the code version that produced it.
 6. **Stop the instance when finished.** GPU instances bill by the hour while running.
 
+## Measured runs on any Linux GPU machine (e.g. RunPod)
+
+The harness only needs Linux, an NVIDIA GPU with 24 GB or more, and Python.
+On a rented pod (for example RunPod's PyTorch template, on-demand, not spot):
+
+```bash
+git clone https://github.com/rmedipallycic/llm-inference-fault-tolerance.git
+cd llm-inference-fault-tolerance
+python -m venv ~/venv-vllm && source ~/venv-vllm/bin/activate
+python -m pip install -r requirements.txt vllm
+read -s HF_TOKEN && export HF_TOKEN   # paste a Read token with Llama 3.1 access (not echoed)
+nvidia-smi                     # confirm the GPU before starting
+bash scripts/run_matrix.sh vllm
+```
+
+For SGLang, use a second environment (`~/venv-sglang`)
+and run `bash scripts/run_matrix.sh sglang`. Use `pip install sglang`, or the install command in the SGLang docs if it has changed. The GPU model, driver, and package
+versions are recorded in every `run.json`, so the paper reports the hardware
+actually used. Copy `experiments/` off the pod and commit it before stopping the
+pod, because a stopped or terminated pod can lose its disk.
+
 ## What each trial records
 
 `run.json` holds the config, git commit, GPU, and two failure-free reference
