@@ -221,7 +221,9 @@ runs on that server disagreed at temperature 0.8.
 
 \paragraph{Setup.} One cloud machine with a single NVIDIA GPU of at least
 24\,GB, Llama~3.1~8B~Instruct in bf16, vLLM and SGLang each in a separate
-Python environment with default engine flags. The GPU model, driver, and
+Python environment with default engine flags except a 4{,}096-token
+context cap (Llama~3.1's 128k default does not fit a 24\,GB KV cache; every
+request here is far shorter). The GPU model, driver, and
 package versions are recorded by the harness in every run and reported as
 recorded\IfFileExists{tables/env.tex}{ (Table~\ref{tab:env})}{}.
 

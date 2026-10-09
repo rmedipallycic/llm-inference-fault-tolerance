@@ -76,7 +76,9 @@ def environment():
         "gpu_count": len(gpus),
         "gpus": gpus,
         "git_commit": sh(["git", "rev-parse", "HEAD"]),
-        "git_dirty": bool(sh(["git", "status", "--porcelain"])),
+        # Only code counts: new logs in experiments/ must not mark a run dirty.
+        "git_dirty": bool(sh(["git", "status", "--porcelain", "--",
+                              "harness", "analysis", "scripts", "requirements.txt"])),
         "argv": sys.argv,
         "python": sys.version,
         "platform": platform.platform(),
