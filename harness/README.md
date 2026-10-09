@@ -38,14 +38,16 @@ python analysis/analyze.py --smoke
    increase can take a day or more.
 2. Launch a GPU instance with at least 24 GB of GPU memory (for example
    g5.xlarge, one A10G) from an AWS Deep Learning AMI for Ubuntu.
-3. On the instance:
+3. On the instance (one command installs everything and runs a 1-trial pilot):
    ```bash
    git clone https://github.com/rmedipallycic/llm-inference-fault-tolerance.git
    cd llm-inference-fault-tolerance
-   python -m pip install -r requirements.txt vllm
+   read -s HF_TOKEN && export HF_TOKEN     # Read token with Llama 3.1 access
+   bash scripts/setup_instance.sh vllm     # or: sglang
    ```
-   Llama 3.1 8B is gated on Hugging Face: accept the license on the model
-   page, then run `huggingface-cli login` on the instance.
+   Then start the full grid inside `tmux` as the script prints:
+   `bash scripts/run_matrix.sh vllm`. A failed run is recorded in
+   `experiments/failed_runs_<engine>.txt` and the grid continues.
 4. Run, for example:
    ```bash
    python -m harness.run_trial --run-type measured --engine vllm \
