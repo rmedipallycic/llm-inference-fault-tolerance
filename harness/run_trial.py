@@ -80,6 +80,9 @@ def environment():
         "git_dirty": bool(sh(["git", "status", "--porcelain", "--",
                               "harness", "analysis", "scripts", "requirements.txt"])),
         "argv": sys.argv,
+        # Engine settings passed via environment (never secrets such as HF_TOKEN).
+        "engine_env": {k: v for k, v in sorted(os.environ.items())
+                       if k.startswith(("VLLM_", "SGLANG_", "FLASHINFER_", "CUDA_HOME"))},
         "python": sys.version,
         "platform": platform.platform(),
         "hostname": socket.gethostname(),

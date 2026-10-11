@@ -43,9 +43,11 @@ esac
 echo "== Downloading $MODEL (checks Llama access)"
 python -c "from huggingface_hub import snapshot_download; snapshot_download('$MODEL', allow_patterns=['*.json','*.safetensors','tokenizer*'])"
 
+# Same FlashInfer workarounds as scripts/run_matrix.sh (no CUDA toolkit needed).
 case "$ENGINE" in
-  vllm)   SERVER_CMD="vllm serve $MODEL --port 8000 --max-model-len $MAX_MODEL_LEN" ;;
-  sglang) SERVER_CMD="python -m sglang.launch_server --model-path $MODEL --port 8000 --context-length $MAX_MODEL_LEN" ;;
+  vllm)   export VLLM_USE_FLASHINFER_SAMPLER="${VLLM_USE_FLASHINFER_SAMPLER:-0}"
+          SERVER_CMD="vllm serve $MODEL --port 8000 --max-model-len $MAX_MODEL_LEN" ;;
+  sglang) SERVER_CMD="python -m sglang.launch_server --model-path $MODEL --port 8000 --context-length $MAX_MODEL_LEN --attention-backend triton --sampling-backend pytorch" ;;
 esac
 
 echo "== Pilot: 1 smoke trial (server start, kill, restart, recovery)"
