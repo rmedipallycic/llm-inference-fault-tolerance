@@ -21,9 +21,14 @@ MAX_MODEL_LEN="${MAX_MODEL_LEN:-4096}"
 # 10%, 50%, 90% of MAX_TOKENS
 KILL_POINTS="${KILL_POINTS:-$((MAX_TOKENS / 10)) $((MAX_TOKENS / 2)) $((MAX_TOKENS * 9 / 10))}"
 
+# Machines without a full CUDA toolkit cannot JIT-compile FlashInfer kernels.
+# vLLM: use PyTorch sampling instead of FlashInfer's sampler.
+# SGLang: Triton attention and PyTorch sampling (no FlashInfer JIT).
+# Both choices are recorded in every run.json (engine_env, argv).
 case "$ENGINE" in
-  vllm)   SERVER_CMD="vllm serve $MODEL --port $PORT --max-model-len $MAX_MODEL_LEN" ;;
-  sglang) SERVER_CMD="python -m sglang.launch_server --model-path $MODEL --port $PORT --context-length $MAX_MODEL_LEN" ;;
+  vllm)   export VLLM_USE_FLASHINFER_SAMPLER="${VLLM_USE_FLASHINFER_SAMPLER:-0}"
+          SERVER_CMD="vllm serve $MODEL --port $PORT --max-model-len $MAX_MODEL_LEN" ;;
+  sglang) SERVER_CMD="python -m sglang.launch_server --model-path $MODEL --port $PORT --context-length $MAX_MODEL_LEN --attention-backend triton --sampling-backend pytorch" ;;
   *) echo "engine must be vllm or sglang" >&2; exit 2 ;;
 esac
 

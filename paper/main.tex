@@ -223,7 +223,10 @@ runs on that server disagreed at temperature 0.8.
 24\,GB, Llama~3.1~8B~Instruct in bf16, vLLM and SGLang each in a separate
 Python environment with default engine flags except a 4{,}096-token
 context cap (Llama~3.1's 128k default does not fit a 24\,GB KV cache; every
-request here is far shorter). The GPU model, driver, and
+request here is far shorter). Because the machine image ships no CUDA toolkit,
+FlashInfer kernels that compile at startup were avoided: vLLM used PyTorch
+sampling (\texttt{VLLM\_USE\_FLASHINFER\_SAMPLER=0}) and SGLang used Triton
+attention with PyTorch sampling. Both settings are recorded in every run log. The GPU model, driver, and
 package versions are recorded by the harness in every run and reported as
 recorded\IfFileExists{tables/env.tex}{ (Table~\ref{tab:env})}{}.
 
