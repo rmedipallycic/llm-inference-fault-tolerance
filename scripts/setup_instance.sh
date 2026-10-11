@@ -21,10 +21,17 @@ if [ -z "${HF_TOKEN:-}" ]; then
 fi
 command -v tmux >/dev/null || sudo apt-get install -y tmux
 
-echo "== Python environment $VENV"
-python3 -m venv "$VENV" 2>/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q python3-venv && python3 -m venv "$VENV"; }
+echo "== Python environment $VENV (Python 3.12, independent of the system Python)"
+# vLLM/SGLang wheels lag the newest Python releases, so pin 3.12 via uv,
+# which downloads its own interpreter if the OS does not have one.
+if ! command -v uv >/dev/null; then
+  curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+uv venv --seed --python 3.12 "$VENV"
 # shellcheck disable=SC1091
 source "$VENV/bin/activate"
+python --version
 python -m pip install -q --upgrade pip
 python -m pip install -q -r requirements.txt
 case "$ENGINE" in
@@ -54,7 +61,7 @@ cat <<MSG
 
   tmux new -s grid
   source $VENV/bin/activate && export HF_TOKEN
-  bash scripts/run_matrix.sh $ENGINE 2>&1 | tee grid_$ENGINE.log
+  TRIALS=5 bash scripts/run_matrix.sh $ENGINE 2>&1 | tee grid_$ENGINE.log
 
 Detach with Ctrl-b then d. Reattach later with: tmux attach -t grid
 MSG
