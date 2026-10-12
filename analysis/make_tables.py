@@ -1,17 +1,30 @@
 """Generate the paper's LaTeX tables directly from raw measured logs.
 
-Reads experiments/<run>/run.json and trial_*.json, reuses the per-trial
-metrics in analysis/analyze.py, and writes:
+Reads experiments/<run>/run.json and trial_*.json and writes:
 
-  paper/tables/anomalies.tex  one row per (engine, strategy, temperature)
-  paper/tables/latency.tex    restart and recovery latency per engine
-  paper/tables/env.tex        engine/library versions and GPU per engine
-  paper/tables/provenance.tex runs, trials, commits, exclusions
+  paper/tables/repro.tex      failure-free reproducibility: does the first
+                              request on a fresh server (G) equal the second (G')?
+  paper/tables/anomalies.tex  one row per (configuration, strategy, T, kill point)
+  paper/tables/latency.tex    restart, time to first token after restart, and
+                              kill -> first recovered token
+  paper/tables/env.tex        engine/library versions and GPU per configuration
+  paper/tables/provenance.tex runs, trials, commits
 
 No number is typed by hand: re-running this script on the committed logs
-reproduces every table. Runs whose two failure-free references disagree
-are excluded from the anomaly table (divergence is not interpretable for
-them) and counted in provenance.tex.
+reproduces every table.
+
+Why two references. Each run records two failure-free outputs for the same
+request: G, the first request after the server starts, and G', the second.
+In the vLLM runs these differ (deterministically), so "the" failure-free
+output is not unique and every comparison is made against both.
+
+Per trial, with D = text delivered before the kill and R = recovery text:
+  final text F  naive retry: F = R (the retry is a complete answer)
+                recompute:   F = D + R
+  contradicts   naive retry only: R does not start with D, i.e. the replay
+                disagrees with text the client has already shown. (Recompute
+                cannot contradict D by construction.)
+  F = G, F = G' exact equality with either failure-free reference
 
     python analysis/make_tables.py            # reads experiments/
     python analysis/make_tables.py --root X   # any directory of runs
@@ -24,11 +37,11 @@ import statistics
 import sys
 from collections import defaultdict
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from analyze import analyze_trial  # noqa: E402
-
-ENGINE_NAME = {"vllm": "vLLM", "sglang": "SGLang", "llamacpp": "llama.cpp"}
+CONFIG_NAME = {"vllm": "vLLM", "vllm-noapc": "vLLM, no prefix cache",
+               "sglang": "SGLang", "llamacpp": "llama.cpp"}
+CONFIG_SHORT = {"vllm": "default", "vllm-noapc": "no APC"}
 STRATEGY_NAME = {"naive_retry": "naive", "recompute": "recomp."}
+CONFIG_ORDER = ["vllm", "vllm-noapc", "sglang", "llamacpp"]
 
 
 def tex(s):
@@ -36,15 +49,51 @@ def tex(s):
             .replace("%", r"\%").replace("&", r"\&").replace("#", r"\#"))
 
 
+def join(chunks):
+    return "".join(c["text"] for c in chunks)
+
+
+def lcp(a, b):
+    n, i = min(len(a), len(b)), 0
+    while i < n and a[i] == b[i]:
+        i += 1
+    return i
+
+
 def frac(k, n):
     return f"{k}/{n}" if n else "--"
 
 
-def med_range(xs):
+def med_range(xs, fmt="{:.1f}"):
     xs = [x for x in xs if x is not None]
     if not xs:
         return "--"
-    return f"{statistics.median(xs):.1f} ({min(xs):.1f}--{max(xs):.1f})"
+    f = lambda v: fmt.format(v)  # noqa: E731
+    return f"{f(statistics.median(xs))} ({f(min(xs))}--{f(max(xs))})"
+
+
+def order_key(label):
+    return (CONFIG_ORDER.index(label) if label in CONFIG_ORDER else 99, label)
+
+
+def trial_metrics(t, G, G2):
+    D, R = join(t["pre_kill_chunks"]), join(t["recovery_chunks"])
+    naive = t["strategy"] == "naive_retry"
+    F = R if naive else D + R
+    return {
+        "delivered_chars": len(D),
+        "contradicts": (not R.startswith(D)) if naive else None,
+        "contradict_at": lcp(R, D) if naive and not R.startswith(D) else None,
+        "F_eq_G": F == G,
+        "F_eq_G2": F == G2,
+        "F_lcp_G": lcp(F, G),
+        "F_lcp_G2": lcp(F, G2),
+        "restart_s": t["restart_s"],
+        "recovery_latency_s": t["recovery_latency_s"],
+        "ttft_after_restart_s": (t["recovery_latency_s"] - t["restart_s"]
+                                 if t["recovery_latency_s"] is not None else None),
+        "in_flight": t.get("in_flight_chunks_after_kill"),
+    }
 
 
 def load_runs(root):
@@ -54,13 +103,17 @@ def load_runs(root):
             run = json.load(f)
         if run.get("run_type") != "measured":
             continue  # smoke runs are never reported
-        ref = run["reference"]["text"]
+        G, G2 = run["reference"]["text"], run["reference_repeat"]["text"]
         trials = []
-        for t in sorted(glob.glob(os.path.join(os.path.dirname(run_path), "trial_*.json"))):
-            with open(t, encoding="utf-8") as f:
-                trials.append(analyze_trial(json.load(f), ref))
+        for p in sorted(glob.glob(os.path.join(os.path.dirname(run_path), "trial_*.json"))):
+            with open(p, encoding="utf-8") as f:
+                trials.append(trial_metrics(json.load(f), G, G2))
         runs.append((run, trials))
     return runs
+
+
+def header(f):
+    f.write("% generated by analysis/make_tables.py; do not edit by hand\n")
 
 
 def main():
@@ -74,71 +127,88 @@ def main():
         sys.exit(f"no measured runs under {a.root}/; nothing written")
     os.makedirs(a.out, exist_ok=True)
 
-    cells = defaultdict(list)          # (engine, strategy, temp) -> trial rows
-    excluded = defaultdict(int)        # same key -> excluded trials
-    lat = defaultdict(lambda: {"restart": [], "recovery": []})
-    env_by_engine = {}
-    commits = set()
+    repro = defaultdict(list)          # (label, T) -> [(identical, lcp, lenG, lenG2)]
+    cells = defaultdict(list)          # (label, strategy, T, k) -> trial metrics
+    lat = defaultdict(list)            # (label, strategy) -> trial metrics
+    env_by_label, commits = {}, set()
     n_trials = 0
-
     for run, trials in runs:
-        cfg = run["config"]
-        key = (run["engine"], cfg["strategy"], float(cfg["temperature"]))
+        cfg, label = run["config"], run["engine"]
+        T = float(cfg["temperature"])
+        G, G2 = run["reference"]["text"], run["reference_repeat"]["text"]
+        repro[(label, T)].append((G == G2, lcp(G, G2), len(G), len(G2)))
+        cells[(label, cfg["strategy"], T, int(cfg["kill_at"]))].extend(trials)
+        lat[(label, cfg["strategy"])].extend(trials)
+        env_by_label.setdefault(label, (run["environment"], cfg["server_cmd"]))
         commits.add(str(run["environment"].get("git_commit"))[:7])
         n_trials += len(trials)
-        if run["reference_repeat_identical"]:
-            cells[key].extend(trials)
-        else:
-            excluded[key] += len(trials)
-        for t in trials:
-            lat[run["engine"]]["restart"].append(t["restart_s"])
-            lat[run["engine"]]["recovery"].append(t["recovery_latency_s"])
-        env_by_engine.setdefault(run["engine"], run["environment"])
+
+    # reproducibility
+    with open(os.path.join(a.out, "repro.tex"), "w", encoding="utf-8") as f:
+        header(f)
+        for (label, T) in sorted(repro, key=lambda k: (order_key(k[0]), k[1])):
+            rs = repro[(label, T)]
+            same = sum(r[0] for r in rs)
+            lcps = sorted({r[1] for r in rs})
+            lens = sorted({(r[2], r[3]) for r in rs})
+            lcp_s = ", ".join(str(x) for x in lcps)
+            len_s = "; ".join(f"{x}/{y}" for x, y in lens)
+            f.write(f"{CONFIG_SHORT.get(label, tex(label))} & {T:g} & {frac(same, len(rs))} & "
+                    f"{lcp_s} & {len_s} \\\\\n")
 
     # anomalies
     rows = []
-    for key in sorted(set(cells) | set(excluded)):
-        eng, strat, temp = key
-        ts = cells.get(key, [])
+    for key in sorted(cells, key=lambda k: (order_key(k[0]), k[1], k[2], k[3])):
+        label, strat, T, k = key
+        ts = cells[key]
         n = len(ts)
-        exact = sum(t["exact_match"] for t in ts)
-        full = sum(t["duplicated_fraction"] == 1.0 for t in ts)
-        div = sum(t["diverged_after_dedup"] for t in ts)
-        note = f" ({excluded[key]} excl.)" if excluded.get(key) else ""
-        rows.append(f"{ENGINE_NAME.get(eng, tex(eng))} & {STRATEGY_NAME.get(strat, tex(strat))} & "
-                    f"{temp:g} & {frac(exact, n)} & {frac(full, n)} & {frac(div, n)}{note} \\\\")
+        dchars = sorted({t["delivered_chars"] for t in ts})
+        if strat == "naive_retry":
+            con = frac(sum(t["contradicts"] for t in ts), n)
+        else:
+            con = "n/a"
+        rows.append(f"{CONFIG_SHORT.get(label, tex(label))} & {STRATEGY_NAME.get(strat, tex(strat))} & "
+                    f"{T:g} & {k} & {'/'.join(str(x) for x in dchars)} & {con} & "
+                    f"{frac(sum(t['F_eq_G'] for t in ts), n)} & "
+                    f"{frac(sum(t['F_eq_G2'] for t in ts), n)} \\\\")
     with open(os.path.join(a.out, "anomalies.tex"), "w", encoding="utf-8") as f:
-        f.write("% generated by analysis/make_tables.py; do not edit by hand\n")
+        header(f)
         f.write("\n".join(rows) + "\n")
 
     # latency
     with open(os.path.join(a.out, "latency.tex"), "w", encoding="utf-8") as f:
-        f.write("% generated by analysis/make_tables.py; do not edit by hand\n")
-        for eng in sorted(lat):
-            f.write(f"{ENGINE_NAME.get(eng, tex(eng))} & {med_range(lat[eng]['restart'])} & "
-                    f"{med_range(lat[eng]['recovery'])} \\\\\n")
+        header(f)
+        for (label, strat) in sorted(lat, key=lambda k: (order_key(k[0]), k[1])):
+            ts = lat[(label, strat)]
+            f.write(f"{CONFIG_SHORT.get(label, tex(label))} & {STRATEGY_NAME.get(strat, tex(strat))} & "
+                    f"{len(ts)} & {med_range([t['restart_s'] for t in ts])} & "
+                    f"{med_range([t['ttft_after_restart_s'] for t in ts], '{:.2f}')} & "
+                    f"{med_range([t['recovery_latency_s'] for t in ts])} \\\\\n")
 
     # environment
     with open(os.path.join(a.out, "env.tex"), "w", encoding="utf-8") as f:
-        f.write("% generated by analysis/make_tables.py; do not edit by hand\n")
-        for eng in sorted(env_by_engine):
-            e = env_by_engine[eng]
+        header(f)
+        for label in sorted(env_by_label, key=order_key):
+            e, _cmd = env_by_label[label]
             pk = e.get("packages", {})
             gpus = e.get("gpus") or []
-            gpu = f"{gpus[0]['name']} ({gpus[0]['memory_total']}), driver {gpus[0]['driver']}" if gpus else "none recorded"
-            ver = pk.get(eng) or "n/a"
-            f.write(f"{ENGINE_NAME.get(eng, tex(eng))} & {tex(ver)} & {tex(pk.get('torch') or 'n/a')} & "
-                    f"{tex(gpu)} \\\\\n")
+            gpu = (f"{gpus[0]['name']} ({gpus[0]['memory_total']}), driver {gpus[0]['driver']}"
+                   if gpus else "none recorded")
+            engine_pkg = label.split("-")[0]
+            f.write(f"{CONFIG_SHORT.get(label, tex(label))} & {tex(pk.get(engine_pkg) or 'n/a')} & "
+                    f"{tex(pk.get('torch') or 'n/a')} & {tex(gpu)} \\\\\n")
 
     # provenance summary
+    in_flight = [t["in_flight"] for _, ts in runs for t in ts if t["in_flight"] is not None]
     with open(os.path.join(a.out, "provenance.tex"), "w", encoding="utf-8") as f:
-        f.write("% generated by analysis/make_tables.py; do not edit by hand\n")
+        header(f)
         f.write(f"{len(runs)} measured runs, {n_trials} trials, harness commit(s) "
-                f"\\texttt{{{tex(', '.join(sorted(commits)))}}}; "
-                f"{sum(excluded.values())} trials excluded because their failure-free "
-                f"references disagreed.\n")
+                f"\\texttt{{{tex(', '.join(sorted(commits)))}}}. "
+                f"In-flight chunks received after the kill: "
+                f"{max(in_flight) if in_flight else '--'} at most, over all trials.\n")
 
-    print(f"wrote {len(rows)} anomaly rows, {len(lat)} latency rows to {a.out}/")
+    print(f"wrote {len(rows)} anomaly rows, {len(repro)} reproducibility rows, "
+          f"{len(lat)} latency rows to {a.out}/")
 
 
 if __name__ == "__main__":
