@@ -8,67 +8,64 @@
 \usepackage{fancyhdr}
 \hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=black}
 
-% Every result-dependent passage is marked with \pending{...}.
-% Rule: a \pending box is replaced only with numbers produced by
-% analysis/analyze.py from raw logs committed under experiments/.
+% Every number in this paper comes from analysis/make_tables.py run on the raw
+% logs committed under experiments/. \pending marks any passage still awaiting data.
 \newcommand{\pending}[1]{\par\noindent\fbox{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\small\textbf{PENDING MEASURED DATA.} #1}}\par}
 
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[C]{\small DRAFT --- methods complete, results pending measured runs. Not for citation.}
+\fancyhead[C]{\small Preprint draft, October 2026.}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0pt}
 
 \title{What Does a Streaming Client See When an LLM Server Crashes?\\
-\large A Fault-Injection Study of Client-Visible Token Anomalies in vLLM and SGLang}
+\large A Fault-Injection Study of Client-Visible Token Anomalies in vLLM}
 \author{Rajshekar Medipally\\
 \small Independent researcher, Richmond, VA\\
 \small \url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}}
 \date{Draft, October 2026}
 
 % Table rows come from paper/tables/*.tex, written by analysis/make_tables.py
-% from the committed raw logs. Until those files exist, placeholders show.
-% (\@@input is the expandable primitive, so it is safe inside tabular.)
+% from the committed raw logs. (\@@input is expandable, so safe inside tabular.)
 \makeatletter
-\IfFileExists{tables/anomalies.tex}{\def\AnomRows{\@@input tables/anomalies.tex }}{\def\AnomRows{%
-vLLM   & naive    & 0   & -- & -- & -- \\
-vLLM   & naive    & 0.8 & -- & -- & -- \\
-vLLM   & recomp.  & 0   & -- & -- & -- \\
-vLLM   & recomp.  & 0.8 & -- & -- & -- \\
-SGLang & naive    & 0   & -- & -- & -- \\
-SGLang & naive    & 0.8 & -- & -- & -- \\
-SGLang & recomp.  & 0   & -- & -- & -- \\
-SGLang & recomp.  & 0.8 & -- & -- & -- \\
-}}
-\IfFileExists{tables/latency.tex}{\def\LatRows{\@@input tables/latency.tex }}{\def\LatRows{%
-vLLM   & -- & -- \\
-SGLang & -- & -- \\
-}}
-\IfFileExists{tables/env.tex}{\def\EnvRows{\@@input tables/env.tex }}{\def\EnvRows{}}
+\def\AnomRows{\@@input tables/anomalies.tex }
+\def\LatRows{\@@input tables/latency.tex }
+\def\EnvRows{\@@input tables/env.tex }
+\def\ReproRows{\@@input tables/repro.tex }
 \makeatother
 
 \begin{document}
 \maketitle
 \thispagestyle{fancy}
 
+
 \begin{abstract}
 LLM inference servers stream generated tokens to clients over requests that
 last seconds to minutes. When a serving process fails mid-generation, the
 client is left holding a partial response, and the recovery it performs
-determines what it ultimately shows to a user or passes to a downstream agent.
-Prior work on fault-tolerant LLM serving measures server-side recovery time.
-This paper instead measures what the client receives. We define three
-client-visible anomalies (duplicated, missing, and divergent text) relative to
-a failure-free reference, build an open-source fault-injection harness that
-SIGKILLs an unmodified OpenAI-compatible server at a chosen token position and
-records every streamed chunk, and apply it to vLLM and SGLang serving
-Llama~3.1~8B~Instruct on a single GPU. We compare the two recovery strategies
-available to a client of an unmodified engine: naive retry, which resubmits
-the original prompt, and recompute, which resubmits the prompt plus the text
-already delivered.
-\pending{One to two sentences stating the measured anomaly rates and recovery
-latencies for each engine, strategy, and temperature.}
-All raw logs and the single analysis script are public.
+determines what it ultimately shows a user or hands to a downstream agent.
+We built an open-source fault-injection harness that SIGKILLs an unmodified
+OpenAI-compatible server at a chosen token position, restarts it, applies a
+client recovery strategy, and records every streamed chunk, and applied it to
+vLLM serving Llama~3.1~8B~Instruct on one A10G GPU (60 trials, plus a
+20-trial ablation). The central
+finding is that, with default settings, the failure-free output was not
+unique: at temperature~0,
+with requests issued one at a time, the first request after a server start
+and the second request with the identical prompt diverged at character 506 of
+about 1{,}280, and with a fixed seed at temperature~0.8 they diverged at
+character 9. Both outputs were exactly repeatable. Because a crashed server
+restarts cold, naive retry returned the first-request text in 30 of 30 trials
+and so contradicted text the client had already displayed in 25 of 30.
+Recompute, which resubmits the delivered text, never contradicted it, but its
+final text matched neither failure-free output in 24 of 30 trials. Recovery
+latency was server restart (median 117--178\,s per strategy); the time to the
+first recovered token after restart was 0.23--0.32\,s.
+Disabling vLLM's automatic prefix cache made the failure-free output
+reproducible (4 of 4 runs) and removed every contradiction (0 of 10
+naive-retry trials), but recompute at temperature~0 still changed the
+answer, 43 characters after the kill, in 5 of 5 trials.
+All raw logs and the table-generating script are public.
 \end{abstract}
 
 \section{Introduction}
@@ -80,7 +77,7 @@ if the serving process dies, the client or a load balancer resubmits the
 request and generation starts again.
 
 That recovery has a cost that server-side metrics miss. A client that has
-already displayed 128 tokens may receive those 128 tokens a second time, may
+already displayed 128 tokens may receive those tokens a second time, may
 receive a continuation that disagrees with what it already showed, or may lose
 text at the boundary. For a chat interface this is a visible glitch. For an
 agent that has already acted on a partial tool call or a partial plan, it is a
@@ -90,19 +87,28 @@ correctness problem. Stream processing systems name this property
 serving has no equivalent definition, and to our knowledge no measurement of
 what clients actually receive.
 
+A common intuition is that at temperature 0 a retry is harmless: greedy
+decoding is deterministic, so resubmitting the prompt reproduces the same
+text and the client only has to drop the duplicate. Our measurements on vLLM
+refute that intuition. The engine's output for a fixed prompt depended on
+what the server had served earlier, so the restarted server produced a
+different, equally repeatable, text.
+
 This paper makes three contributions:
 \begin{enumerate}
   \item \textbf{Definitions.} Token-level delivery semantics for streamed
-    generation, and three measurable client-visible anomalies: duplication,
-    loss, and divergence (Section~\ref{sec:model}).
+    generation, and client-visible anomalies defined against \emph{two}
+    failure-free references rather than one (Section~\ref{sec:model}).
   \item \textbf{A fault-injection harness} for any OpenAI-compatible server,
     which kills the full server process tree at a chosen chunk, restarts it,
     applies a client recovery strategy, and records every chunk with
     timestamps, the code commit, package versions, and GPU inventory
     (Section~\ref{sec:harness}).
-  \item \textbf{A measurement study} of naive retry and recompute on vLLM and
-    SGLang at temperature 0 and 0.8, at three kill positions
-    (Sections~\ref{sec:method}--\ref{sec:results}).
+  \item \textbf{A measurement study} of naive retry and recompute on vLLM
+    at temperature 0 and 0.8 and three kill positions
+    (Sections~\ref{sec:method}--\ref{sec:results}), which finds that
+    failure-free output depends on server history and quantifies what that
+    does to each recovery strategy.
 \end{enumerate}
 
 The study deliberately uses unmodified engines and client-side recovery only.
@@ -135,45 +141,40 @@ sink where delivery semantics are decided.
 \section{Delivery model and anomalies}
 \label{sec:model}
 
-Let $G$ be the failure-free reference output for a request, recorded on the
-same server configuration. A failure occurs after the client has received
-delivered text $D$. After recovery the client receives recovery text $R$ and
-its final view is $V = D \cdot R$ (concatenation), which is what a typical
-client displays.
-
-We measure:
-\begin{itemize}
-  \item \textbf{Duplication}: the length of the longest common prefix of $R$
-    and $D$, reported as the fraction $\textit{dup} = |\mathrm{lcp}(R, D)| / |D|$.
-    $\textit{dup}=1$ means the client received all of $D$ a second time.
-  \item \textbf{Divergence}: whether the client's text disagrees with $G$
-    after the duplicated prefix is removed, i.e.\ whether
-    $V' = D \cdot R[\textit{dup}{:}]$ and $G$ differ at some position before
-    either ends. Removing the duplicate first keeps the two anomalies
-    separate: a retry that re-sends identical text is duplication, not
-    divergence. The first differing index is recorded and compared with
-    $|D|$, the kill boundary.
-  \item \textbf{Exact match}: $V = G$, i.e.\ the failure was invisible in the
-    final text.
-  \item \textbf{Recovery latency}: wall time from the kill to the first chunk
-    delivered after recovery, including server restart.
-\end{itemize}
-
-Under this model, \emph{at-least-once} delivery shows as $\textit{dup}>0$,
-\emph{at-most-once} as $V$ being a strict prefix of $G$, and
-\emph{exactly-once} as $V=G$. Comparison is on text, not token ids, because
-the OpenAI-compatible streaming API does not guarantee one token per chunk.
-
-A comparison against $G$ is only meaningful if the server is reproducible
-without failures. The harness therefore records two failure-free references per
-run and flags the run when they differ (Section~\ref{sec:harness}).
-
-\paragraph{Client recovery strategies.}
-\textbf{Naive retry} resubmits the original prompt with the original
-\texttt{max\_tokens}; many client libraries' retry wrappers do this.
-\textbf{Recompute} resubmits the prompt concatenated with $D$ and requests the
+A failure occurs after the client has received delivered text $D$. After
+recovery the client receives recovery text $R$. What the client finally holds
+depends on the strategy:
+\textbf{naive retry} resubmits the original prompt with the original
+\texttt{max\_tokens}, as many client retry wrappers do, and the retry is a
+complete answer, so the final text is $F=R$;
+\textbf{recompute} resubmits the prompt concatenated with $D$ and requests the
 remaining token budget, so the server rebuilds the KV cache by prefill and
-continues. Neither requires engine changes.
+continues, and $F=D\cdot R$. Neither requires engine changes.
+
+\paragraph{Two references.} Before the trials of each run, the harness
+issues the request twice without failures and records both outputs: $G$, the
+first request after the server starts, and $G'$, the second. A reproducible
+server has $G=G'$. We do not assume this; we measure it, and compare every
+final text with both.
+
+\paragraph{Anomalies.}
+\begin{itemize}
+  \item \textbf{Contradiction} (naive retry): $R$ does not start with $D$,
+    i.e.\ the replay disagrees with text the client has already displayed.
+    A client that deduplicates by dropping the first $|D|$ characters of $R$
+    would then splice two different texts. Recompute cannot contradict $D$
+    by construction.
+  \item \textbf{Duplication} (naive retry): the client receives $D$ again.
+    Without contradiction this is full duplication, which an idempotent
+    client can remove.
+  \item \textbf{Divergence}: $F$ equals neither $G$ nor $G'$, i.e.\ the
+    failure changed the final answer relative to any failure-free run we
+    observed.
+  \item \textbf{Recovery latency}: wall time from the kill to the first
+    chunk delivered after recovery, which includes server restart.
+\end{itemize}
+Comparison is on text, not token ids, because the OpenAI-compatible streaming
+API does not guarantee one token per chunk.
 
 \section{Fault-injection harness}
 \label{sec:harness}
@@ -206,8 +207,8 @@ working tree was dirty, the full command line, installed versions of
 GPU model, memory, and driver from \texttt{nvidia-smi}, and the full server
 log. Measured runs are written to \texttt{experiments/} and committed; harness
 smoke tests are written to a separate, git-ignored directory and are never
-reported. All statistics in this paper are produced by one script,
-\texttt{analysis/analyze.py}, from those committed files.
+reported. Every table in this paper is generated by one script,
+\texttt{analysis/make\_tables.py}, from those committed files.
 
 \paragraph{Validation.} The harness was exercised end to end on a laptop CPU
 with llama.cpp and a 0.5B model before any GPU run. That check, documented in
@@ -219,49 +220,51 @@ runs on that server disagreed at temperature 0.8.
 \section{Methodology}
 \label{sec:method}
 
-\paragraph{Setup.} One cloud machine with a single NVIDIA GPU of at least
-24\,GB, Llama~3.1~8B~Instruct in bf16, vLLM and SGLang each in a separate
-Python environment with default engine flags except a 4{,}096-token
-context cap (Llama~3.1's 128k default does not fit a 24\,GB KV cache; every
-request here is far shorter). Because the machine image ships no CUDA toolkit,
-FlashInfer kernels that compile at startup were avoided: vLLM used PyTorch
-sampling (\texttt{VLLM\_USE\_FLASHINFER\_SAMPLER=0}) and SGLang used Triton
-attention with PyTorch sampling. Both settings are recorded in every run log. The GPU model, driver, and
-package versions are recorded by the harness in every run and reported as
-recorded\IfFileExists{tables/env.tex}{ (Table~\ref{tab:env})}{}.
+\paragraph{Setup.} One AWS \texttt{g5.xlarge} instance (one NVIDIA A10G,
+24\,GB; 4 vCPUs), Llama~3.1~8B~Instruct in bf16, vLLM in its own Python 3.12
+environment with default engine flags except a 4{,}096-token context cap
+(Llama~3.1's 128k default does not fit a 24\,GB KV cache; every request here
+is far shorter). Defaults include automatic prefix caching, which the server
+logs confirm was on (\texttt{enable\_prefix\_caching=True}). The machine
+image ships no CUDA toolkit, so FlashInfer's sampler, which compiles at
+startup, was replaced by PyTorch sampling
+(\texttt{VLLM\_USE\_FLASHINFER\_SAMPLER=0}); this is recorded in every run log.
+Versions are in Table~\ref{tab:env}.
 
-\IfFileExists{tables/env.tex}{%
 \begin{table}[h]
 \centering\small
 \caption{Software and hardware, from \texttt{run.json}.}
 \label{tab:env}
-\begin{tabular}{@{}lllp{0.38\linewidth}@{}}
+\begin{tabular}{@{}lllp{0.40\linewidth}@{}}
 \toprule
-Engine & Version & torch & GPU \\
+Config & vLLM & torch & GPU \\
 \midrule
 \EnvRows
 \bottomrule
 \end{tabular}
 \end{table}
-\IfFileExists{tables/provenance.tex}{\noindent\small\input{tables/provenance.tex}\par}{}%
-}{\pending{Engine, torch, CUDA and driver versions and model revision hash,
-generated from \texttt{run.json} by \texttt{analysis/make\_tables.py}.}}
+\noindent{\small\input{tables/provenance.tex}\par}
 
-\paragraph{Grid.} For each engine: strategy $\in$ \{naive retry, recompute\}
-$\times$ temperature $\in \{0, 0.8\}$ $\times$ kill point $\in$ \{25, 128, 230\}
-chunks (about 10\%, 50\%, and 90\% of a 256-token budget), with 10 trials
-per cell and a fixed per-request seed (1234). That is 12 runs and 120 trials
-per engine, 240 in total, produced by \texttt{scripts/run\_matrix.sh}.
-Requests are issued one at a time, so there is no batching interference.
+\paragraph{Grid.} One fixed prompt (an explanation of write-ahead logging),
+\texttt{max\_tokens}=256, per-request seed 1234. Strategy $\in$ \{naive
+retry, recompute\} $\times$ temperature $\in \{0, 0.8\}$ $\times$ kill point
+$\in$ \{25, 128, 230\} chunks (about 10\%, 50\%, and 90\% of the budget),
+5 trials each: 12 runs and 60 trials, produced by
+\texttt{TRIALS=5 scripts/run\_matrix.sh vllm}. Requests are issued one at a
+time, so there is never more than one request in a batch.
 
-\paragraph{Hypotheses.} Stated in advance so that the data can refute them:
+\paragraph{Ablation.} After the grid showed $G\neq G'$, we repeated the
+kill-at-128 configurations for both strategies and temperatures with
+automatic prefix caching disabled (\texttt{--no-enable-prefix-caching}), all
+else equal: 4 runs, 20 trials, labeled ``no APC''.
+
+\paragraph{Hypotheses.} Stated before the runs:
 \begin{description}
-  \item[H1] At temperature 0, naive retry yields $\textit{dup}=1$ in every
-    trial and recompute yields $V=G$ in every trial.
-  \item[H2] At temperature 0.8 with a fixed seed, both engines reproduce $G$
+  \item[H1] At temperature 0, naive retry yields full duplication in every
+    trial and recompute yields $F=G$ in every trial.
+  \item[H2] At temperature 0.8 with a fixed seed, vLLM reproduces $G$
     across clean runs; if so, naive retry still yields full duplication and
-    recompute yields divergence from $G$ after the kill point, because the
-    sampler restarts from a different random state.
+    recompute diverges after the kill point.
   \item[H3] Recovery latency is dominated by server restart, not by prefill
     of the delivered text.
 \end{description}
@@ -269,60 +272,162 @@ Requests are issued one at a time, so there is no batching interference.
 \section{Results}
 \label{sec:results}
 
-\pending{\textbf{Reproducibility first.} For each engine and temperature,
-report whether the two failure-free references matched (\texttt{reference
-repeat identical}). Any cell where they did not is marked uninterpretable for
-divergence and excluded from Table~\ref{tab:anomalies}, with the count stated.}
+\paragraph{Failure-free output was not unique.} In all 12 runs of the
+default configuration, $G\neq G'$
+(Table~\ref{tab:repro}). At temperature 0 the two references agreed for the
+first 506 characters and then took different wording (``The log is scanned
+from the end\dots'' versus ``The log is scanned to determine\dots''). With a
+fixed seed at temperature 0.8 they diverged at character 9. Neither is noise:
+every run's $G$ was identical to every other run's $G$ at the same
+temperature, and likewise for $G'$. The output was a deterministic function
+of the server's history, not of the prompt alone. Within a run, all trials
+after the first produced identical text, so the 5 trials per configuration
+are repeated observations of at most two distinct server histories, not
+independent samples.
 
-\begin{table}[t]
+\begin{table}[h]
 \centering\small
-\caption{Client-visible anomalies per cell (10 trials each), generated from
-the raw logs by \texttt{analysis/make\_tables.py}. Diverged$'$ is counted
-after removing duplicated text (Section~\ref{sec:model}).}
-\label{tab:anomalies}
-\setlength{\tabcolsep}{3.5pt}
-\begin{tabular}{@{}llrccc@{}}
+\caption{Failure-free reproducibility: first request after server start
+($G$) versus second ($G'$). LCP is their common prefix in characters.
+``No APC'': automatic prefix caching disabled.}
+\label{tab:repro}
+\begin{tabular}{@{}lcccc@{}}
 \toprule
-Engine & Strategy & $T$ & $V{=}G$ & Full dup & Diverged$'$ \\
+Config & $T$ & $G{=}G'$ (runs) & LCP & $|G|/|G'|$ \\
+\midrule
+\ReproRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table*}[t]
+\centering\small
+\caption{Client-visible outcome per configuration (5 trials each), generated
+from the raw logs by \texttt{analysis/make\_tables.py}. $|D|$: characters
+delivered before the kill (two values when trial~0 differed from trials 1--4).
+Contradicts $D$: the naive replay disagreed with text already shown.
+$F{=}G$, $F{=}G'$: the final text equals the first or second failure-free
+reference.}
+\label{tab:anomalies}
+\begin{tabular}{@{}llrrrccc@{}}
+\toprule
+Config & Strategy & $T$ & Kill (chunks) & $|D|$ (chars) & Contradicts $D$ & $F{=}G$ & $F{=}G'$ \\
 \midrule
 \AnomRows
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
-\begin{table}[t]
+\paragraph{Naive retry contradicted the client.} The restarted server is
+always in the state that produced $G$, and the replay equaled $G$ in all
+30 naive-retry trials (Table~\ref{tab:anomalies}). The text the client had
+already shown, $D$, came from a warm server and followed $G'$. Wherever the
+kill fell after the point at which $G$ and $G'$ part, the replay therefore
+contradicted $D$: in 25 of 30 trials, at character 506 at temperature 0 and
+at character 9 at temperature 0.8. The only clean case was temperature 0
+with the kill at 25 chunks (113 characters, before character 506), where the
+replay began with $D$ and the anomaly was pure, removable duplication. A
+client that drops the first $|D|$ characters of a replay, the usual
+deduplication, would in the other 25 trials have produced a spliced text
+that no failure-free run generated.
+
+\paragraph{Recompute kept the shown text but changed the answer.} Recompute
+never contradicted $D$, but its final text matched $G$ in 4 of 30 trials and
+$G'$ in 2 of 30. At temperature 0 with the kill at 25 chunks, all five final
+texts departed from both references at character 267, after the kill (113)
+and before $G$ and $G'$ part (506): a third greedy output. The same third
+point of departure appeared without any failure. In each recompute run, trials 1--4 ran on
+a server whose only earlier request was trial~0's recovery (prompt plus $D$),
+and their pre-kill streams, which no failure had yet touched, departed from
+both references in 16 of 24 trials. The two $F{=}G'$ cases are trial~0 at
+the 230-chunk kill; the four $F{=}G$ cases are trials 1--4 at temperature
+0.8 with the kill at 25 chunks, where a 25-token recovery prefix left the
+continuation on the cold-server path.
+
+\paragraph{Hypotheses.} \textbf{H1 is refuted}: at temperature 0, naive
+retry gave full duplication only at the earliest kill point (5 of 15 trials)
+and recompute never reproduced $G$ (0 of 15). \textbf{H2's premise is
+refuted}: a fixed seed did not reproduce $G$ across requests, so its
+predictions cannot be tested as stated. \textbf{H3 is supported}
+(Table~\ref{tab:latency}): restart took 108--195\,s and the first recovered
+token arrived 0.23--0.32\,s after the server was ready. Recompute's extra
+prefill was visible but small: median time to first token after restart rose
+from 0.24 to 0.27\,s at temperature 0 and from 0.28 to 0.31\,s at 0.8 as the
+kill moved from 25 to 230 chunks, against 0.23--0.28\,s for naive retry.
+The higher median restart for recompute is not a strategy effect: restart
+happens before the recovery request is sent, and both initial startup and
+restart rose from about 110--122\,s to 160--195\,s from the third trial of
+the temperature-0, 230-chunk recompute run onward and stayed there for the
+rest of the grid; the cause was not identified. In the ablation, run later
+the same day, restarts were back to 107--120\,s.
+
+\begin{table*}[t]
 \centering\small
-\caption{Restart and recovery latency, median (min--max), seconds.}
+\caption{Latency in seconds, median (min--max). Restart: kill to server
+ready. TTFT: server ready to first recovered chunk. Recovery: kill to first
+recovered chunk.}
 \label{tab:latency}
-\begin{tabular}{@{}lcc@{}}
+\begin{tabular}{@{}llrccc@{}}
 \toprule
-Engine & Server restart & Kill $\to$ first recovered token \\
+Config & Strategy & Trials & Restart & TTFT after restart & Recovery \\
 \midrule
 \LatRows
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
-\pending{\textbf{H1, H2 outcomes} by kill position, with the raw counts.
-State plainly where a hypothesis was refuted.}
+\paragraph{Prefix-cache ablation.} With automatic prefix caching disabled
+(rows ``no APC''), $G=G'$ in all 4 runs at both temperatures
+(Table~\ref{tab:repro}), and naive retry no longer contradicted the client:
+in 10 of 10 trials the replay equaled both references and began with $D$, so
+the anomaly was pure duplication that a client can remove
+(Table~\ref{tab:anomalies}). The cache setting also changed the reference
+itself at temperature 0: the no-APC output departs from the default
+configuration's $G$ at character 267, although $G$ is the first request after
+start, when the cache is empty. At temperature 0.8 the no-APC reference
+equals the default $G$ exactly.
 
-\pending{\textbf{H3}: restart time versus recovery latency, and whether
-recompute is measurably slower than naive retry to first token at the 90\%
-kill point.}
+Recompute behaved differently by temperature. At 0.8 its final text equaled
+$G$ in 5 of 5 trials. At temperature 0 it equaled neither reference in 5 of
+5: all five departed at character 655, 43 characters after the kill (612), so
+recompute changed the greedy answer even with no prefix cache. That final
+text is character-for-character identical to the default configuration's
+recompute text at the 25-chunk kill. Recompute's answer at temperature 0 is
+therefore not explained by the cache. It is consistent with the delivered
+text being processed as prompt (prefill) rather than generated (decode), or
+with re-tokenization of $D$; these data do not separate the two.
 
 \section{Discussion}
 
-\pending{What the measured anomalies mean for chat clients and for agents
-that act on partial output; which strategy a client should use for each
-temperature; whether the difference between engines matters.}
+\paragraph{Retry is not replay.} The usual argument for retrying an LLM
+request is that at temperature 0 it is idempotent up to duplication. On the
+default vLLM configuration measured here, it was not: the server that
+answers a retry is a fresh process, and a fresh process gave a different
+greedy answer from the warm one that had been streaming. For a chat client
+this means a visible rewrite of text already shown in 25 of 30 trials; for an
+agent that acted on a partial tool call or plan, it means the action was
+based on text that the final answer contradicts.
+
+\paragraph{What a client should do.} Within these measurements, recompute is
+the only client-side strategy that never contradicted what was shown, at the
+price of a final answer that no failure-free run produced, and a few tens of
+milliseconds of extra prefill. Naive retry with deduplication is unsafe
+unless the client verifies that the replay begins with $D$, and should
+replace rather than splice when it does not. An operator can remove the
+contradictions by disabling automatic prefix caching, as the ablation did;
+we did not measure the throughput cost, which on workloads with shared
+prefixes is the reason the cache exists.
 
 \paragraph{Why client-side recovery is not enough.} Even in the best case for
-recompute, the client cannot restore the sampler's random state, so above
-temperature 0 it can at most hide duplication, not guarantee the continuation
-the original request would have produced. Exactly-once delivery therefore
-requires state the client does not hold: a sequence-numbered token log and the
-sampler state, committed before tokens are released. That protocol is the
-next stage of this project.
+recompute, the client cannot restore the server's state: neither the
+sampler's random state above temperature 0 nor, as measured here, whatever
+server state made $G$ differ from $G'$; and even with that state removed
+by disabling the prefix cache, recompute at temperature 0 did not reproduce
+the original continuation. Exactly-once delivery therefore
+requires state the client does not hold: a sequence-numbered token log, and
+the sampler state, committed before tokens are released, with recovery
+continuing from the log rather than regenerating. That protocol is the next
+stage of this project, and these measurements are its baseline.
 
 \section{Related work}
 
@@ -340,39 +445,72 @@ SGLang \cite{zheng2024sglang} prefix sharing via RadixAttention.
 define consistent snapshots, Elnozahy et al.\ \cite{elnozahy2002survey}
 output commit, and Flink \cite{carbone2015lightweight} and Spark Structured
 Streaming \cite{armbrust2018structured} build exactly-once sinks on them.
+\textbf{Inference nondeterminism.} He et al.\ \cite{he2025nondeterminism}
+show that LLM inference at temperature 0 is not reproducible across server
+load because kernels are not batch-invariant, and build batch-invariant
+kernels. Our observation is the fault-tolerance consequence: requests here
+were issued one at a time, yet output still depended on what the server had
+served before, so a retry after a crash is not a replay.
 Optimal checkpoint intervals \cite{young1974first,daly2006higher} motivate
 later stages of this project.
 
 \section{Threats to validity}
 
 \begin{itemize}
-  \item \textbf{One model, one GPU, one prompt.} Results are scoped to
-    Llama~3.1~8B on one single-GPU machine with a single explanatory prompt. Tensor-parallel
-    serving and other prompts may differ.
-  \item \textbf{Re-tokenization in recompute.} Recompute sends $D$ as text, and
-    the engine re-tokenizes it. If the boundary tokenizes differently than the
-    original output tokens, the continuation can diverge at temperature 0 for
-    a reason unrelated to sampling. Any such divergence is reported with its
-    position relative to the kill point.
-  \item \textbf{Fail-stop only.} \texttt{SIGKILL} is a clean crash; GPU hangs,
-    NCCL stalls, and silent corruption are not modeled.
-  \item \textbf{Latency includes restart.} With a single instance, recovery
-    latency includes model reload; failover to a warm standby would be faster.
-  \item \textbf{Chunks are approximate tokens.} Kill points are set in chunks,
-    which are usually but not always one token.
+  \item \textbf{Trials are not independent.} Output was deterministic given
+    server history, so 5 trials per configuration are repeated observations
+    of one or two histories. Counts such as ``25 of 30'' describe how many
+    configurations and histories were affected, not a sampled rate.
+  \item \textbf{One prompt, one model, one GPU.} The divergence positions
+    (characters 506 and 9) are specific to this prompt and to Llama~3.1~8B
+    on an A10G. Other prompts may diverge earlier, later, or not at all
+    within 256 tokens; tensor-parallel serving may differ.
+  \item \textbf{One engine.} SGLang was planned as a second engine. On the
+    machine image used (Ubuntu 26.04 Deep Learning AMI, no CUDA toolkit) it
+    could not be started: several of its components compile GPU kernels at
+    startup. The harness supports it unchanged, and the failed attempts are
+    documented in the repository.
+  \item \textbf{Sampler substitution.} vLLM ran with PyTorch sampling instead
+    of FlashInfer's sampler, because of the missing CUDA toolkit. The
+    temperature-0 results do not involve random sampling, but the 0.8
+    results may differ under FlashInfer.
+  \item \textbf{Mechanism.} The ablation shows that, on this setup, the
+    dependence on server history requires automatic prefix caching. It does
+    not show which computation inside the cached path differs; kernels whose
+    results depend on batch or prefill shape \cite{he2025nondeterminism} are
+    a plausible candidate that we did not test. The ablation covered only
+    the 128-chunk kill point (20 trials).
+  \item \textbf{Re-tokenization in recompute.} Recompute sends $D$ as text,
+    which the engine re-tokenizes; a boundary that tokenizes differently can
+    change the continuation. The recompute departures observed here were
+    after the kill boundary (e.g.\ character 267 against a kill at 113).
+  \item \textbf{Fail-stop only; latency includes restart.} \texttt{SIGKILL}
+    is a clean crash; GPU hangs and silent corruption are not modeled. With
+    a single instance, recovery includes model reload; a warm standby would
+    be faster. Restart time also drifted during the grid (see H3).
 \end{itemize}
 
 \section{Conclusion and future work}
 
-\pending{Two-sentence summary of measured findings.}
+On vLLM with default settings, the failure-free output for a fixed prompt
+depended on what the server had served before, at temperature 0 as well as
+with a fixed seed. As a result, naive retry after a crash contradicted text
+the client had already shown in 25 of 30 trials, and recompute, while never
+contradicting it, produced a final text that no failure-free run produced in
+24 of 30. Disabling automatic prefix caching made failure-free output
+reproducible and turned naive retry's contradictions into removable
+duplication, which shows that the cache is necessary for the history
+dependence on this setup. It did not make recompute exact at temperature 0.
 
-Next stages: (1) a gateway that assigns sequence numbers, logs tokens and
-sampler state before release, and deduplicates on recovery, evaluated on the
-same harness for zero anomalies and per-token overhead; (2) measured
-recompute-versus-checkpoint cost curves for the KV cache; (3) an adaptive
-per-request checkpoint policy.
+Next stages: (0) repeat the grid on SGLang with a CUDA toolkit available,
+with more prompts, and with batch-invariant kernels
+\cite{he2025nondeterminism}; (1) a gateway that assigns sequence numbers,
+logs tokens and sampler state before release, and continues from the log on
+recovery, evaluated on the same harness for zero anomalies and per-token
+overhead; (2) measured recompute-versus-checkpoint cost curves for the KV
+cache; (3) an adaptive per-request checkpoint policy.
 
-\paragraph{Artifact.} Code, raw logs, and the analysis script are at
+\paragraph{Artifact.} Code, raw logs, and the table-generating script are at
 \url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}
 (Apache-2.0). Every number above traces to a committed log file.
 
