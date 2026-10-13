@@ -7,8 +7,12 @@ raw record to JSON. Nothing here computes or invents results; analysis
 reads these raw files later.
 
 Recovery strategies (client side, unmodified engine):
-  naive_retry  resubmit the original prompt, append whatever comes back
-  recompute    resubmit prompt + already-delivered text, ask for the rest
+  naive_retry    resubmit the original prompt, append whatever comes back
+  recompute      resubmit prompt + already-delivered text, ask for the rest
+  recompute_ids  like recompute, but resubmit token ids (prompt ids from
+                 /tokenize + the delivered tokens' ids), so the engine does
+                 not re-tokenize the delivered text. vLLM only; every request
+                 in the run asks for token ids via logprobs.
 
 Example (AWS GPU instance, vLLM):
   python -m harness.run_trial --run-type measured \
@@ -27,7 +31,7 @@ import sys
 import time
 from datetime import datetime, timezone
 
-from harness.client import join, stream_completion
+from harness.client import join, stream_completion, tokenize
 from harness.server import ServerProcess
 
 DEFAULT_PROMPT = (
@@ -35,6 +39,7 @@ DEFAULT_PROMPT = (
     "recover after a crash."
 )
 OUT_DIRS = {"smoke": "smoke_tests", "measured": "experiments"}
+PROMPTS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "prompts.json")
 
 
 def sh(cmd):
@@ -99,8 +104,13 @@ def main():
     p.add_argument("--base-url", default="http://127.0.0.1:8000")
     p.add_argument("--model", required=True, help="model name the server expects")
     p.add_argument("--engine", default="unspecified", help="label: vllm, sglang, llamacpp")
-    p.add_argument("--strategy", choices=["naive_retry", "recompute"], required=True)
+    p.add_argument("--strategy", choices=["naive_retry", "recompute", "recompute_ids"],
+                   required=True)
     p.add_argument("--prompt", default=DEFAULT_PROMPT)
+    p.add_argument("--prompt-id", default=None,
+                   help="use prompt <id> from harness/prompts.json instead of --prompt")
+    p.add_argument("--extra-body", default=None,
+                   help='JSON object merged into every request, e.g. \'{"sampling_seed": 1234}\'')
     p.add_argument("--max-tokens", type=int, default=256)
     p.add_argument("--temperature", type=float, default=0.0)
     p.add_argument("--seed", type=int, default=None)
@@ -112,9 +122,19 @@ def main():
 
     if a.kill_at < 1 or a.kill_at >= a.max_tokens:
         p.error("--kill-at must be between 1 and max-tokens - 1")
+    if a.prompt_id is not None:
+        with open(PROMPTS_FILE, encoding="utf-8") as f:
+            prompts = {x["id"]: x["text"] for x in json.load(f)}
+        if a.prompt_id not in prompts:
+            p.error(f"unknown --prompt-id {a.prompt_id}; known: {', '.join(prompts)}")
+        a.prompt = prompts[a.prompt_id]
+    extra = json.loads(a.extra_body) if a.extra_body else {}
+    if a.strategy == "recompute_ids":
+        extra = {**extra, "logprobs": 1, "return_tokens_as_token_ids": True}
 
+    pid = f"_{a.prompt_id}" if a.prompt_id else ""
     run_id = (f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
-              f"_{a.engine}_{a.strategy}_T{a.temperature}_k{a.kill_at}")
+              f"_{a.engine}{pid}_{a.strategy}_T{a.temperature}_k{a.kill_at}")
     out = os.path.join(OUT_DIRS[a.run_type], run_id)
     os.makedirs(out, exist_ok=True)
     env = environment()
@@ -122,7 +142,8 @@ def main():
         print("WARNING: uncommitted changes; the logged commit will not match the code that ran.")
 
     server = ServerProcess(a.server_cmd, a.base_url, os.path.join(out, "server.log"))
-    gen = dict(base_url=a.base_url, model=a.model, temperature=a.temperature, seed=a.seed)
+    gen = dict(base_url=a.base_url, model=a.model, temperature=a.temperature, seed=a.seed,
+               extra_body=extra or None)
 
     run_meta = {"run_id": run_id, "run_type": a.run_type, "engine": a.engine,
                 "config": vars(a), "environment": env}
@@ -139,6 +160,8 @@ def main():
         run_meta["reference"] = refs[0]
         run_meta["reference_repeat"] = refs[1]
         run_meta["reference_repeat_identical"] = refs[0]["text"] == refs[1]["text"]
+        if a.strategy == "recompute_ids":
+            run_meta["prompt_token_ids"] = tokenize(a.base_url, a.model, a.prompt)
         with open(os.path.join(out, "run.json"), "w", encoding="utf-8") as f:
             json.dump(run_meta, f, indent=2)
 
@@ -171,11 +194,24 @@ def main():
 
             if a.strategy == "naive_retry":
                 rec_prompt, rec_max = a.prompt, a.max_tokens
-            else:
+                rec["recovery_request"] = {"prompt_suffix_chars": 0, "max_tokens": rec_max}
+            elif a.strategy == "recompute":
                 rec_prompt = a.prompt + delivered
                 rec_max = max(1, a.max_tokens - len(pre))
-            rec["recovery_request"] = {"prompt_suffix_chars": len(rec_prompt) - len(a.prompt),
-                                       "max_tokens": rec_max}
+                rec["recovery_request"] = {"prompt_suffix_chars": len(delivered),
+                                           "max_tokens": rec_max}
+            else:  # recompute_ids: resubmit token ids, no re-tokenization of D
+                delivered_ids = [t for c in pre for t in c.get("token_ids", [])]
+                rec_prompt = run_meta["prompt_token_ids"] + delivered_ids
+                rec_max = max(1, a.max_tokens - len(delivered_ids))
+                # what text re-tokenization would have produced, for comparison
+                retok = tokenize(a.base_url, a.model, a.prompt + delivered)
+                rec["recovery_request"] = {
+                    "prompt_suffix_chars": len(delivered), "max_tokens": rec_max,
+                    "delivered_token_ids": delivered_ids,
+                    "retokenized_ids": retok,
+                    "retokenization_matches": retok == rec_prompt,
+                }
             post, err2 = stream_completion(prompt=rec_prompt, max_tokens=rec_max, **gen)
             rec["recovery_chunks"] = post
             rec["recovery_stream_end"] = err2
