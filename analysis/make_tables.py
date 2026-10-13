@@ -39,13 +39,14 @@ import statistics
 import sys
 from collections import defaultdict
 
-CONFIG_NAME = {"vllm": "vLLM", "vllm-noapc": "vLLM, no prefix cache",
-               "sglang": "SGLang", "sglang-noradix": "SGLang, no radix cache",
-               "llamacpp": "llama.cpp"}
 CONFIG_SHORT = {"vllm": "vLLM", "vllm-noapc": "vLLM, no APC",
-                "sglang": "SGLang", "sglang-noradix": "SGLang, no radix"}
-STRATEGY_NAME = {"naive_retry": "naive", "recompute": "recomp."}
-CONFIG_ORDER = ["vllm", "vllm-noapc", "sglang", "sglang-noradix", "llamacpp"]
+                "vllm-bi": "vLLM, batch-inv.",
+                "sglang": "SGLang", "sglang-noradix": "SGLang, no radix",
+                "sglang-seed": "SGLang, fixed seed", "sglang-det": "SGLang, determ."}
+STRATEGY_NAME = {"naive_retry": "naive", "recompute": "recomp.",
+                 "recompute_ids": "recomp. (ids)"}
+CONFIG_ORDER = ["vllm", "vllm-noapc", "vllm-bi",
+                "sglang", "sglang-noradix", "sglang-seed", "sglang-det", "llamacpp"]
 
 
 def tex(s):
@@ -82,6 +83,7 @@ def order_key(label):
 
 def trial_metrics(t, G, G2):
     D, R = join(t["pre_kill_chunks"]), join(t["recovery_chunks"])
+    rq = t.get("recovery_request") or {}
     naive = t["strategy"] == "naive_retry"
     F = R if naive else D + R
     return {
@@ -97,6 +99,7 @@ def trial_metrics(t, G, G2):
         "ttft_after_restart_s": (t["recovery_latency_s"] - t["restart_s"]
                                  if t["recovery_latency_s"] is not None else None),
         "in_flight": t.get("in_flight_chunks_after_kill"),
+        "retok_matches": rq.get("retokenization_matches"),
     }
 
 
@@ -136,8 +139,18 @@ def main():
     lat = defaultdict(list)            # (label, strategy) -> trial metrics
     env_by_label, commits = {}, set()
     n_trials = 0
+    prompt_cells = defaultdict(list)   # (label, prompt_id, strategy) -> trial metrics
+    prompt_repro = defaultdict(list)   # (label, prompt_id) -> [G == G']
     for run, trials in runs:
         cfg, label = run["config"], run["engine"]
+        if cfg.get("prompt_id"):       # extra prompts get their own table
+            pid = cfg["prompt_id"]
+            prompt_cells[(label, pid, cfg["strategy"])].extend(trials)
+            prompt_repro[(label, pid)].append(run["reference"]["text"] == run["reference_repeat"]["text"])
+            commits.add(str(run["environment"].get("git_commit"))[:7])
+            n_trials += len(trials)
+            env_by_label.setdefault(label, (run["environment"], cfg["server_cmd"]))
+            continue
         T = float(cfg["temperature"])
         G, G2 = run["reference"]["text"], run["reference_repeat"]["text"]
         repro[(label, T)].append((G == G2, lcp(G, G2), len(G), len(G2), G, G2))
@@ -169,7 +182,7 @@ def main():
         dchars = sorted({t["delivered_chars"] for t in ts})
         d_s = "/".join(str(x) for x in dchars) if len(dchars) <= 2 else f"{dchars[0]}--{dchars[-1]}"
         if strat == "naive_retry":
-            con = frac(sum(t["contradicts"] for t in ts), n)
+            con = frac(sum(bool(t["contradicts"]) for t in ts), n)
         else:
             con = "n/a"
         rows.append(f"{CONFIG_SHORT.get(label, tex(label))} & {STRATEGY_NAME.get(strat, tex(strat))} & "
@@ -189,6 +202,29 @@ def main():
                     f"{len(ts)} & {med_range([t['restart_s'] for t in ts])} & "
                     f"{med_range([t['ttft_after_restart_s'] for t in ts], '{:.2f}')} & "
                     f"{med_range([t['recovery_latency_s'] for t in ts])} \\\\\n")
+
+    # extra prompts: one row per (configuration, prompt)
+    with open(os.path.join(a.out, "prompts.tex"), "w", encoding="utf-8") as f:
+        header(f)
+        for (label, pid) in sorted(prompt_repro, key=lambda k: (order_key(k[0]), k[1])):
+            rs = prompt_repro[(label, pid)]
+            nv = prompt_cells.get((label, pid, "naive_retry"), [])
+            rc = prompt_cells.get((label, pid, "recompute"), [])
+            f.write(f"{CONFIG_SHORT.get(label, tex(label))} & {tex(pid)} & {frac(sum(rs), len(rs))} & "
+                    f"{frac(sum(bool(t['contradicts']) for t in nv), len(nv))} & "
+                    f"{frac(sum(t['F_eq_G'] or t['F_eq_G2'] for t in rc), len(rc))} \\\\\n")
+
+    # token-id recompute: does re-tokenizing the delivered text change the tokens?
+    with open(os.path.join(a.out, "retok.tex"), "w", encoding="utf-8") as f:
+        header(f)
+        for key in sorted(cells, key=lambda k: (order_key(k[0]), k[1], k[2], k[3])):
+            if key[1] != "recompute_ids":
+                continue
+            ts = cells[key]
+            f.write(f"{CONFIG_SHORT.get(key[0], tex(key[0]))} & {key[2]:g} & {len(ts)} & "
+                    f"{frac(sum(bool(t['retok_matches']) for t in ts), len(ts))} & "
+                    f"{frac(sum(t['F_eq_G'] for t in ts), len(ts))} & "
+                    f"{frac(sum(t['F_eq_G2'] for t in ts), len(ts))} \\\\\n")
 
     # environment
     with open(os.path.join(a.out, "env.tex"), "w", encoding="utf-8") as f:
