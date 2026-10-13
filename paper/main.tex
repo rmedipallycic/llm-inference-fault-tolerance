@@ -19,7 +19,7 @@
 \renewcommand{\headrulewidth}{0pt}
 
 \title{What Does a Streaming Client See When an LLM Server Crashes?\\
-\large A Fault-Injection Study of Client-Visible Token Anomalies in vLLM}
+\large A Fault-Injection Study of Client-Visible Token Anomalies in vLLM and SGLang}
 \author{Rajshekar Medipally\\
 \small Independent researcher, Richmond, VA\\
 \small \url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}}
@@ -46,26 +46,23 @@ client is left holding a partial response, and the recovery it performs
 determines what it ultimately shows a user or hands to a downstream agent.
 We built an open-source fault-injection harness that SIGKILLs an unmodified
 OpenAI-compatible server at a chosen token position, restarts it, applies a
-client recovery strategy, and records every streamed chunk, and applied it to
-vLLM serving Llama~3.1~8B~Instruct on one A10G GPU (60 trials, plus a
-20-trial ablation). The central
-finding is that, with default settings, the failure-free output was not
-unique: at temperature~0,
-with requests issued one at a time, the first request after a server start
-and the second request with the identical prompt diverged at character 506 of
-about 1{,}280, and with a fixed seed at temperature~0.8 they diverged at
-character 9. Both outputs were exactly repeatable. Because a crashed server
-restarts cold, naive retry returned the first-request text in 30 of 30 trials
-and so contradicted text the client had already displayed in 25 of 30.
-Recompute, which resubmits the delivered text, never contradicted it, but its
-final text matched neither failure-free output in 24 of 30 trials. Recovery
-latency was server restart (median 117--178\,s per strategy); the time to the
-first recovered token after restart was 0.23--0.32\,s.
-Disabling vLLM's automatic prefix cache made the failure-free output
-reproducible (4 of 4 runs) and removed every contradiction (0 of 10
-naive-retry trials), but recompute at temperature~0 still changed the
-answer, 43 characters after the kill, in 5 of 5 trials.
-All raw logs and the table-generating script are public.
+client recovery strategy, and records every streamed chunk, and applied it
+with identical code to vLLM and SGLang serving Llama~3.1~8B~Instruct on one
+A10G GPU (60 trials per engine, plus a 20-trial cache ablation per engine).
+In both engines' default configurations, the failure-free output for a fixed
+prompt was not unique at temperature~0, for different reasons. In vLLM it
+depended deterministically on what the server had served before, and
+disabling automatic prefix caching removed the dependence. In SGLang the
+second request on a running server was always the same, but the first
+request after each start was not, and disabling the radix cache did not
+change that. Because a crashed server restarts cold, naive retry, which
+resubmits the prompt, contradicted text the client had already displayed in
+25 of 30 vLLM trials and 24 of 30 SGLang trials. Recompute, which resubmits
+the delivered text, never contradicted it, but its final text matched
+neither failure-free output of its run in 24 of 30 and 26 of 30 trials.
+Recovery latency was dominated by server restart (107--195\,s); the first
+recovered token followed 0.23--0.51\,s after the server was ready. All raw
+logs and the table-generating script are public.
 \end{abstract}
 
 \section{Introduction}
@@ -90,9 +87,11 @@ what clients actually receive.
 A common intuition is that at temperature 0 a retry is harmless: greedy
 decoding is deterministic, so resubmitting the prompt reproduces the same
 text and the client only has to drop the duplicate. Our measurements on vLLM
-refute that intuition. The engine's output for a fixed prompt depended on
-what the server had served earlier, so the restarted server produced a
-different, equally repeatable, text.
+refute that intuition, and so do our measurements on SGLang, for a
+different reason. In vLLM the output for a fixed prompt depended on what the
+server had served earlier; in SGLang the first request after each server
+start varied from start to start. Either way, the restarted server that
+answers a retry does not reproduce the text the client was already shown.
 
 This paper makes three contributions:
 \begin{enumerate}
@@ -105,10 +104,12 @@ This paper makes three contributions:
     timestamps, the code commit, package versions, and GPU inventory
     (Section~\ref{sec:harness}).
   \item \textbf{A measurement study} of naive retry and recompute on vLLM
-    at temperature 0 and 0.8 and three kill positions
-    (Sections~\ref{sec:method}--\ref{sec:results}), which finds that
-    failure-free output depends on server history and quantifies what that
-    does to each recovery strategy.
+    and SGLang at temperature 0 and 0.8 and three kill positions, with a
+    cache ablation for each engine
+    (Sections~\ref{sec:method}--\ref{sec:results}), which finds that in
+    both engines' default configurations failure-free output depends on
+    server state, identifies the mechanism in vLLM, and quantifies what
+    that does to each recovery strategy.
 \end{enumerate}
 
 The study deliberately uses unmodified engines and client-side recovery only.
@@ -220,8 +221,13 @@ runs on that server disagreed at temperature 0.8.
 \section{Methodology}
 \label{sec:method}
 
-\paragraph{Setup.} One AWS \texttt{g5.xlarge} instance (one NVIDIA A10G,
-24\,GB; 4 vCPUs), Llama~3.1~8B~Instruct in bf16, vLLM in its own Python 3.12
+\paragraph{Setup.} Two identical AWS \texttt{g5.xlarge} instances (one
+NVIDIA A10G, 24\,GB; 4 vCPUs each; same machine image and driver), one per
+engine, Llama~3.1~8B~Instruct in bf16. The harness code was identical for
+both engines (commits \texttt{90da903} and \texttt{ddd8890} differ only
+outside \texttt{harness/}).
+
+\emph{vLLM} ran in its own Python 3.12
 environment with default engine flags except a 4{,}096-token context cap
 (Llama~3.1's 128k default does not fit a 24\,GB KV cache; every request here
 is far shorter). Defaults include automatic prefix caching, which the server
@@ -229,34 +235,50 @@ logs confirm was on (\texttt{enable\_prefix\_caching=True}). The machine
 image ships no CUDA toolkit, so FlashInfer's sampler, which compiles at
 startup, was replaced by PyTorch sampling
 (\texttt{VLLM\_USE\_FLASHINFER\_SAMPLER=0}); this is recorded in every run log.
-Versions are in Table~\ref{tab:env}.
 
-\begin{table}[h]
+\emph{SGLang} could not be started directly on that image, because several
+of its components compile GPU code at startup (the attempts are documented
+in the repository). It ran instead from the official container image
+\texttt{lmsysorg/sglang:v0.5.21} (digest \texttt{sha256:b1259f3e\dots}),
+which includes a CUDA 13.0 toolkit, with the harness running inside the same
+container so that the process-group kill reaches the server. Flags were
+defaults except the same 4{,}096-token context cap and
+\texttt{--mem-fraction-static 0.85} (the default left no room for the KV
+cache on 24\,GB). The server logs record what the defaults selected:
+FlashInfer attention and sampling, CUDA graphs, radix cache on, and
+deterministic inference off. The two engines therefore differ in kernels
+and sampler as well as in design; we compare each engine's default
+behaviour, not individual kernels. Versions are in Table~\ref{tab:env}.
+
+\begin{table*}[t]
 \centering\small
 \caption{Software and hardware, from \texttt{run.json}.}
 \label{tab:env}
-\begin{tabular}{@{}lllp{0.40\linewidth}@{}}
+\begin{tabular}{@{}llll@{}}
 \toprule
-Config & vLLM & torch & GPU \\
+Config & Engine & torch & GPU \\
 \midrule
 \EnvRows
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 \noindent{\small\input{tables/provenance.tex}\par}
 
 \paragraph{Grid.} One fixed prompt (an explanation of write-ahead logging),
 \texttt{max\_tokens}=256, per-request seed 1234. Strategy $\in$ \{naive
 retry, recompute\} $\times$ temperature $\in \{0, 0.8\}$ $\times$ kill point
 $\in$ \{25, 128, 230\} chunks (about 10\%, 50\%, and 90\% of the budget),
-5 trials each: 12 runs and 60 trials, produced by
-\texttt{TRIALS=5 scripts/run\_matrix.sh vllm}. Requests are issued one at a
+5 trials each: 12 runs and 60 trials per engine, produced by
+\texttt{TRIALS=5 scripts/run\_matrix.sh vllm} and by
+\texttt{scripts/sgl\_grid.sh} (the same grid with the SGLang flags above). Requests are issued one at a
 time, so there is never more than one request in a batch.
 
-\paragraph{Ablation.} After the grid showed $G\neq G'$, we repeated the
+\paragraph{Ablation.} After the vLLM grid showed $G\neq G'$, we repeated the
 kill-at-128 configurations for both strategies and temperatures with
 automatic prefix caching disabled (\texttt{--no-enable-prefix-caching}), all
-else equal: 4 runs, 20 trials, labeled ``no APC''.
+else equal: 4 runs, 20 trials, labeled ``no APC''. For SGLang we ran the
+same four configurations with its radix cache, the corresponding feature,
+disabled (\texttt{--disable-radix-cache}), labeled ``no radix''.
 
 \paragraph{Hypotheses.} Stated before the runs:
 \begin{description}
@@ -272,7 +294,7 @@ else equal: 4 runs, 20 trials, labeled ``no APC''.
 \section{Results}
 \label{sec:results}
 
-\paragraph{Failure-free output was not unique.} In all 12 runs of the
+\paragraph{vLLM: failure-free output was not unique.} In all 12 runs of the
 default configuration, $G\neq G'$
 (Table~\ref{tab:repro}). At temperature 0 the two references agreed for the
 first 506 characters and then took different wording (``The log is scanned
@@ -288,12 +310,13 @@ independent samples.
 \begin{table}[h]
 \centering\small
 \caption{Failure-free reproducibility: first request after server start
-($G$) versus second ($G'$). LCP is their common prefix in characters.
-``No APC'': automatic prefix caching disabled.}
+($G$) versus second ($G'$). LCP: their common prefix in characters (range
+over runs). Distinct $G$, $G'$: how many different texts occurred across the
+runs of a row. ``No APC'', ``no radix'': the engine's prefix cache disabled.}
 \label{tab:repro}
-\begin{tabular}{@{}lcccc@{}}
+\begin{tabular}{@{}lccccc@{}}
 \toprule
-Config & $T$ & $G{=}G'$ (runs) & LCP & $|G|/|G'|$ \\
+Config & $T$ & $G{=}G'$ & LCP & \#$G$ & \#$G'$ \\
 \midrule
 \ReproRows
 \bottomrule
@@ -304,7 +327,7 @@ Config & $T$ & $G{=}G'$ (runs) & LCP & $|G|/|G'|$ \\
 \centering\small
 \caption{Client-visible outcome per configuration (5 trials each), generated
 from the raw logs by \texttt{analysis/make\_tables.py}. $|D|$: characters
-delivered before the kill (two values when trial~0 differed from trials 1--4).
+delivered before the kill (two values, or a range, when trials differed).
 Contradicts $D$: the naive replay disagreed with text already shown.
 $F{=}G$, $F{=}G'$: the final text equals the first or second failure-free
 reference.}
@@ -318,7 +341,7 @@ Config & Strategy & $T$ & Kill (chunks) & $|D|$ (chars) & Contradicts $D$ & $F{=
 \end{tabular}
 \end{table*}
 
-\paragraph{Naive retry contradicted the client.} The restarted server is
+\paragraph{vLLM: naive retry contradicted the client.} The restarted server is
 always in the state that produced $G$, and the replay equaled $G$ in all
 30 naive-retry trials (Table~\ref{tab:anomalies}). The text the client had
 already shown, $D$, came from a warm server and followed $G'$. Wherever the
@@ -331,7 +354,7 @@ client that drops the first $|D|$ characters of a replay, the usual
 deduplication, would in the other 25 trials have produced a spliced text
 that no failure-free run generated.
 
-\paragraph{Recompute kept the shown text but changed the answer.} Recompute
+\paragraph{vLLM: recompute kept the shown text but changed the answer.} Recompute
 never contradicted $D$, but its final text matched $G$ in 4 of 30 trials and
 $G'$ in 2 of 30. At temperature 0 with the kill at 25 chunks, all five final
 texts departed from both references at character 267, after the kill (113)
@@ -344,7 +367,7 @@ the 230-chunk kill; the four $F{=}G$ cases are trials 1--4 at temperature
 0.8 with the kill at 25 chunks, where a 25-token recovery prefix left the
 continuation on the cold-server path.
 
-\paragraph{Hypotheses.} \textbf{H1 is refuted}: at temperature 0, naive
+\paragraph{vLLM hypotheses.} \textbf{H1 is refuted}: at temperature 0, naive
 retry gave full duplication only at the earliest kill point (5 of 15 trials)
 and recompute never reproduced $G$ (0 of 15). \textbf{H2's premise is
 refuted}: a fixed seed did not reproduce $G$ across requests, so its
@@ -376,7 +399,7 @@ Config & Strategy & Trials & Restart & TTFT after restart & Recovery \\
 \end{tabular}
 \end{table*}
 
-\paragraph{Prefix-cache ablation.} With automatic prefix caching disabled
+\paragraph{vLLM prefix-cache ablation.} With automatic prefix caching disabled
 (rows ``no APC''), $G=G'$ in all 4 runs at both temperatures
 (Table~\ref{tab:repro}), and naive retry no longer contradicted the client:
 in 10 of 10 trials the replay equaled both references and began with $D$, so
@@ -397,26 +420,77 @@ therefore not explained by the cache. It is consistent with the delivered
 text being processed as prompt (prefill) rather than generated (decode), or
 with re-tokenization of $D$; these data do not separate the two.
 
+\paragraph{SGLang: the first request after a start was not reproducible.}
+SGLang showed a different pattern (Table~\ref{tab:repro}). At temperature 0
+the second request on a running server, $G'$, was the same text in all 6
+runs, but the first request after a start was not: the 21
+first-after-start outputs we recorded (6 references $G$ and 15 naive-retry
+replays) contained 10 distinct texts, none equal to $G'$, departing from it
+at characters 267 to 676. Disabling the radix cache did not change this:
+$G'$ was again the same in both runs, and 7 first-after-start outputs gave 4
+distinct texts. In SGLang the output therefore depended on whether the server
+had just started, not on cache contents, and the cold output was not
+repeatable from one start to the next. We did not identify the source. One
+untested candidate is that, with no seed given, SGLang chooses a new server
+random seed at every start; the logs record a different value each time.
+
+At temperature 0.8 the request seed had no observable effect: $G$ and $G'$
+diverged within the first two characters in all 8 runs, and the 20
+naive-retry pre-kill streams were all different. SGLang provides seeded,
+reproducible sampling through an opt-in deterministic mode with a seed in
+its own sampling parameters \cite{sglang2025deterministic}; our harness sends
+the OpenAI-style \texttt{seed} and did not enable that mode, so SGLang's 0.8
+results describe unseeded sampling.
+
+\paragraph{SGLang: the same consequences.} Naive retry contradicted text
+already shown in 24 of 30 default-configuration trials: at temperature 0 in
+0, 4 and 5 of 5 trials as the kill moved from 25 to 128 to 230 chunks
+(the warm stream $D$ followed $G'$, the cold replay did not), and at 0.8 in
+15 of 15. Without the radix cache it did so in 10 of 10. Recompute never
+contradicted $D$, and its final text matched neither failure-free output of
+its run in 26 of 30 default-configuration trials. Recovery was again
+dominated by restart (Table~\ref{tab:latency}): 125--145\,s with the radix
+cache on, and the first recovered token 0.33--0.51\,s after the server was
+ready. Restarts in the no-radix runs, which ran last, took 172--195\,s; as
+with vLLM's drift, we did not identify the cause and do not attribute it to
+the cache setting.
+For SGLang, as for vLLM, \textbf{H1 is refuted} (at temperature 0 naive
+retry gave full duplication only at the earliest kill point, and recompute
+reproduced $G$ in 3 of 15 trials), \textbf{H2's premise is refuted} (the
+seed had no observable effect), and \textbf{H3 is supported}.
+
 \section{Discussion}
+
+\paragraph{Two engines, two mechanisms, one consequence.} vLLM's variation
+was deterministic and tied to its prefix cache; SGLang's was tied to server
+start and was not repeatable across starts. A client cannot tell these
+apart, and for a client they have the same effect: the server that answers
+a retry is freshly started, and a freshly started server did not reproduce
+the text the client had been shown, in 25 of 30 vLLM and 24 of 30 SGLang
+trials.
 
 \paragraph{Retry is not replay.} The usual argument for retrying an LLM
 request is that at temperature 0 it is idempotent up to duplication. On the
 default vLLM configuration measured here, it was not: the server that
 answers a retry is a fresh process, and a fresh process gave a different
 greedy answer from the warm one that had been streaming. For a chat client
-this means a visible rewrite of text already shown in 25 of 30 trials; for an
+this means a visible rewrite of text already shown in most trials on both
+engines; for an
 agent that acted on a partial tool call or plan, it means the action was
 based on text that the final answer contradicts.
 
-\paragraph{What a client should do.} Within these measurements, recompute is
-the only client-side strategy that never contradicted what was shown, at the
+\paragraph{What a client should do.} Within these measurements, on both
+engines, recompute is the only client-side strategy that never contradicted
+what was shown, at the
 price of a final answer that no failure-free run produced, and a few tens of
 milliseconds of extra prefill. Naive retry with deduplication is unsafe
 unless the client verifies that the replay begins with $D$, and should
-replace rather than splice when it does not. An operator can remove the
-contradictions by disabling automatic prefix caching, as the ablation did;
-we did not measure the throughput cost, which on workloads with shared
-prefixes is the reason the cache exists.
+replace rather than splice when it does not. On vLLM, an operator can
+remove the contradictions by disabling automatic prefix caching, as the
+ablation did; we did not measure the throughput cost, which on workloads
+with shared prefixes is the reason the cache exists. On SGLang, disabling
+the radix cache did not help; its opt-in deterministic mode
+\cite{sglang2025deterministic} is the natural next configuration to test.
 
 \paragraph{Why client-side recovery is not enough.} Even in the best case for
 recompute, the client cannot restore the server's state: neither the
@@ -457,29 +531,38 @@ later stages of this project.
 \section{Threats to validity}
 
 \begin{itemize}
-  \item \textbf{Trials are not independent.} Output was deterministic given
-    server history, so 5 trials per configuration are repeated observations
-    of one or two histories. Counts such as ``25 of 30'' describe how many
-    configurations and histories were affected, not a sampled rate.
+  \item \textbf{Trials are not independent samples.} In vLLM, output was
+    deterministic given server history, so 5 trials per configuration are
+    repeated observations of one or two histories, and counts such as ``25
+    of 30'' describe how many configurations and histories were affected,
+    not a sampled rate. In SGLang the cold output varied from start to
+    start, so its trials do sample that variation, but 5 per configuration
+    is too few to estimate rates.
   \item \textbf{One prompt, one model, one GPU.} The divergence positions
     (characters 506 and 9) are specific to this prompt and to Llama~3.1~8B
     on an A10G. Other prompts may diverge earlier, later, or not at all
     within 256 tokens; tensor-parallel serving may differ.
-  \item \textbf{One engine.} SGLang was planned as a second engine. On the
-    machine image used (Ubuntu 26.04 Deep Learning AMI, no CUDA toolkit) it
-    could not be started: several of its components compile GPU kernels at
-    startup. The harness supports it unchanged, and the failed attempts are
-    documented in the repository.
-  \item \textbf{Sampler substitution.} vLLM ran with PyTorch sampling instead
-    of FlashInfer's sampler, because of the missing CUDA toolkit. The
+  \item \textbf{Default configurations, different kernels.} Each engine
+    ran with its own defaults on this GPU (vLLM with PyTorch sampling
+    because FlashInfer's sampler could not compile on the host image;
+    SGLang with FlashInfer attention and sampling inside its container).
+    The comparison is between default behaviours, not kernels.
+  \item \textbf{SGLang seed.} The harness's OpenAI-style seed had no
+    observable effect on SGLang, so its temperature-0.8 results are for
+    unseeded sampling and are not comparable to vLLM's seeded runs.
+    Its temperature-0 results do not involve sampling.
+  \item \textbf{vLLM sampler substitution.} vLLM ran with PyTorch sampling
+    instead of FlashInfer's sampler, because of the missing CUDA toolkit. The
     temperature-0 results do not involve random sampling, but the 0.8
     results may differ under FlashInfer.
-  \item \textbf{Mechanism.} The ablation shows that, on this setup, the
-    dependence on server history requires automatic prefix caching. It does
+  \item \textbf{Mechanism.} For vLLM, the ablation shows that, on this
+    setup, the dependence on server history requires automatic prefix
+    caching. For SGLang, the radix cache was not required, and the source of
+    the start-to-start variation was not identified. It does
     not show which computation inside the cached path differs; kernels whose
     results depend on batch or prefill shape \cite{he2025nondeterminism} are
     a plausible candidate that we did not test. The ablation covered only
-    the 128-chunk kill point (20 trials).
+    the 128-chunk kill point (20 trials per engine).
   \item \textbf{Re-tokenization in recompute.} Recompute sends $D$ as text,
     which the engine re-tokenizes; a boundary that tokenizes differently can
     change the continuation. The recompute departures observed here were
@@ -492,19 +575,19 @@ later stages of this project.
 
 \section{Conclusion and future work}
 
-On vLLM with default settings, the failure-free output for a fixed prompt
-depended on what the server had served before, at temperature 0 as well as
-with a fixed seed. As a result, naive retry after a crash contradicted text
-the client had already shown in 25 of 30 trials, and recompute, while never
-contradicting it, produced a final text that no failure-free run produced in
-24 of 30. Disabling automatic prefix caching made failure-free output
-reproducible and turned naive retry's contradictions into removable
-duplication, which shows that the cache is necessary for the history
-dependence on this setup. It did not make recompute exact at temperature 0.
+In the default configurations of both vLLM and SGLang, the failure-free
+output for a fixed prompt was not unique at temperature 0: in vLLM it
+depended on what the server had served before, through automatic prefix
+caching; in SGLang the first request after each start varied, with or
+without its radix cache. As a result, naive retry after a crash contradicted
+text the client had already shown in 25 of 30 vLLM and 24 of 30 SGLang
+trials, and recompute, while never contradicting it, produced a final text
+matching neither failure-free output of its run in most trials on both
+engines. A retry after a crash is not a replay, and exactly-once delivery
+needs state the client does not have.
 
-Next stages: (0) repeat the grid on SGLang with a CUDA toolkit available,
-with more prompts, and with batch-invariant kernels
-\cite{he2025nondeterminism}; (1) a gateway that assigns sequence numbers,
+Next stages: (0) more prompts and models, and both engines' deterministic
+or batch-invariant modes \cite{he2025nondeterminism,sglang2025deterministic}; (1) a gateway that assigns sequence numbers,
 logs tokens and sampler state before release, and continues from the log on
 recovery, evaluated on the same harness for zero anomalies and per-token
 overhead; (2) measured recompute-versus-checkpoint cost curves for the KV

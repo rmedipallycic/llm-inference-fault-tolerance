@@ -2,7 +2,7 @@
 
 **Recovery semantics, exactly-once token delivery, and adaptive KV-cache checkpointing for LLM serving engines (vLLM, SGLang).**
 
-> **Status (October 12, 2026):** Phase 1 measured on vLLM 0.31.0 (AWS g5.xlarge, one A10G, Llama 3.1 8B Instruct): 60-trial grid plus a 20-trial prefix-cache ablation, raw logs in [`experiments/`](experiments/). Results are in the [paper draft](paper/main.pdf) and summarized below. SGLang could not be started on the machine image used and is deferred; see [the SGLang note](docs/sglang-attempt.md).
+> **Status (October 13, 2026):** Phase 1 measured on vLLM 0.31.0 and SGLang 0.5.21 (two identical AWS g5.xlarge instances, one A10G each, Llama 3.1 8B Instruct): per engine, a 60-trial grid plus a 20-trial cache ablation, 160 trials in total, with raw logs in [`experiments/`](experiments/). Results are in the [paper draft](paper/main.pdf) and summarized below.
 
 ---
 
@@ -106,18 +106,21 @@ Each question has a stated hypothesis in [`docs/proposal.md`](docs/proposal.md) 
 
 ## Key Findings (preliminary)
 
-Measured on vLLM 0.31.0, one A10G, Llama 3.1 8B Instruct, one prompt, 256-token budget, requests issued one at a time. Every number comes from [`analysis/make_tables.py`](analysis/make_tables.py) run on the logs in [`experiments/`](experiments/) (harness commit `90da903`). Scope limits are in the paper's threats-to-validity section.
+Measured on vLLM 0.31.0 and SGLang 0.5.21 with identical harness code, one A10G each, Llama 3.1 8B Instruct, one prompt, a 256-token budget, and requests issued one at a time. Every number comes from [`analysis/make_tables.py`](analysis/make_tables.py) run on the logs in [`experiments/`](experiments/). Scope limits are in the paper's threats-to-validity section.
 
-1. **Failure-free output was not unique under default settings.** The first request after a server start and the second identical request differed in all 12 runs: at character 506 of about 1,280 at temperature 0, and at character 9 at temperature 0.8 with a fixed seed. Both texts were exactly repeatable, so output depended on what the server had served before, not on the prompt alone.
-2. **Naive retry contradicted the client.** A restarted server is cold, so the retry always returned the first-request text (30 of 30 trials) and disagreed with text the client had already shown in 25 of 30. Only the earliest kill at temperature 0 gave pure, removable duplication.
-3. **Recompute never contradicted the client but changed the answer.** Its final text matched neither failure-free output in 24 of 30 trials.
-4. **Automatic prefix caching was necessary for the history dependence.** With `--no-enable-prefix-caching`, the two failure-free outputs matched in 4 of 4 runs and naive retry never contradicted the client (0 of 10). Recompute at temperature 0 still departed from the reference 43 characters after the kill in 5 of 5 trials.
-5. **Recovery latency was server restart.** Restart took 107 to 195 s; the first recovered token arrived 0.23 to 0.32 s after the server was ready.
+1. **In both engines' default configurations, failure-free output was not unique at temperature 0, for different reasons.**
+   - **vLLM:** the first request after a start and the second identical request differed in all 12 runs, and both texts were exactly repeatable. Output depended on what the server had served before.
+   - **SGLang:** the second request was the same text in every run, but the first request after a start varied from start to start (10 distinct texts in 21 cold outputs).
+2. **Naive retry contradicted the client.** A restarted server is cold, so the retry disagreed with text the client had already shown in **25 of 30 vLLM** and **24 of 30 SGLang** trials.
+3. **Recompute never contradicted the client but changed the answer.** Its final text matched neither failure-free output of its run in 24 of 30 (vLLM) and 26 of 30 (SGLang) trials.
+4. **The cache ablations split the engines.** Disabling vLLM's automatic prefix caching made output reproducible (4 of 4 runs) and removed every contradiction (0 of 10). Disabling SGLang's radix cache changed neither (contradictions in 10 of 10).
+5. **SGLang ignored the OpenAI-style seed.** At temperature 0.8 every SGLang request differed, so its 0.8 results are for unseeded sampling. SGLang offers an opt-in deterministic mode, which was not tested here.
+6. **Recovery latency was server restart.** Restart took 107 to 195 s; the first recovered token arrived 0.23 to 0.51 s after the server was ready.
 
 | Phase | Gate to pass before the next phase | Status |
 | --- | --- | --- |
-| 1. Harness and baselines | Fault injection runs end to end on unmodified vLLM and SGLang, logs committed | Done for vLLM (16 runs, 80 trials committed); SGLang deferred ([note](docs/sglang-attempt.md)) |
-| 2. RQ1 characterization | Measured anomaly counts for naive retry and recompute | Done for vLLM, one prompt ([paper](paper/main.pdf)); more prompts and SGLang pending |
+| 1. Harness and baselines | Fault injection runs end to end on unmodified vLLM and SGLang, logs committed | Done: 32 runs, 160 trials committed (SGLang via its official container; [note](docs/sglang-attempt.md)) |
+| 2. RQ1 characterization | Measured anomaly counts for naive retry and recompute | Done for both engines, one prompt ([paper](paper/main.pdf)); more prompts and deterministic modes pending |
 | 3. Exactly-once gateway (RQ2) | Zero client anomalies across injected trials, overhead measured | Not started |
 | 4. Checkpoint microbenchmarks (RQ3) | Measured recompute-cost and checkpoint-cost curves | Not started |
 | 5. Adaptive policy (RQ4) | Compared against all baselines on mixed workload | Not started |
@@ -132,14 +135,15 @@ llm-inference-fault-tolerance/
 ├── docs/
 │   ├── proposal.md          # full research proposal
 │   ├── harness-validation.md # smoke-test note
-│   └── sglang-attempt.md    # why SGLang is deferred
+│   └── sglang-attempt.md    # SGLang setup: failed host install, working container
 ├── harness/                 # fault-injection harness (Phase 1)
 ├── gateway/                 # exactly-once token gateway (planned)
 ├── policies/                # fixed and adaptive checkpoint policies (planned)
-├── experiments/             # raw logs from measured runs only (16 runs, 80 trials)
+├── experiments/             # raw logs from measured runs only (32 runs, 160 trials)
 ├── analysis/                # analyze.py (per-trial metrics) and make_tables.py (paper tables), both from raw logs
-├── scripts/run_matrix.sh    # runs the full measurement grid for one engine
-├── paper/                   # paper draft with measured vLLM results
+├── scripts/run_matrix.sh    # vLLM measurement grid
+├── scripts/sgl_grid.sh      # SGLang grid + radix ablation (runs inside the SGLang container)
+├── paper/                   # paper draft with measured vLLM and SGLang results
 └── smoke_tests/summary.csv  # harness smoke test only, not results
 ```
 
@@ -156,12 +160,22 @@ To re-run the measurements on a GPU machine with a Hugging Face token that has L
 
 ```bash
 bash scripts/setup_instance.sh vllm      # Python 3.12 env, vLLM, model download, 1-trial smoke pilot
-TRIALS=5 bash scripts/run_matrix.sh vllm # main grid: 12 runs x 5 trials
+TRIALS=5 bash scripts/run_matrix.sh vllm # vLLM main grid: 12 runs x 5 trials
+```
+
+SGLang ran from its official container, with the harness inside the same container so that the kill reaches the server (model already in `~/.cache/huggingface`):
+
+```bash
+docker pull lmsysorg/sglang:v0.5.21      # measured with digest sha256:b1259f3e...
+docker run --gpus all --rm --network host --ipc=host --shm-size 16g \
+  -e PYTHONUNBUFFERED=1 -e HF_HUB_OFFLINE=1 \
+  -v ~/.cache/huggingface:/root/.cache/huggingface -v "$PWD":/work -w /work \
+  lmsysorg/sglang:v0.5.21 bash /work/scripts/sgl_grid.sh
 ```
 
 The prefix-cache ablation used the same harness with `--engine vllm-noapc` and `--no-enable-prefix-caching` added to the server command, at `--kill-at 128` for both strategies and temperatures; the exact command line is recorded in each ablation run's `run.json`.
 
-Recorded environment: vLLM 0.31.0, torch 2.13.0, NVIDIA A10G (23028 MiB), driver 595.91.07, Deep Learning OSS Nvidia Driver AMI (Ubuntu 26.04, build 20261003), Python 3.12, `VLLM_USE_FLASHINFER_SAMPLER=0` (the image has no CUDA toolkit). Full package versions and GPU inventory are in every `run.json`.
+Recorded environment: vLLM 0.31.0 with torch 2.13.0, and SGLang 0.5.21 with torch 2.13.0+cu130 (container image `lmsysorg/sglang:v0.5.21`); NVIDIA A10G (23028 MiB), driver 595.91.07, Deep Learning OSS Nvidia Driver AMI (Ubuntu 26.04, build 20261003), Python 3.12, `VLLM_USE_FLASHINFER_SAMPLER=0` for vLLM (the host image has no CUDA toolkit). Full package versions and GPU inventory are in every `run.json`.
 
 ## Related Work
 
@@ -173,12 +187,12 @@ Recorded environment: vLLM 0.31.0, torch 2.13.0, NVIDIA A10G (23028 MiB), driver
 
 ## Citation
 
-A paper draft with the measured vLLM results is in [`paper/`](paper/main.pdf). To reference this repository:
+A paper draft with the measured vLLM and SGLang results is in [`paper/`](paper/main.pdf). To reference this repository:
 
 ```bibtex
 @misc{medipally2026llmft,
   author       = {Medipally, Rajshekar},
-  title        = {What Does a Streaming Client See When an {LLM} Server Crashes? A Fault-Injection Study of Client-Visible Token Anomalies in {vLLM}},
+  title        = {What Does a Streaming Client See When an {LLM} Server Crashes? A Fault-Injection Study of Client-Visible Token Anomalies in {vLLM} and {SGLang}},
   year         = {2026},
   howpublished = {\url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}},
   note         = {Preprint draft}

@@ -4,6 +4,8 @@ Reads experiments/<run>/run.json and trial_*.json and writes:
 
   paper/tables/repro.tex      failure-free reproducibility: does the first
                               request on a fresh server (G) equal the second (G')?
+                              Also how many distinct G and G' texts occurred across
+                              the runs of one configuration and temperature.
   paper/tables/anomalies.tex  one row per (configuration, strategy, T, kill point)
   paper/tables/latency.tex    restart, time to first token after restart, and
                               kill -> first recovered token
@@ -38,10 +40,12 @@ import sys
 from collections import defaultdict
 
 CONFIG_NAME = {"vllm": "vLLM", "vllm-noapc": "vLLM, no prefix cache",
-               "sglang": "SGLang", "llamacpp": "llama.cpp"}
-CONFIG_SHORT = {"vllm": "default", "vllm-noapc": "no APC"}
+               "sglang": "SGLang", "sglang-noradix": "SGLang, no radix cache",
+               "llamacpp": "llama.cpp"}
+CONFIG_SHORT = {"vllm": "vLLM", "vllm-noapc": "vLLM, no APC",
+                "sglang": "SGLang", "sglang-noradix": "SGLang, no radix"}
 STRATEGY_NAME = {"naive_retry": "naive", "recompute": "recomp."}
-CONFIG_ORDER = ["vllm", "vllm-noapc", "sglang", "llamacpp"]
+CONFIG_ORDER = ["vllm", "vllm-noapc", "sglang", "sglang-noradix", "llamacpp"]
 
 
 def tex(s):
@@ -127,7 +131,7 @@ def main():
         sys.exit(f"no measured runs under {a.root}/; nothing written")
     os.makedirs(a.out, exist_ok=True)
 
-    repro = defaultdict(list)          # (label, T) -> [(identical, lcp, lenG, lenG2)]
+    repro = defaultdict(list)          # (label, T) -> [(identical, lcp, lenG, lenG2, G, G2)]
     cells = defaultdict(list)          # (label, strategy, T, k) -> trial metrics
     lat = defaultdict(list)            # (label, strategy) -> trial metrics
     env_by_label, commits = {}, set()
@@ -136,7 +140,7 @@ def main():
         cfg, label = run["config"], run["engine"]
         T = float(cfg["temperature"])
         G, G2 = run["reference"]["text"], run["reference_repeat"]["text"]
-        repro[(label, T)].append((G == G2, lcp(G, G2), len(G), len(G2)))
+        repro[(label, T)].append((G == G2, lcp(G, G2), len(G), len(G2), G, G2))
         cells[(label, cfg["strategy"], T, int(cfg["kill_at"]))].extend(trials)
         lat[(label, cfg["strategy"])].extend(trials)
         env_by_label.setdefault(label, (run["environment"], cfg["server_cmd"]))
@@ -150,11 +154,11 @@ def main():
             rs = repro[(label, T)]
             same = sum(r[0] for r in rs)
             lcps = sorted({r[1] for r in rs})
-            lens = sorted({(r[2], r[3]) for r in rs})
-            lcp_s = ", ".join(str(x) for x in lcps)
-            len_s = "; ".join(f"{x}/{y}" for x, y in lens)
+            lcp_s = str(lcps[0]) if len(lcps) == 1 else f"{lcps[0]}--{lcps[-1]}"
+            nG = len({r[4] for r in rs})
+            nG2 = len({r[5] for r in rs})
             f.write(f"{CONFIG_SHORT.get(label, tex(label))} & {T:g} & {frac(same, len(rs))} & "
-                    f"{lcp_s} & {len_s} \\\\\n")
+                    f"{lcp_s} & {nG} & {nG2} \\\\\n")
 
     # anomalies
     rows = []
@@ -163,12 +167,13 @@ def main():
         ts = cells[key]
         n = len(ts)
         dchars = sorted({t["delivered_chars"] for t in ts})
+        d_s = "/".join(str(x) for x in dchars) if len(dchars) <= 2 else f"{dchars[0]}--{dchars[-1]}"
         if strat == "naive_retry":
             con = frac(sum(t["contradicts"] for t in ts), n)
         else:
             con = "n/a"
         rows.append(f"{CONFIG_SHORT.get(label, tex(label))} & {STRATEGY_NAME.get(strat, tex(strat))} & "
-                    f"{T:g} & {k} & {'/'.join(str(x) for x in dchars)} & {con} & "
+                    f"{T:g} & {k} & {d_s} & {con} & "
                     f"{frac(sum(t['F_eq_G'] for t in ts), n)} & "
                     f"{frac(sum(t['F_eq_G2'] for t in ts), n)} \\\\")
     with open(os.path.join(a.out, "anomalies.tex"), "w", encoding="utf-8") as f:
