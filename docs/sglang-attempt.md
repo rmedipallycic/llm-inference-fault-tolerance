@@ -1,9 +1,9 @@
-# SGLang attempt (October 11, 2026): not run
+# SGLang setup: failed host install (October 11), working container (October 12--13, 2026)
 
-SGLang was planned as the second engine. It could not be started on the
-machine image used for the measured runs, so the first measured results are
-vLLM only. This note records what was tried, in order, so the attempt can be
-repeated on a different setup.
+SGLang could not be started directly on the machine image used for vLLM. It
+was then run successfully from its official container image, and the
+measured SGLang results come from that container. This note records both, so
+that the setup can be reproduced.
 
 ## Setup
 
@@ -38,13 +38,30 @@ Each step is a separate startup failure, fixed or worked around before the next 
 Server flags at the last attempt:
 `--context-length 4096 --attention-backend triton --sampling-backend pytorch --mem-fraction-static 0.85`
 
-## Decision
+## Resolution: the official container (measured runs)
+
+The same machine (same AMI, driver 595.91.07) ran SGLang from
+`lmsysorg/sglang:v0.5.21` (digest
+`sha256:b1259f3ea3275f66237c498ea388919729018bc9f01c3d638391e06e2cf3f469`),
+which ships CUDA 13.0 and prebuilt kernels. The harness runs inside the same
+container, so the process-group SIGKILL reaches the server, exactly as on the
+host for vLLM. A one-trial smoke test passed first, and then
+[`scripts/sgl_grid.sh`](../scripts/sgl_grid.sh) ran the 12-run grid and the
+4-run radix-cache ablation (16 runs, 80 trials, none failed), on harness
+commit `ddd8890`, whose `harness/` is identical to the vLLM runs' `90da903`.
+
+Server flags: `--context-length 4096 --mem-fraction-static 0.85`, all else
+default. The server logs record what the defaults selected on the A10G:
+FlashInfer attention and sampling, CUDA graphs on, radix cache on (off in the
+ablation via `--disable-radix-cache`), deterministic inference off.
+
+## Original decision (October 11)
 
 After about 30 minutes and four distinct failures, SGLang was deferred so that
 the vLLM measurements could complete. The harness (`harness/`) and grid script
 (`scripts/run_matrix.sh sglang`) already support SGLang unchanged.
 
-## To retry
+## To retry on the host (not needed for the container route)
 
 Use an image with a full CUDA toolkit matching the installed PyTorch (or
 install one), then run `bash scripts/setup_instance.sh sglang`. The memory
