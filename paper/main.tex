@@ -6,7 +6,10 @@
 \usepackage{xcolor}
 \usepackage{hyperref}
 \usepackage{fancyhdr}
-\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=black}
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=black,
+  pdftitle={What Does a Streaming Client See When an LLM Server Crashes? A Fault-Injection Study of Client-Visible Token Anomalies in vLLM and SGLang},
+  pdfauthor={Rajshekar Medipally},
+  pdfkeywords={LLM serving, fault tolerance, fault injection, vLLM, SGLang, delivery semantics}}
 
 % Every number in this paper comes from analysis/make_tables.py run on the raw
 % logs committed under experiments/. \pending marks any passage still awaiting data.
@@ -14,7 +17,6 @@
 
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[C]{\small Preprint, October 2026.}
 \fancyfoot[C]{\thepage}
 \renewcommand{\headrulewidth}{0pt}
 
@@ -47,23 +49,23 @@ last seconds to minutes. When a serving process fails mid-generation, the
 client is left holding a partial response, and the recovery it performs
 determines what it ultimately shows a user or hands to a downstream agent.
 We built an open-source fault-injection harness that SIGKILLs an unmodified
-OpenAI-compatible server at a chosen token position, restarts it, applies a
-client recovery strategy, and records every streamed chunk, and applied it
-with identical code to vLLM and SGLang serving Llama~3.1~8B~Instruct on
-A10G GPUs (86 runs, 430 trials). In both engines' default configurations
+OpenAI-compatible server at a chosen stream chunk, restarts it, applies a
+client recovery strategy, and records every streamed chunk, and applied it to vLLM and SGLang serving Llama~3.1~8B~Instruct on
+A10G GPUs (86 runs, 430 trials including ablations and follow-ups). In both engines' default configurations
 the failure-free output for a fixed prompt was not unique at temperature~0,
 for different reasons: in vLLM it depended deterministically on what the
 server had served before, through automatic prefix caching; in SGLang the
 first request after each start varied from start to start. Because a
 crashed server restarts cold, naive retry contradicted text the client had
 already displayed in 25 of 30 vLLM and 24 of 30 SGLang trials on the main
-prompt, and on 3 of 5 (vLLM) and 4 of 5 (SGLang) further prompts. Recompute, which resubmits
+prompt, and in at least one trial on 3 of 5 (vLLM) and 4 of 5 (SGLang) further prompts. Recompute, which resubmits
 the delivered text, never contradicted it but usually changed the final
 answer. Re-tokenization was ruled out as the cause. With each engine's
 deterministic mode enabled (vLLM batch invariance, SGLang deterministic
 inference), recompute reproduced the failure-free output exactly in every
-temperature-0 trial (35 of 35) and naive retry never contradicted the
-client. Recovery latency was dominated by server restart (107--195\,s). All
+temperature-0 trial we ran (35 of 35; on vLLM also at temperature 0.8), and naive
+retry never contradicted the client at temperature 0. This is failure-free equivalence for sequential requests and fail-stop
+crashes, not an exactly-once protocol. Recovery latency was dominated by server restart (107--195\,s). All
 raw logs and the table-generating script are public.
 \end{abstract}
 
@@ -110,7 +112,7 @@ This paper makes three contributions:
     cache ablation for each engine
     (Sections~\ref{sec:method}--\ref{sec:results}), which finds that in
     both engines' default configurations failure-free output depends on
-    server state, identifies the mechanism in vLLM, and quantifies what
+    server state, identifies prefix caching as a necessary factor in vLLM, and quantifies what
     that does to each recovery strategy.
 \end{enumerate}
 
@@ -152,7 +154,11 @@ depends on the strategy:
 complete answer, so the final text is $F=R$;
 \textbf{recompute} resubmits the prompt concatenated with $D$ and requests the
 remaining token budget, so the server rebuilds the KV cache by prefill and
-continues, and $F=D\cdot R$. Neither requires engine changes.
+continues, and $F=D\cdot R$. Neither requires engine changes. When the
+failure occurs, $D$ has already been shown to a user or passed to a
+consumer. $F=R$ for naive retry assumes the client replaces what it
+showed; a client that instead appends the replay after dropping its first
+$|D|$ characters is the case the contradiction metric below captures.
 
 \paragraph{Two references.} Before the trials of each run, the harness
 issues the request twice without failures and records both outputs: $G$, the
@@ -195,7 +201,10 @@ used only for laptop smoke tests, the equivalent is \texttt{taskkill /F /T}.
 as a chunk with wall-clock and monotonic timestamps. The kill fires from the
 chunk callback when the configured chunk count is reached, and the client
 keeps reading, so chunks the server had already sent before dying are recorded
-as in-flight rather than lost.
+as in-flight rather than lost. Kill points are counted in chunks, not tokens. In
+the 10 vLLM trials that recorded token ids, every chunk before the kill
+carried exactly one token, so there the two coincide; after recovery, one
+chunk per trial carried 9 or 10 tokens.
 
 \paragraph{Trial protocol.} Each run (one engine, strategy, temperature, and
 kill position) starts the server, records two failure-free references $G$ and
@@ -486,8 +495,8 @@ trials, re-tokenizing the delivered text gave exactly the token ids the
 engine had generated (Table~\ref{tab:retok}). Resubmitting the ids instead
 of the text changed nothing: without prefix caching, the final text again
 departed from the reference at character 655, the same place as text-based
-recompute. The remaining explanation for recompute's change of answer is
-that the delivered tokens' KV cache, computed in one prefill on recovery,
+recompute. The most plausible remaining explanation for recompute's change of answer,
+which we did not test directly, is that the delivered tokens' KV cache, computed in one prefill on recovery,
 differs numerically from the one built token by token during decoding.
 Requesting token ids on every call also changed vLLM's default-configuration
 reference to the no-APC text, so the default-configuration ids run serves
@@ -597,8 +606,11 @@ with shared prefixes is the reason the cache exists. On SGLang, disabling
 the radix cache did not help. The combination that worked on both engines
 was an engine deterministic mode on the server and recompute on the client:
 at temperature 0 it reproduced the failure-free output exactly in all 35
-trials (Section~\ref{sec:followup}), which is what a client sees under
-exactly-once delivery, without any change to the engines' code.
+trials (Section~\ref{sec:followup}), without any change to the engines'
+code. The client ended with the same text as a failure-free run, the
+outcome exactly-once delivery would guarantee. That is equivalence in the
+tested configurations, not an exactly-once protocol: it relied on greedy
+decoding, sequential requests, and the operator enabling the mode.
 
 \paragraph{Why client-side recovery is not enough.} Even in the best case for
 recompute, the client cannot restore the server's state: neither the
@@ -681,7 +693,11 @@ later stages of this project.
     (Section~\ref{sec:followup}): re-tokenization matched in all 10 trials
     checked, at the 128-chunk kill on the main prompt. Other prompts or
     kill points could tokenize differently at the boundary.
-  \item \textbf{Fail-stop only; latency includes restart.} \texttt{SIGKILL}
+  \item \textbf{Sequential requests only.} Requests were issued one at a
+time. Concurrent load, cross-request batching, and cache state shared
+under load may change both the anomalies and the deterministic-mode
+results, and were not tested.
+\item \textbf{Fail-stop only; latency includes restart.} \texttt{SIGKILL}
     is a clean crash; GPU hangs and silent corruption are not modeled. With
     a single instance, recovery includes model reload; a warm standby would
     be faster. Restart time also drifted during the grid (see H3).
@@ -699,7 +715,7 @@ tied to server start. Enabling each engine's deterministic mode and
 recovering by recompute reproduced the failure-free output exactly in every
 temperature-0 trial we ran. A retry is not a replay by default, but with
 the right server configuration and client strategy it can be, for greedy
-decoding.
+decoding, in the configurations we tested.
 
 Next stages: (0) the throughput cost of the deterministic modes, other
 models, and sampled output under SGLang's deterministic mode; (1) a gateway that assigns sequence numbers,

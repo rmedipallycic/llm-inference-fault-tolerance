@@ -50,7 +50,7 @@ Each question has a stated hypothesis in [`docs/proposal.md`](docs/proposal.md) 
                                  │
                  ┌───────────────▼──────────────────────────────┐
                  │  Fault injector (built, harness/)            │
-                 │  - kills worker at a chosen token position   │
+                 │  - kills worker at a chosen stream chunk     │
                  │  - records full client-side token stream     │
                  └──────────────────────────────────────────────┘
 ```
@@ -85,7 +85,7 @@ Each question has a stated hypothesis in [`docs/proposal.md`](docs/proposal.md) 
 | Model | Llama 3.1 8B Instruct (proposed) |
 | Hardware | Single GPU with 24 GB or more to start; multi-GPU tensor parallel in a later phase |
 | Workloads | Short chat turns, long-context requests, and a mixed trace; temperature 0 and above 0 run separately |
-| Fault injection | SIGKILL at fixed token positions (10%, 50%, 90% of target output length) |
+| Fault injection | SIGKILL at fixed chunk positions (25, 128, 230 chunks: about 10%, 50%, 90% of max_tokens) |
 
 **Metrics**
 
