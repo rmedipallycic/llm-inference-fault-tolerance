@@ -11,10 +11,16 @@ vLLM & recomp. & 0 & 230 & 1143/1145 & n/a & 0/5 & 1/5 \\
 vLLM & recomp. & 0.8 & 25 & 105/114 & n/a & 4/5 & 0/5 \\
 vLLM & recomp. & 0.8 & 128 & 556/590 & n/a & 0/5 & 0/5 \\
 vLLM & recomp. & 0.8 & 230 & 1079/1085 & n/a & 0/5 & 1/5 \\
+vLLM & recomp. (ids) & 0 & 128 & 625/626 & n/a & 0/5 & 1/5 \\
 vLLM, no APC & naive & 0 & 128 & 612 & 0/5 & 5/5 & 5/5 \\
 vLLM, no APC & naive & 0.8 & 128 & 601 & 0/5 & 5/5 & 5/5 \\
 vLLM, no APC & recomp. & 0 & 128 & 612 & n/a & 0/5 & 0/5 \\
 vLLM, no APC & recomp. & 0.8 & 128 & 601 & n/a & 5/5 & 5/5 \\
+vLLM, no APC & recomp. (ids) & 0 & 128 & 612 & n/a & 0/5 & 0/5 \\
+vLLM, batch-inv. & naive & 0 & 128 & 612 & 0/5 & 5/5 & 5/5 \\
+vLLM, batch-inv. & naive & 0.8 & 128 & 556 & 0/5 & 5/5 & 5/5 \\
+vLLM, batch-inv. & recomp. & 0 & 128 & 612 & n/a & 5/5 & 5/5 \\
+vLLM, batch-inv. & recomp. & 0.8 & 128 & 556 & n/a & 5/5 & 5/5 \\
 SGLang & naive & 0 & 25 & 113 & 0/5 & 1/5 & 0/5 \\
 SGLang & naive & 0 & 128 & 643 & 4/5 & 1/5 & 0/5 \\
 SGLang & naive & 0 & 230 & 1144 & 5/5 & 0/5 & 0/5 \\
@@ -31,3 +37,11 @@ SGLang, no radix & naive & 0 & 128 & 643 & 5/5 & 1/5 & 0/5 \\
 SGLang, no radix & naive & 0.8 & 128 & 599--682 & 5/5 & 0/5 & 0/5 \\
 SGLang, no radix & recomp. & 0 & 128 & 643 & n/a & 0/5 & 2/5 \\
 SGLang, no radix & recomp. & 0.8 & 128 & 430--683 & n/a & 0/5 & 0/5 \\
+SGLang, fixed seed & naive & 0 & 128 & 643 & 5/5 & 1/5 & 0/5 \\
+SGLang, fixed seed & naive & 0.8 & 128 & 456--691 & 5/5 & 0/5 & 0/5 \\
+SGLang, fixed seed & recomp. & 0 & 128 & 623/625 & n/a & 0/5 & 0/5 \\
+SGLang, fixed seed & recomp. & 0.8 & 128 & 588--670 & n/a & 0/5 & 0/5 \\
+SGLang, determ. & naive & 0 & 128 & 625 & 0/5 & 5/5 & 5/5 \\
+SGLang, determ. & naive & 0.8 & 128 & 666 & 5/5 & 5/5 & 0/5 \\
+SGLang, determ. & recomp. & 0 & 128 & 625 & n/a & 5/5 & 5/5 \\
+SGLang, determ. & recomp. & 0.8 & 128 & 666 & n/a & 0/5 & 0/5 \\

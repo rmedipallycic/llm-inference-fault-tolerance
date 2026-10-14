@@ -153,7 +153,10 @@ def main():
             continue
         T = float(cfg["temperature"])
         G, G2 = run["reference"]["text"], run["reference_repeat"]["text"]
-        repro[(label, T)].append((G == G2, lcp(G, G2), len(G), len(G2), G, G2))
+        # token-id runs request logprobs on every call, which is a different request
+        # path; they are reported in retok.tex, not in the reproducibility table
+        if cfg["strategy"] != "recompute_ids":
+            repro[(label, T)].append((G == G2, lcp(G, G2), len(G), len(G2), G, G2))
         cells[(label, cfg["strategy"], T, int(cfg["kill_at"]))].extend(trials)
         lat[(label, cfg["strategy"])].extend(trials)
         env_by_label.setdefault(label, (run["environment"], cfg["server_cmd"]))
