@@ -2,7 +2,11 @@
 
 **Recovery semantics, exactly-once token delivery, and adaptive KV-cache checkpointing for LLM serving engines (vLLM, SGLang).**
 
-> **Status (October 14, 2026):** Phase 1 measured on vLLM 0.31.0 and SGLang 0.5.21 (AWS g5.xlarge, one A10G each, Llama 3.1 8B Instruct): 86 runs, 430 trials, including cache ablations, both engines' deterministic modes, a token-id recompute check, and five further prompts. Raw logs are in [`experiments/`](experiments/), and results are in the [paper draft](paper/main.pdf) and summarized below.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23377448.svg)](https://doi.org/10.5281/zenodo.23377448)
+
+**Paper (preprint):** Medipally, R. (2026). *What Does a Streaming Client See When an LLM Server Crashes? A Fault-Injection Study of Client-Visible Token Anomalies in vLLM and SGLang.* Zenodo. https://doi.org/10.5281/zenodo.23377448
+
+> **Status (October 14, 2026):** Phase 1 measured on vLLM 0.31.0 and SGLang 0.5.21 (AWS g5.xlarge, one A10G each, Llama 3.1 8B Instruct): 86 runs, 430 trials, including cache ablations, both engines' deterministic modes, a token-id recompute check, and five further prompts. Raw logs are in [`experiments/`](experiments/), and results are in the [paper](paper/main.pdf) ([DOI 10.5281/zenodo.23377448](https://doi.org/10.5281/zenodo.23377448)) and summarized below.
 
 ---
 
@@ -147,7 +151,7 @@ llm-inference-fault-tolerance/
 ├── scripts/run_matrix.sh    # vLLM measurement grid
 ├── scripts/sgl_grid.sh      # SGLang grid + radix ablation (runs inside the SGLang container)
 ├── scripts/extras_*.sh      # follow-up runs: deterministic modes, token-id recompute, more prompts
-├── paper/                   # paper draft with measured vLLM and SGLang results
+├── paper/                   # paper (preprint) with measured vLLM and SGLang results
 └── smoke_tests/summary.csv  # harness smoke test only, not results
 ```
 
@@ -191,15 +195,18 @@ Recorded environment: vLLM 0.31.0 with torch 2.13.0, and SGLang 0.5.21 with torc
 
 ## Citation
 
-A paper draft with the measured vLLM and SGLang results is in [`paper/`](paper/main.pdf). To reference this repository:
+The paper is published as a preprint on Zenodo ([DOI 10.5281/zenodo.23377448](https://doi.org/10.5281/zenodo.23377448)); its source is in [`paper/`](paper/main.pdf). To cite it:
 
 ```bibtex
 @misc{medipally2026llmft,
   author       = {Medipally, Rajshekar},
   title        = {What Does a Streaming Client See When an {LLM} Server Crashes? A Fault-Injection Study of Client-Visible Token Anomalies in {vLLM} and {SGLang}},
   year         = {2026},
-  howpublished = {\url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}},
-  note         = {Preprint draft}
+  publisher    = {Zenodo},
+  version      = {v0.3.2},
+  doi          = {10.5281/zenodo.23377448},
+  url          = {https://doi.org/10.5281/zenodo.23377448},
+  note         = {Preprint. Code and data: \url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}}
 }
 ```
 
