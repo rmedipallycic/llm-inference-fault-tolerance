@@ -32,6 +32,8 @@
 \def\LatRows{\@@input tables/latency.tex }
 \def\EnvRows{\@@input tables/env.tex }
 \def\ReproRows{\@@input tables/repro.tex }
+\def\PromptRows{\@@input tables/prompts.tex }
+\def\RetokRows{\@@input tables/retok.tex }
 \makeatother
 
 \begin{document}
@@ -47,22 +49,22 @@ determines what it ultimately shows a user or hands to a downstream agent.
 We built an open-source fault-injection harness that SIGKILLs an unmodified
 OpenAI-compatible server at a chosen token position, restarts it, applies a
 client recovery strategy, and records every streamed chunk, and applied it
-with identical code to vLLM and SGLang serving Llama~3.1~8B~Instruct on one
-A10G GPU (60 trials per engine, plus a 20-trial cache ablation per engine).
-In both engines' default configurations, the failure-free output for a fixed
-prompt was not unique at temperature~0, for different reasons. In vLLM it
-depended deterministically on what the server had served before, and
-disabling automatic prefix caching removed the dependence. In SGLang the
-second request on a running server was always the same, but the first
-request after each start was not, and disabling the radix cache did not
-change that. Because a crashed server restarts cold, naive retry, which
-resubmits the prompt, contradicted text the client had already displayed in
-25 of 30 vLLM trials and 24 of 30 SGLang trials. Recompute, which resubmits
-the delivered text, never contradicted it, but its final text matched
-neither failure-free output of its run in 24 of 30 and 26 of 30 trials.
-Recovery latency was dominated by server restart (107--195\,s); the first
-recovered token followed 0.23--0.51\,s after the server was ready. All raw
-logs and the table-generating script are public.
+with identical code to vLLM and SGLang serving Llama~3.1~8B~Instruct on
+A10G GPUs (86 runs, 430 trials). In both engines' default configurations
+the failure-free output for a fixed prompt was not unique at temperature~0,
+for different reasons: in vLLM it depended deterministically on what the
+server had served before, through automatic prefix caching; in SGLang the
+first request after each start varied from start to start. Because a
+crashed server restarts cold, naive retry contradicted text the client had
+already displayed in 25 of 30 vLLM and 24 of 30 SGLang trials on the main
+prompt, and on 3 of 5 (vLLM) and 4 of 5 (SGLang) further prompts. Recompute, which resubmits
+the delivered text, never contradicted it but usually changed the final
+answer. Re-tokenization was ruled out as the cause. With each engine's
+deterministic mode enabled (vLLM batch invariance, SGLang deterministic
+inference), recompute reproduced the failure-free output exactly in every
+temperature-0 trial (35 of 35) and naive retry never contradicted the
+client. Recovery latency was dominated by server restart (107--195\,s). All
+raw logs and the table-generating script are public.
 \end{abstract}
 
 \section{Introduction}
@@ -280,6 +282,23 @@ else equal: 4 runs, 20 trials, labeled ``no APC''. For SGLang we ran the
 same four configurations with its radix cache, the corresponding feature,
 disabled (\texttt{--disable-radix-cache}), labeled ``no radix''.
 
+\paragraph{Follow-up runs.} After the first results, a second set of runs
+(harness commit \texttt{9510da0}, scripts \texttt{scripts/extras\_*.sh}),
+all at the 128-chunk kill point with 5 trials each, tested the open
+questions: (i) each engine's deterministic mode, vLLM's batch invariance
+(\texttt{VLLM\_BATCH\_INVARIANT=1}) and SGLang's deterministic inference
+(\texttt{--enable-deterministic-inference}, with \texttt{sampling\_seed}
+1234 in each request), on the original prompt at both temperatures;
+(ii) SGLang with a fixed server seed (\texttt{--random-seed 1234});
+(iii) a vLLM recompute variant, \emph{recompute (ids)}, that resubmits token
+ids (the prompt's ids from \texttt{/tokenize} plus the delivered tokens'
+ids) instead of text, and records whether re-tokenizing the delivered text
+would have produced the same ids; and (iv) five further prompts (a TCP
+explanation, a short story, a coffee recipe, processes versus threads, and
+the 2008 financial crisis; \texttt{harness/prompts.json}) at temperature 0,
+for each engine in its default and its fixed configuration (vLLM without
+prefix caching, SGLang deterministic). That is 54 runs and 270 trials.
+
 \paragraph{Hypotheses.} Stated before the runs:
 \begin{description}
   \item[H1] At temperature 0, naive retry yields full duplication in every
@@ -459,6 +478,92 @@ retry gave full duplication only at the earliest kill point, and recompute
 reproduced $G$ in 3 of 15 trials), \textbf{H2's premise is refuted} (the
 seed had no observable effect), and \textbf{H3 is supported}.
 
+\section{Follow-up experiments}
+\label{sec:followup}
+
+\paragraph{Re-tokenization is not the cause.} In all 10 recompute (ids)
+trials, re-tokenizing the delivered text gave exactly the token ids the
+engine had generated (Table~\ref{tab:retok}). Resubmitting the ids instead
+of the text changed nothing: without prefix caching, the final text again
+departed from the reference at character 655, the same place as text-based
+recompute. The remaining explanation for recompute's change of answer is
+that the delivered tokens' KV cache, computed in one prefill on recovery,
+differs numerically from the one built token by token during decoding.
+Requesting token ids on every call also changed vLLM's default-configuration
+reference to the no-APC text, so the default-configuration ids run serves
+only as a re-tokenization check.
+
+\begin{table}[h]
+\centering\small
+\caption{Recompute (ids), vLLM, temperature 0, kill at 128 chunks.
+Re-tok.: re-tokenizing $D$ gave the generated token ids.}
+\label{tab:retok}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Config & $T$ & $n$ & Re-tok. & $F{=}G$ & $F{=}G'$ \\
+\midrule
+\RetokRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{SGLang's server seed is not the cause.} With
+\texttt{--random-seed 1234}, SGLang's first request after a start still
+varied from start to start (Table~\ref{tab:repro}) and naive retry still
+contradicted the client in 5 of 5 trials at temperature 0.
+
+\paragraph{Deterministic modes made recompute exact.} With vLLM's batch
+invariance, $G=G'$ in all 4 runs, naive retry never contradicted the client
+(0 of 10), and recompute reproduced the failure-free output exactly in 10 of
+10 trials, at temperature 0 and at 0.8 with a fixed seed
+(Table~\ref{tab:anomalies}). Its temperature-0 output was identical to the
+no-APC output. With SGLang's deterministic inference at temperature 0,
+$G=G'$, naive retry never contradicted the client, and recompute was exact
+in 5 of 5. That is consistent with the explanation above: kernels that give
+the same result regardless of batch and prefill shape remove the difference
+between the recovered and the original computation. At temperature 0.8,
+SGLang's deterministic mode made each reference repeatable across runs, but
+$G$ and $G'$ still diverged at character 3; naive retry contradicted the
+client in 5 of 5 trials and recompute was not exact (0 of 5), so its
+sampling was not reproducible across requests in this configuration.
+
+\paragraph{The pattern holds across prompts.} Table~\ref{tab:prompts}
+repeats the 128-chunk, temperature-0 configuration on five more prompts. In
+vLLM's default configuration, $G\neq G'$ for three of the five prompts, and
+for exactly those three naive retry contradicted the client in 5 of 5
+trials (15 of 25 overall); for the other two, the first and second requests
+happened to agree. Without prefix caching, $G=G'$ for all five and naive
+retry never contradicted (0 of 25), but recompute was exact for only one
+prompt (5 of 25). In SGLang's default configuration $G=G'$ in only 1 of 10
+runs, naive retry contradicted the client in 14 of 25 trials, and recompute
+was exact in 3 of 25. In SGLang's deterministic mode, all 10 runs had
+$G=G'$, naive retry never contradicted (0 of 25), and recompute was exact in
+25 of 25.
+
+\begin{table}[h]
+\centering\small
+\caption{Five further prompts, temperature 0, kill at 128 chunks, 5 trials
+per strategy. Contra.: naive replay contradicted $D$. Exact: recompute's
+final text equals $G$ or $G'$.}
+\label{tab:prompts}
+\begin{tabular}{@{}llccc@{}}
+\toprule
+Config & Prompt & $G{=}G'$ & Contra. & Exact \\
+\midrule
+\PromptRows
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Cost.} The deterministic modes did not slow recovery much in
+these runs: restart times were in the same range, and the first token after
+restart arrived in 0.26--0.30\,s with vLLM's batch invariance. With SGLang's
+deterministic mode it arrived in 0.34--0.46\,s in some runs and 3--4\,s in
+others, which we did not investigate. Throughput under load, which is what
+batch-invariant kernels are reported to cost \cite{he2025nondeterminism},
+was not measured.
+
 \section{Discussion}
 
 \paragraph{Two engines, two mechanisms, one consequence.} vLLM's variation
@@ -479,9 +584,9 @@ engines; for an
 agent that acted on a partial tool call or plan, it means the action was
 based on text that the final answer contradicts.
 
-\paragraph{What a client should do.} Within these measurements, on both
-engines, recompute is the only client-side strategy that never contradicted
-what was shown, at the
+\paragraph{What a client and an operator should do.} With default
+engine settings, recompute is the only client-side strategy that never
+contradicted what was shown, at the
 price of a final answer that no failure-free run produced, and a few tens of
 milliseconds of extra prefill. Naive retry with deduplication is unsafe
 unless the client verifies that the replay begins with $D$, and should
@@ -489,16 +594,21 @@ replace rather than splice when it does not. On vLLM, an operator can
 remove the contradictions by disabling automatic prefix caching, as the
 ablation did; we did not measure the throughput cost, which on workloads
 with shared prefixes is the reason the cache exists. On SGLang, disabling
-the radix cache did not help; its opt-in deterministic mode
-\cite{sglang2025deterministic} is the natural next configuration to test.
+the radix cache did not help. The combination that worked on both engines
+was an engine deterministic mode on the server and recompute on the client:
+at temperature 0 it reproduced the failure-free output exactly in all 35
+trials (Section~\ref{sec:followup}), which is what a client sees under
+exactly-once delivery, without any change to the engines' code.
 
 \paragraph{Why client-side recovery is not enough.} Even in the best case for
 recompute, the client cannot restore the server's state: neither the
 sampler's random state above temperature 0 nor, as measured here, whatever
 server state made $G$ differ from $G'$; and even with that state removed
 by disabling the prefix cache, recompute at temperature 0 did not reproduce
-the original continuation. Exactly-once delivery therefore
-requires state the client does not hold: a sequence-numbered token log, and
+the original continuation. Deterministic modes close
+this gap at temperature 0, but not, in SGLang, for sampled output, and they
+depend on the operator's configuration. Exactly-once delivery in general
+therefore requires state the client does not hold: a sequence-numbered token log, and
 the sampler state, committed before tokens are released, with recovery
 continuing from the log rather than regenerating. That protocol is the next
 stage of this project, and these measurements are its baseline.
@@ -538,10 +648,12 @@ later stages of this project.
     not a sampled rate. In SGLang the cold output varied from start to
     start, so its trials do sample that variation, but 5 per configuration
     is too few to estimate rates.
-  \item \textbf{One prompt, one model, one GPU.} The divergence positions
-    (characters 506 and 9) are specific to this prompt and to Llama~3.1~8B
-    on an A10G. Other prompts may diverge earlier, later, or not at all
-    within 256 tokens; tensor-parallel serving may differ.
+  \item \textbf{Six prompts, one model, one GPU type.} The main grid used
+    one prompt; five more were tested only at temperature 0 and the
+    128-chunk kill point, and vLLM's batch invariance only on the main
+    prompt. Divergence positions are prompt-specific (two of five extra
+    prompts showed no vLLM divergence within 256 tokens). Other models and
+    tensor-parallel serving may differ.
   \item \textbf{Default configurations, different kernels.} Each engine
     ran with its own defaults on this GPU (vLLM with PyTorch sampling
     because FlashInfer's sampler could not compile on the host image;
@@ -555,18 +667,20 @@ later stages of this project.
     instead of FlashInfer's sampler, because of the missing CUDA toolkit. The
     temperature-0 results do not involve random sampling, but the 0.8
     results may differ under FlashInfer.
-  \item \textbf{Mechanism.} For vLLM, the ablation shows that, on this
-    setup, the dependence on server history requires automatic prefix
-    caching. For SGLang, the radix cache was not required, and the source of
-    the start-to-start variation was not identified. It does
-    not show which computation inside the cached path differs; kernels whose
-    results depend on batch or prefill shape \cite{he2025nondeterminism} are
-    a plausible candidate that we did not test. The ablation covered only
-    the 128-chunk kill point (20 trials per engine).
+  \item \textbf{Mechanism.} For vLLM, the ablation shows that the
+    dependence on server history requires automatic prefix caching, and
+    re-tokenization was ruled out for recompute. For SGLang, neither the
+    radix cache nor the server seed was required, and the source of the
+    start-to-start variation was not identified. That both engines'
+    deterministic modes removed every contradiction and made recompute exact
+    at temperature 0 supports, but does not prove, a numerical explanation
+    \cite{he2025nondeterminism}; we did not identify which kernel differs.
+    The ablations and follow-up runs covered only the 128-chunk kill point.
   \item \textbf{Re-tokenization in recompute.} Recompute sends $D$ as text,
-    which the engine re-tokenizes; a boundary that tokenizes differently can
-    change the continuation. The recompute departures observed here were
-    after the kill boundary (e.g.\ character 267 against a kill at 113).
+    which the engine re-tokenizes. We checked this directly for vLLM
+    (Section~\ref{sec:followup}): re-tokenization matched in all 10 trials
+    checked, at the 128-chunk kill on the main prompt. Other prompts or
+    kill points could tokenize differently at the boundary.
   \item \textbf{Fail-stop only; latency includes restart.} \texttt{SIGKILL}
     is a clean crash; GPU hangs and silent corruption are not modeled. With
     a single instance, recovery includes model reload; a warm standby would
@@ -576,18 +690,19 @@ later stages of this project.
 \section{Conclusion and future work}
 
 In the default configurations of both vLLM and SGLang, the failure-free
-output for a fixed prompt was not unique at temperature 0: in vLLM it
-depended on what the server had served before, through automatic prefix
-caching; in SGLang the first request after each start varied, with or
-without its radix cache. As a result, naive retry after a crash contradicted
-text the client had already shown in 25 of 30 vLLM and 24 of 30 SGLang
-trials, and recompute, while never contradicting it, produced a final text
-matching neither failure-free output of its run in most trials on both
-engines. A retry after a crash is not a replay, and exactly-once delivery
-needs state the client does not have.
+output for a fixed prompt was not unique at temperature 0, so the restarted
+server that answers a retry did not reproduce what the client had been
+shown: naive retry contradicted displayed text in most trials on both
+engines, and on three (vLLM) and four (SGLang) of five further prompts. The cause was not
+re-tokenization; in vLLM it required prefix caching, and in SGLang it was
+tied to server start. Enabling each engine's deterministic mode and
+recovering by recompute reproduced the failure-free output exactly in every
+temperature-0 trial we ran. A retry is not a replay by default, but with
+the right server configuration and client strategy it can be, for greedy
+decoding.
 
-Next stages: (0) more prompts and models, and both engines' deterministic
-or batch-invariant modes \cite{he2025nondeterminism,sglang2025deterministic}; (1) a gateway that assigns sequence numbers,
+Next stages: (0) the throughput cost of the deterministic modes, other
+models, and sampled output under SGLang's deterministic mode; (1) a gateway that assigns sequence numbers,
 logs tokens and sampler state before release, and continues from the log on
 recovery, evaluated on the same harness for zero anomalies and per-token
 overhead; (2) measured recompute-versus-checkpoint cost curves for the KV
@@ -597,6 +712,7 @@ cache; (3) an adaptive per-request checkpoint policy.
 \url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}
 (Apache-2.0). Every number above traces to a committed log file.
 
+\clearpage
 \bibliographystyle{plain}
 \bibliography{refs}
 \end{document}

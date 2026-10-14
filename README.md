@@ -2,7 +2,7 @@
 
 **Recovery semantics, exactly-once token delivery, and adaptive KV-cache checkpointing for LLM serving engines (vLLM, SGLang).**
 
-> **Status (October 13, 2026):** Phase 1 measured on vLLM 0.31.0 and SGLang 0.5.21 (two identical AWS g5.xlarge instances, one A10G each, Llama 3.1 8B Instruct): per engine, a 60-trial grid plus a 20-trial cache ablation, 160 trials in total, with raw logs in [`experiments/`](experiments/). Results are in the [paper draft](paper/main.pdf) and summarized below.
+> **Status (October 14, 2026):** Phase 1 measured on vLLM 0.31.0 and SGLang 0.5.21 (AWS g5.xlarge, one A10G each, Llama 3.1 8B Instruct): 86 runs, 430 trials, including cache ablations, both engines' deterministic modes, a token-id recompute check, and five further prompts. Raw logs are in [`experiments/`](experiments/), and results are in the [paper draft](paper/main.pdf) and summarized below.
 
 ---
 
@@ -106,7 +106,7 @@ Each question has a stated hypothesis in [`docs/proposal.md`](docs/proposal.md) 
 
 ## Key Findings (preliminary)
 
-Measured on vLLM 0.31.0 and SGLang 0.5.21 with identical harness code, one A10G each, Llama 3.1 8B Instruct, one prompt, a 256-token budget, and requests issued one at a time. Every number comes from [`analysis/make_tables.py`](analysis/make_tables.py) run on the logs in [`experiments/`](experiments/). Scope limits are in the paper's threats-to-validity section.
+Measured on vLLM 0.31.0 and SGLang 0.5.21 with identical harness code, one A10G each, Llama 3.1 8B Instruct, one main prompt plus five more for the follow-up runs, a 256-token budget, and requests issued one at a time. Every number comes from [`analysis/make_tables.py`](analysis/make_tables.py) run on the logs in [`experiments/`](experiments/). Scope limits are in the paper's threats-to-validity section.
 
 1. **In both engines' default configurations, failure-free output was not unique at temperature 0, for different reasons.**
    - **vLLM:** the first request after a start and the second identical request differed in all 12 runs, and both texts were exactly repeatable. Output depended on what the server had served before.
@@ -114,13 +114,16 @@ Measured on vLLM 0.31.0 and SGLang 0.5.21 with identical harness code, one A10G 
 2. **Naive retry contradicted the client.** A restarted server is cold, so the retry disagreed with text the client had already shown in **25 of 30 vLLM** and **24 of 30 SGLang** trials.
 3. **Recompute never contradicted the client but changed the answer.** Its final text matched neither failure-free output of its run in 24 of 30 (vLLM) and 26 of 30 (SGLang) trials.
 4. **The cache ablations split the engines.** Disabling vLLM's automatic prefix caching made output reproducible (4 of 4 runs) and removed every contradiction (0 of 10). Disabling SGLang's radix cache changed neither (contradictions in 10 of 10).
-5. **SGLang ignored the OpenAI-style seed.** At temperature 0.8 every SGLang request differed, so its 0.8 results are for unseeded sampling. SGLang offers an opt-in deterministic mode, which was not tested here.
-6. **Recovery latency was server restart.** Restart took 107 to 195 s; the first recovered token arrived 0.23 to 0.51 s after the server was ready.
+5. **Re-tokenization is not the cause.** Resubmitting token ids instead of text (vLLM) changed nothing; re-tokenizing the delivered text gave the same ids in 10 of 10 trials. SGLang's server seed is not the cause either (`--random-seed` made no difference).
+6. **Deterministic modes plus recompute gave exact recovery.** With vLLM's batch invariance (`VLLM_BATCH_INVARIANT=1`) or SGLang's `--enable-deterministic-inference`, recompute reproduced the failure-free output exactly in every temperature-0 trial (35 of 35, across six prompts for SGLang and one for vLLM), and naive retry never contradicted the client. Throughput cost was not measured.
+7. **The pattern holds on five more prompts.** In default configurations, naive retry contradicted the client on 3 of 5 prompts (vLLM) and 4 of 5 (SGLang).
+8. **SGLang ignored the OpenAI-style seed** in its default mode, so its default 0.8 results are for unseeded sampling. Even in deterministic mode, SGLang's sampled (0.8) output was not reproducible across requests.
+9. **Recovery latency was server restart.** Restart took 107 to 195 s; the first recovered token usually arrived 0.23 to 0.6 s after the server was ready (3 to 4 s in some SGLang deterministic-mode runs).
 
 | Phase | Gate to pass before the next phase | Status |
 | --- | --- | --- |
-| 1. Harness and baselines | Fault injection runs end to end on unmodified vLLM and SGLang, logs committed | Done: 32 runs, 160 trials committed (SGLang via its official container; [note](docs/sglang-attempt.md)) |
-| 2. RQ1 characterization | Measured anomaly counts for naive retry and recompute | Done for both engines, one prompt ([paper](paper/main.pdf)); more prompts and deterministic modes pending |
+| 1. Harness and baselines | Fault injection runs end to end on unmodified vLLM and SGLang, logs committed | Done: 86 runs, 430 trials committed (SGLang via its official container; [note](docs/sglang-attempt.md)) |
+| 2. RQ1 characterization | Measured anomaly counts for naive retry and recompute | Done for both engines: six prompts, cache ablations, deterministic modes ([paper](paper/main.pdf)); throughput cost of the fixes not yet measured |
 | 3. Exactly-once gateway (RQ2) | Zero client anomalies across injected trials, overhead measured | Not started |
 | 4. Checkpoint microbenchmarks (RQ3) | Measured recompute-cost and checkpoint-cost curves | Not started |
 | 5. Adaptive policy (RQ4) | Compared against all baselines on mixed workload | Not started |
@@ -139,10 +142,11 @@ llm-inference-fault-tolerance/
 ├── harness/                 # fault-injection harness (Phase 1)
 ├── gateway/                 # exactly-once token gateway (planned)
 ├── policies/                # fixed and adaptive checkpoint policies (planned)
-├── experiments/             # raw logs from measured runs only (32 runs, 160 trials)
+├── experiments/             # raw logs from measured runs only (86 runs, 430 trials)
 ├── analysis/                # analyze.py (per-trial metrics) and make_tables.py (paper tables), both from raw logs
 ├── scripts/run_matrix.sh    # vLLM measurement grid
 ├── scripts/sgl_grid.sh      # SGLang grid + radix ablation (runs inside the SGLang container)
+├── scripts/extras_*.sh      # follow-up runs: deterministic modes, token-id recompute, more prompts
 ├── paper/                   # paper draft with measured vLLM and SGLang results
 └── smoke_tests/summary.csv  # harness smoke test only, not results
 ```
