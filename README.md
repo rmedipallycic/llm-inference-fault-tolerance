@@ -1,6 +1,6 @@
 # Fault-Tolerant LLM Inference Systems
 
-**Recovery semantics, exactly-once token delivery, and adaptive KV-cache checkpointing for LLM serving engines (vLLM, SGLang).**
+**A fault-injection study of what a streaming client sees when an LLM server (vLLM, SGLang) crashes mid-generation. Exactly-once token delivery and adaptive KV-cache checkpointing are planned later phases (see the phase table below).**
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23377448.svg)](https://doi.org/10.5281/zenodo.23377448)
 
@@ -108,7 +108,7 @@ Each question has a stated hypothesis in [`docs/proposal.md`](docs/proposal.md) 
 3. All statistics come from one script that reads raw logs and that anyone can re-run.
 4. Planned work is never described in past tense.
 
-## Key Findings (preliminary)
+## Key Findings
 
 Measured on vLLM 0.31.0 and SGLang 0.5.21 with identical harness code, one A10G each, Llama 3.1 8B Instruct, one main prompt plus five more for the follow-up runs, a 256-token budget, and requests issued one at a time. Every number comes from [`analysis/make_tables.py`](analysis/make_tables.py) run on the logs in [`experiments/`](experiments/). Scope limits are in the paper's threats-to-validity section.
 
