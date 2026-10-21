@@ -1,0 +1,112 @@
+"""A tiny OpenAI-compatible mock engine for testing the harness and gateway.
+
+It is NOT a model and is never used for measured results. It streams one token
+per chunk, like vLLM and SGLang, so that tests can kill it mid-stream:
+
+  * tokens are words "w0".."w499"; the token after a context is a hash of the
+    last three token ids, so output is a pure function of the context
+    (like an engine in deterministic mode);
+  * --history-dependent adds the number of requests served so far to the hash,
+    so a cold restart produces different text (like vLLM's default mode with
+    prefix caching, Phase 1);
+  * temperature > 0 samples from a seeded RNG that restarts with every request
+    (like an engine that does not expose its RNG position);
+  * /tokenize and the vLLM token-id logprobs format are supported.
+
+  python -m harness.mock_engine --port 8100 --delay 0.01
+"""
+import argparse
+import json
+import random
+import re
+import time
+import zlib
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+VOCAB = 500
+BOS = VOCAB          # id of the beginning-of-sequence token
+WORD = re.compile(r"^w(\d+)$")
+
+
+def tokenize(text):
+    ids = [BOS]
+    for w in text.split():
+        m = WORD.match(w)
+        ids.append(int(m.group(1)) % VOCAB if m else zlib.crc32(w.encode()) % VOCAB)
+    return ids
+
+
+def next_token(ctx, salt, rng=None):
+    a, b, c = ([BOS, BOS, BOS] + ctx)[-3:]
+    base = zlib.crc32(f"{a},{b},{c},{salt}".encode()) % VOCAB
+    if rng is None:
+        return base
+    return (base + rng.randrange(5)) % VOCAB      # "sampling" among nearby ids
+
+
+def make_handler(state):
+    class H(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.0"
+
+        def log_message(self, *a):
+            pass
+
+        def _json(self, code, obj):
+            b = json.dumps(obj).encode()
+            self.send_response(code)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(b)))
+            self.end_headers()
+            self.wfile.write(b)
+
+        def do_GET(self):
+            if self.path.startswith("/v1/models"):
+                return self._json(200, {"object": "list", "data": [{"id": state["model"]}]})
+            self._json(404, {"error": "not found"})
+
+        def do_POST(self):
+            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", "0"))) or b"{}")
+            if self.path == "/tokenize":
+                return self._json(200, {"tokens": tokenize(body.get("prompt", ""))})
+            if self.path != "/v1/completions":
+                return self._json(404, {"error": "not found"})
+            p = body.get("prompt", "")
+            ctx = [int(t) for t in p] if isinstance(p, list) else tokenize(p)
+            temp = float(body.get("temperature", 0) or 0)
+            rng = random.Random(body.get("seed")) if temp > 0 else None
+            salt = state["served"] if state["history"] else 0
+            state["served"] += 1
+            as_ids = bool(body.get("return_tokens_as_token_ids"))
+            n = int(body.get("max_tokens", 16))
+            self.send_response(200)
+            self.send_header("Content-Type", "text/event-stream")
+            self.end_headers()
+            for i in range(n):
+                tok = next_token(ctx, salt, rng)
+                ctx.append(tok)
+                ch = {"index": 0, "text": f" w{tok}",
+                      "finish_reason": "length" if i == n - 1 else None,
+                      "logprobs": {"tokens": [f"token_id:{tok}"]} if as_ids else None}
+                self.wfile.write(("data: " + json.dumps({"choices": [ch]}) + "\n\n").encode())
+                self.wfile.flush()
+                time.sleep(state["delay"])
+            self.wfile.write(b"data: [DONE]\n\n")
+
+    return H
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("--port", type=int, required=True)
+    p.add_argument("--delay", type=float, default=0.01, help="seconds per token")
+    p.add_argument("--history-dependent", action="store_true")
+    p.add_argument("--model", default="mock")
+    a = p.parse_args()
+    state = {"model": a.model, "delay": a.delay, "history": a.history_dependent, "served": 0}
+    srv = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(state))
+    srv.daemon_threads = True
+    srv.serve_forever()
+
+
+if __name__ == "__main__":
+    main()

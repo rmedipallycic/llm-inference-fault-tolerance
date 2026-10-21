@@ -39,7 +39,7 @@ Each question has a stated hypothesis in [`docs/proposal.md`](docs/proposal.md) 
 
 ```
                  ┌──────────────────────────────────────────────┐
-  Client  ◄──────┤  Gateway (planned)                           │
+  Client  ◄──────┤  Gateway (built, gateway/; GPU runs pending) │
  (streaming)     │  - sequence-numbered tokens                  │
                  │  - durable token log (output commit)         │
                  │  - dedup on recovery                         │
@@ -128,7 +128,7 @@ Measured on vLLM 0.31.0 and SGLang 0.5.21 with identical harness code, one A10G 
 | --- | --- | --- |
 | 1. Harness and baselines | Fault injection runs end to end on unmodified vLLM and SGLang, logs committed | Done: 86 runs, 430 trials committed (SGLang via its official container; [note](docs/sglang-attempt.md)) |
 | 2. RQ1 characterization | Measured anomaly counts for naive retry and recompute | Done for both engines: six prompts, cache ablations, deterministic modes ([paper](paper/main.pdf)); throughput cost of the fixes not yet measured |
-| 3. Exactly-once gateway (RQ2) | Zero client anomalies across injected trials, overhead measured | Not started |
+| 3. Exactly-once gateway (RQ2) | Zero client anomalies across injected trials, overhead measured | In progress: gateway built and tested against a mock engine, including engine and gateway kills ([design and tests](docs/gateway.md)); GPU measurements not yet run |
 | 4. Checkpoint microbenchmarks (RQ3) | Measured recompute-cost and checkpoint-cost curves | Not started |
 | 5. Adaptive policy (RQ4) | Compared against all baselines on mixed workload | Not started |
 
@@ -143,14 +143,16 @@ llm-inference-fault-tolerance/
 │   ├── proposal.md          # full research proposal
 │   ├── harness-validation.md # smoke-test note
 │   └── sglang-attempt.md    # SGLang setup: failed host install, working container
-├── harness/                 # fault-injection harness (Phase 1)
-├── gateway/                 # exactly-once token gateway (planned)
+├── harness/                 # fault-injection harness (Phase 1), gateway trial runner and mock engine (Phase 3)
+├── gateway/                 # exactly-once token gateway (Phase 3; see docs/gateway.md)
+├── tests/                   # gateway tests against harness/mock_engine.py (no GPU)
 ├── policies/                # fixed and adaptive checkpoint policies (planned)
 ├── experiments/             # raw logs from measured runs only (86 runs, 430 trials)
 ├── analysis/                # analyze.py (per-trial metrics) and make_tables.py (paper tables), both from raw logs
 ├── scripts/run_matrix.sh    # vLLM measurement grid
 ├── scripts/sgl_grid.sh      # SGLang grid + radix ablation (runs inside the SGLang container)
 ├── scripts/extras_*.sh      # follow-up runs: deterministic modes, token-id recompute, more prompts
+├── scripts/run_gateway_matrix.sh # Phase 3 grid: restart, deterministic, overhead, failover
 ├── paper/                   # paper (preprint) with measured vLLM and SGLang results
 └── smoke_tests/summary.csv  # harness smoke test only, not results
 ```
@@ -184,6 +186,21 @@ docker run --gpus all --rm --network host --ipc=host --shm-size 16g \
 The prefix-cache ablation used the same harness with `--engine vllm-noapc` and `--no-enable-prefix-caching` added to the server command, at `--kill-at 128` for both strategies and temperatures; the exact command line is recorded in each ablation run's `run.json`.
 
 Recorded environment: vLLM 0.31.0 with torch 2.13.0, and SGLang 0.5.21 with torch 2.13.0+cu130 (container image `lmsysorg/sglang:v0.5.21`); NVIDIA A10G (23028 MiB), driver 595.91.07, Deep Learning OSS Nvidia Driver AMI (Ubuntu 26.04, build 20261003), Python 3.12, `VLLM_USE_FLASHINFER_SAMPLER=0` for vLLM (the host image has no CUDA toolkit). Full package versions and GPU inventory are in every `run.json`.
+
+### Phase 3 gateway (in progress)
+
+No GPU needed for the tests; they start the mock engine and the gateway as processes and kill them mid-stream:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+On a GPU machine, after `scripts/setup_instance.sh`:
+
+```bash
+bash scripts/run_gateway_matrix.sh vllm          # restart, deterministic, overhead (+ failover with 2 GPUs)
+python analysis/gateway_check.py                 # summary from the raw logs
+```
 
 ## Related Work
 
