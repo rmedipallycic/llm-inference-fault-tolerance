@@ -2,7 +2,7 @@
 # Phase 3 (RQ2) grid for ONE engine on a GPU instance: the exactly-once gateway.
 #
 #   bash scripts/run_gateway_matrix.sh vllm
-#   bash scripts/run_gateway_matrix.sh sglang     (in the SGLang environment)
+#   bash scripts/run_gateway_matrix.sh sglang     (inside the lmsysorg/sglang container, see README)
 #   PARTS="overhead" bash scripts/run_gateway_matrix.sh vllm    # one part only
 #
 # Parts (all by default):
@@ -26,6 +26,7 @@ MAX_MODEL_LEN="${MAX_MODEL_LEN:-4096}"
 PARTS="${PARTS:-restart determ overhead failover}"
 KILL_POINTS="${KILL_POINTS:-$((MAX_TOKENS / 10)) $((MAX_TOKENS / 2)) $((MAX_TOKENS * 9 / 10))}"
 NGPU="$(nvidia-smi -L 2>/dev/null | wc -l || echo 0)"
+PY="$(command -v python || command -v python3)"   # the SGLang container has only python3
 
 case "$ENGINE" in
   vllm)
@@ -34,7 +35,8 @@ case "$ENGINE" in
     DET_ENV="VLLM_BATCH_INVARIANT=1"; DET_FLAG=""
     MODE="ids" ;;
   sglang)
-    CMD="env CUDA_VISIBLE_DEVICES={gpu} python -m sglang.launch_server --model-path $MODEL --port {port} --context-length $MAX_MODEL_LEN --attention-backend triton --sampling-backend pytorch"
+    # same server flags as the Phase 1 SGLang runs (scripts/sgl_grid.sh)
+    CMD="env CUDA_VISIBLE_DEVICES={gpu} python3 -m sglang.launch_server --model-path $MODEL --port {port} --context-length $MAX_MODEL_LEN --mem-fraction-static 0.85"
     DET_ENV=""; DET_FLAG=" --enable-deterministic-inference"
     MODE="text" ;;   # token-id resume is only wired for vLLM's logprobs format
   *) echo "engine must be vllm or sglang" >&2; exit 2 ;;
@@ -50,10 +52,11 @@ echo "commit $(git rev-parse HEAD), engine $ENGINE, model $MODEL, GPUs $NGPU, pa
 run() {   # run <label> <args...>; one failed run must not stop the grid
   echo "=== $ENGINE $1"
   shift
-  if ! python -m harness.run_gateway_trial --run-type measured --engine "$ENGINE" \
+  if ! "$PY" -m harness.run_gateway_trial --run-type measured --engine "$ENGINE" \
        --model "$MODEL" --mode "$MODE" --max-tokens "$MAX_TOKENS" --seed "$SEED" "$@"; then
     echo "RUN FAILED: $ENGINE $*" | tee -a "experiments/failed_gateway_runs_${ENGINE}.txt"
     pkill -9 -f -- "--port 80" 2>/dev/null || true
+    pkill -9 -f -- "sglang.launch_server" 2>/dev/null || true
     pkill -9 -f -- "gateway.server" 2>/dev/null || true
     sleep 10
   fi
@@ -87,4 +90,4 @@ for PART in $PARTS; do
   esac
 done
 
-python analysis/gateway_check.py --out "experiments/gateway_summary_${ENGINE}.md" || true
+"$PY" analysis/gateway_check.py --out "experiments/gateway_summary_${ENGINE}.md" || true
