@@ -4,9 +4,15 @@
     python analysis/gateway_check.py --root smoke_tests
 
 Kill runs (one row per run): trials, trials with exactly-once delivery,
-duplicated and missing positions, trials whose final text equals the run's
-failure-free reference, recovery latency (kill -> first recovered position at
-the client) and gateway recovery attempts.
+duplicated and missing positions, trials whose final text equals one of the
+run's two failure-free references (as in Phase 1), and recovery split into
+  recovery_s    kill -> first recovered position at the client
+  restart_s     kill -> killed engine answering its health check again
+  resume_s      engine ready -> first recovered position (the gateway's part;
+                includes up to one health-poll interval, 0.5 s by default)
+plus the gateway's recovery attempts. engine_mode is "batch-invariant" when
+the run had VLLM_BATCH_INVARIANT=1, "deterministic" when the SGLang server
+command had --enable-deterministic-inference, else "default".
 
 Overhead runs (one row per run): per-request time to first token, mean time
 per output token after the first, and end-to-end time, direct to the engine
@@ -43,6 +49,15 @@ def timing(t0, times):
     return ttft, tpot, times[-1] - t0
 
 
+def engine_mode(meta):
+    env = meta["environment"].get("engine_env") or {}
+    if env.get("VLLM_BATCH_INVARIANT") == "1":
+        return "batch-invariant"
+    if "--enable-deterministic-inference" in (meta["config"].get("server_cmd") or ""):
+        return "deterministic"
+    return "default"
+
+
 def kill_row(run_dir, meta):
     trials = []
     for f in sorted(glob.glob(os.path.join(run_dir, "trial_*.json"))):
@@ -50,21 +65,33 @@ def kill_row(run_dir, meta):
             trials.append(json.load(fh))
     if not trials:
         return None
-    ref = meta["reference"]["text"]
+    refs = {meta["reference"]["text"], meta["reference_repeat"]["text"]}
     ds = [delivery(t["client"]["events"]) for t in trials]
     texts = [text_of(t["client"]["events"]) for t in trials]
     c = meta["config"]
+    restart, resume = [], []
+    for t in trials:
+        r = (t.get("restarts") or [None])[0]
+        after = [e for e in t["client"]["events"] if (e.get("attempt") or 0) >= 1]
+        if r and "t_kill" in t:
+            ready = r["t_start"] + r["ready_s"]
+            restart.append(ready - t["t_kill"])
+            if after:
+                resume.append(after[0]["t_wall"] - ready)
     return {
-        "run_id": meta["run_id"], "engine": meta["engine"], "replicas": c["replicas"],
+        "run_id": meta["run_id"], "engine": meta["engine"], "engine_mode": engine_mode(meta),
+        "replicas": c["replicas"],
         "mode": c["mode"], "fsync": c["fsync"], "temperature": c["temperature"],
         "kill_at": c["kill_at"], "trials": len(trials),
         "exactly_once": sum(d["exactly_once"] for d in ds),
         "duplicated_positions": sum(d["duplicated_positions"] for d in ds),
         "missing_positions": sum(d["missing_positions"] for d in ds),
         "complete": sum(t["client"].get("finish_reason") in ("length", "stop") for t in trials),
-        "matches_reference": sum(x == ref for x in texts),
+        "matches_reference": sum(x in refs for x in texts),
         "reference_repeatable": meta.get("reference_repeat_identical"),
-        "recovery_s": med([t.get("recovery_latency_s") for t in trials]),
+        "recovery_s": med([t.get("recovery_latency_s") for t in trials], "{:.1f}"),
+        "restart_s": med(restart, "{:.1f}"),
+        "resume_s": med(resume),
         "attempts": med([(t["client"].get("final") or {}).get("attempts") for t in trials], "{:.0f}"),
         "git_commit": (meta["environment"].get("git_commit") or "")[:7],
     }
