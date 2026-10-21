@@ -156,6 +156,40 @@ tokenization), not a measured lower bound for exactly-once delivery.
   8B replicas do not fit). Not yet run.
 * **SGLang**: the same grid in text mode. Not yet run.
 
+### Failover across two machines
+
+Instances with two or more GPUs need a larger vCPU quota than this project
+has, so failover runs on two single-GPU machines (two g5.xlarge, same AMI and
+vLLM 0.31.0, same security group with TCP 8000 allowed from that group).
+Machine 1 runs the gateway and replica 0, machine 2 runs replica 1:
+
+```bash
+# machine 2, in tmux (default mode first; later restart it with "bi")
+bash scripts/remote_replica.sh default
+# machine 1, in tmux, with machine 2's private IP
+bash scripts/run_failover_two_hosts.sh default http://<private IP>:8000
+```
+
+Each trial starts on replica 0, which is SIGKILLed at position 128; the
+gateway resumes on replica 1 over the private network. The run records
+replica 1's `/version`, a failure-free reference generated on it, and the
+command it was started with (`scripts/failover_common.sh` defines it for both
+machines). Copy `~/remote_replica_<mode>.log` from machine 2 into the run's
+folder before committing.
+
+### SGLang
+
+As in Phase 1, SGLang runs from its official container with the harness
+inside it, so that the kill reaches the server:
+
+```bash
+docker run --gpus all --rm --network host --ipc=host --shm-size 16g \
+  -e PYTHONUNBUFFERED=1 -e HF_HUB_OFFLINE=1 \
+  -v ~/.cache/huggingface:/root/.cache/huggingface -v "$PWD":/work -w /work \
+  lmsysorg/sglang:v0.5.21 bash -c \
+  'git config --global --add safe.directory /work && PARTS="restart determ overhead" bash scripts/run_gateway_matrix.sh sglang'
+```
+
 The hypothesis from the proposal, that exactly-once delivery costs little per
 token because the log grows by one entry per step, is what the overhead runs
 test. It can be refuted.

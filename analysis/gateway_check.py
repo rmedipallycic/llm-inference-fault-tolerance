@@ -10,6 +10,9 @@ run's two failure-free references (as in Phase 1), and recovery split into
   restart_s     kill -> killed engine answering its health check again
   resume_s      engine ready -> first recovered position (the gateway's part;
                 includes up to one health-poll interval, 0.5 s by default)
+  (restart_s and resume_s only for trials that resumed on the killed replica;
+   "failovers" counts trials that resumed on another replica, whose recovery is
+   recovery_s alone)
 plus the gateway's recovery attempts. engine_mode is "batch-invariant" when
 the run had VLLM_BATCH_INVARIANT=1, "deterministic" when the SGLang server
 command had --enable-deterministic-inference, else "default".
@@ -69,18 +72,20 @@ def kill_row(run_dir, meta):
     ds = [delivery(t["client"]["events"]) for t in trials]
     texts = [text_of(t["client"]["events"]) for t in trials]
     c = meta["config"]
-    restart, resume = [], []
+    restart, resume, failovers = [], [], 0
     for t in trials:
         r = (t.get("restarts") or [None])[0]
         after = [e for e in t["client"]["events"] if (e.get("attempt") or 0) >= 1]
-        if r and "t_kill" in t:
+        if after and after[0]["backend"] != t.get("killed_backend"):
+            failovers += 1                       # resumed on another replica
+        elif r and "t_kill" in t:
             ready = r["t_start"] + r["ready_s"]
             restart.append(ready - t["t_kill"])
             if after:
                 resume.append(after[0]["t_wall"] - ready)
     return {
         "run_id": meta["run_id"], "engine": meta["engine"], "engine_mode": engine_mode(meta),
-        "replicas": c["replicas"],
+        "replicas": f"{c['replicas']}+{len(meta.get('remote_backends') or [])}",
         "mode": c["mode"], "fsync": c["fsync"], "temperature": c["temperature"],
         "kill_at": c["kill_at"], "trials": len(trials),
         "exactly_once": sum(d["exactly_once"] for d in ds),
@@ -88,8 +93,10 @@ def kill_row(run_dir, meta):
         "missing_positions": sum(d["missing_positions"] for d in ds),
         "complete": sum(t["client"].get("finish_reason") in ("length", "stop") for t in trials),
         "matches_reference": sum(x in refs for x in texts),
+        "failovers": failovers,
+        "not_killed": sum(1 for t in trials if "t_kill" not in t),
         "reference_repeatable": meta.get("reference_repeat_identical"),
-        "recovery_s": med([t.get("recovery_latency_s") for t in trials], "{:.1f}"),
+        "recovery_s": med([t.get("recovery_latency_s") for t in trials]),
         "restart_s": med(restart, "{:.1f}"),
         "resume_s": med(resume),
         "attempts": med([(t["client"].get("final") or {}).get("attempts") for t in trials], "{:.0f}"),

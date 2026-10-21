@@ -16,6 +16,14 @@ computes every number afterwards):
 The server command is a template: {port} and {gpu} are filled per replica,
 e.g. "env CUDA_VISIBLE_DEVICES={gpu} vllm serve MODEL --port {port}".
 
+Replicas on other machines (--remote-backends) are added to the gateway after
+the local ones. They are not started, killed or restarted by this script; it
+only checks that they answer before every trial and records their /version,
+a failure-free reference generated on them, and --remote-desc (how they were
+started). The gateway prefers the lowest-numbered healthy replica, so a
+request starts on local replica 0, which is the one killed; it then fails
+over to the remote replica.
+
 Example (one A10G, vLLM, restart mode):
   python -m harness.run_gateway_trial --run-type measured --engine vllm \
     --server-cmd "vllm serve meta-llama/Llama-3.1-8B-Instruct --port {port} --max-model-len 4096" \
@@ -64,6 +72,10 @@ def main():
     p.add_argument("--replicas", type=int, default=1)
     p.add_argument("--gpus", default=None,
                    help="comma-separated GPU index per replica, fills {gpu} (default 0,1,...)")
+    p.add_argument("--remote-backends", default="",
+                   help="comma-separated base URLs of replicas on other machines")
+    p.add_argument("--remote-desc", default=None,
+                   help="how the remote replicas were started (required with --remote-backends)")
     p.add_argument("--base-port", type=int, default=8000)
     p.add_argument("--gateway-port", type=int, default=9000)
     p.add_argument("--mode", choices=["ids", "text"], default="ids")
@@ -81,6 +93,9 @@ def main():
     p.add_argument("--stall-timeout", type=float, default=60.0)
     a = p.parse_args()
 
+    remotes = [u.rstrip("/") for u in a.remote_backends.split(",") if u.strip()]
+    if remotes and not a.remote_desc:
+        p.error("--remote-desc is required with --remote-backends")
     if (a.kill_at is None) == (a.overhead_pairs == 0):
         p.error("give either --kill-at (kill trials) or --overhead-pairs (overhead run)")
     if a.kill_at is not None and not 1 <= a.kill_at < a.max_tokens:
@@ -94,8 +109,9 @@ def main():
 
     kind = f"k{a.kill_at}" if a.kill_at is not None else "overhead"
     pid = f"_{a.prompt_id}" if a.prompt_id else ""
+    rlabel = f"r{a.replicas}" + (f"+{len(remotes)}remote" if remotes else "")
     run_id = (f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_gw_{a.engine}{pid}"
-              f"_r{a.replicas}_{a.mode}{'_fsync' if a.fsync else ''}_T{a.temperature}_{kind}")
+              f"_{rlabel}_{a.mode}{'_fsync' if a.fsync else ''}_T{a.temperature}_{kind}")
     out = os.path.join(REPO, OUT_DIRS[a.run_type], run_id)
     os.makedirs(out, exist_ok=True)
     env = environment()
@@ -108,7 +124,8 @@ def main():
                              os.path.join(out, f"server_{i}.log"))
                for i, pt in enumerate(ports)]
     gw_url = f"http://127.0.0.1:{a.gateway_port}"
-    gw_cmd = [sys.executable, "-m", "gateway.server", "--backends", ",".join(urls),
+    all_urls = urls + remotes
+    gw_cmd = [sys.executable, "-m", "gateway.server", "--backends", ",".join(all_urls),
               "--model", a.model, "--port", str(a.gateway_port),
               "--log-dir", os.path.join(out, "gateway_log"), "--mode", a.mode,
               "--stall-timeout", str(a.stall_timeout),
@@ -120,19 +137,27 @@ def main():
     if a.seed is not None:
         body["seed"] = a.seed
     meta = {"run_id": run_id, "run_type": a.run_type, "engine": a.engine, "config": vars(a),
-            "gateway_cmd": gw_cmd, "environment": env, "backends": urls}
+            "gateway_cmd": gw_cmd, "environment": env, "backends": all_urls,
+            "local_backends": urls, "remote_backends": remotes, "remote_desc": a.remote_desc}
     gw_log = open(os.path.join(out, "gateway.log"), "a", encoding="utf-8")
     gw_proc = None
     try:
         for s in servers:
             s.start()
         meta["initial_startup_s"] = [s.wait_ready(a.ready_timeout) for s in servers]
+        meta["remote_version"] = {}
+        for u in remotes:
+            wait_http(u + "/v1/models", a.ready_timeout)
+            try:
+                meta["remote_version"][u] = requests.get(u + "/version", timeout=5).json()
+            except (requests.RequestException, ValueError):
+                meta["remote_version"][u] = None
         gw_proc = subprocess.Popen(gw_cmd, cwd=REPO, stdout=gw_log, stderr=subprocess.STDOUT)
         wait_http(gw_url + "/health", 60)
 
-        def direct():
+        def direct(url=urls[0]):
             t0 = time.monotonic()
-            chunks, err = stream_completion(urls[0], a.model, a.prompt, a.max_tokens,
+            chunks, err = stream_completion(url, a.model, a.prompt, a.max_tokens,
                                             a.temperature, a.seed, extra_body=extra or None)
             return {"t_start_mono": t0, "chunks": chunks, "error": err, "text": join(chunks)}
 
@@ -145,6 +170,7 @@ def main():
         meta["reference"] = direct()
         meta["reference_repeat"] = direct()
         meta["reference_repeat_identical"] = meta["reference"]["text"] == meta["reference_repeat"]["text"]
+        meta["remote_reference"] = {u: direct(u) for u in remotes}
         g = via_gateway()
         meta["gateway_reference"] = g
         meta["gateway_reference_text"] = text_of(g["events"])
@@ -170,11 +196,16 @@ def main():
                 if s.proc is None or s.proc.poll() is not None:
                     s.start()
                 s.wait_ready(a.ready_timeout)
+            for u in remotes:
+                wait_http(u + "/v1/models", a.ready_timeout)
             st = {}
             restarts = []
 
             def hook(e):
                 if st or e["seq"] + e["n"] < a.kill_at:
+                    return
+                if e["backend"] >= len(servers):  # remote: not ours to kill
+                    st["not_killed"] = f"serving backend {e['backend']} is remote"
                     return
                 victim = servers[e["backend"]]
                 st["killed_backend"] = e["backend"]
