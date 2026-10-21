@@ -128,7 +128,7 @@ Measured on vLLM 0.31.0 and SGLang 0.5.21 with identical harness code, one A10G 
 | --- | --- | --- |
 | 1. Harness and baselines | Fault injection runs end to end on unmodified vLLM and SGLang, logs committed | Done: 86 runs, 430 trials committed (SGLang via its official container; [note](docs/sglang-attempt.md)) |
 | 2. RQ1 characterization | Measured anomaly counts for naive retry and recompute | Done for both engines: six prompts, cache ablations, deterministic modes ([paper](paper/main.pdf)); throughput cost of the fixes not yet measured |
-| 3. Exactly-once gateway (RQ2) | Zero client anomalies across injected trials, overhead measured | In progress: gateway built and tested against a mock engine, including engine and gateway kills ([design and tests](docs/gateway.md)); GPU measurements not yet run |
+| 3. Exactly-once gateway (RQ2) | Zero client anomalies across injected trials, overhead measured | Gate met for vLLM (restart mode): exactly-once delivery in 70 of 70 kill trials; batch-invariant mode gave the failure-free text in 10 of 10; +0.05 ms per output token, about +39 ms before the first token ([results](docs/gateway.md)). SGLang and two-replica failover not yet measured |
 | 4. Checkpoint microbenchmarks (RQ3) | Measured recompute-cost and checkpoint-cost curves | Not started |
 | 5. Adaptive policy (RQ4) | Compared against all baselines on mixed workload | Not started |
 
