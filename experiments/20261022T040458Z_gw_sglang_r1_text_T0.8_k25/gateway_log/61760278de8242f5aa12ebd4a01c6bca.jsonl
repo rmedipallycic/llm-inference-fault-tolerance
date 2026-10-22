@@ -1,0 +1,258 @@
+{"kind": "header", "req_id": "61760278de8242f5aa12ebd4a01c6bca", "request": {"model": "meta-llama/Llama-3.1-8B-Instruct", "prompt": "Explain, in a few paragraphs, how a write-ahead log lets a database recover after a crash.", "max_tokens": 256, "temperature": 0.8, "seed": 1234, "stream": true}, "prompt_ids": null, "mode": "text", "backends": ["http://127.0.0.1:8000"], "t": 1792642056.6191845}
+{"kind": "tokens", "seq": 0, "n": 1, "ids": null, "text": " With", "attempt": 0, "backend": 0, "t": 1792642056.6950476}
+{"kind": "tokens", "seq": 1, "n": 1, "ids": null, "text": " your", "attempt": 0, "backend": 0, "t": 1792642056.726329}
+{"kind": "tokens", "seq": 2, "n": 1, "ids": null, "text": " explanation", "attempt": 0, "backend": 0, "t": 1792642056.7590878}
+{"kind": "tokens", "seq": 3, "n": 1, "ids": null, "text": ",", "attempt": 0, "backend": 0, "t": 1792642056.791785}
+{"kind": "tokens", "seq": 4, "n": 1, "ids": null, "text": " address", "attempt": 0, "backend": 0, "t": 1792642056.824619}
+{"kind": "tokens", "seq": 5, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642056.8573663}
+{"kind": "tokens", "seq": 6, "n": 1, "ids": null, "text": " following", "attempt": 0, "backend": 0, "t": 1792642056.8901951}
+{"kind": "tokens", "seq": 7, "n": 1, "ids": null, "text": " points", "attempt": 0, "backend": 0, "t": 1792642056.9229326}
+{"kind": "tokens", "seq": 8, "n": 1, "ids": null, "text": ":\n\n", "attempt": 0, "backend": 0, "t": 1792642056.9557488}
+{"kind": "tokens", "seq": 9, "n": 1, "ids": null, "text": "-", "attempt": 0, "backend": 0, "t": 1792642056.988573}
+{"kind": "tokens", "seq": 10, "n": 1, "ids": null, "text": " **", "attempt": 0, "backend": 0, "t": 1792642057.0213318}
+{"kind": "tokens", "seq": 11, "n": 1, "ids": null, "text": "Cons", "attempt": 0, "backend": 0, "t": 1792642057.0540698}
+{"kind": "tokens", "seq": 12, "n": 1, "ids": null, "text": "istency", "attempt": 0, "backend": 0, "t": 1792642057.086866}
+{"kind": "tokens", "seq": 13, "n": 1, "ids": null, "text": "**:", "attempt": 0, "backend": 0, "t": 1792642057.1196864}
+{"kind": "tokens", "seq": 14, "n": 1, "ids": null, "text": " How", "attempt": 0, "backend": 0, "t": 1792642057.1524973}
+{"kind": "tokens", "seq": 15, "n": 1, "ids": null, "text": " does", "attempt": 0, "backend": 0, "t": 1792642057.185304}
+{"kind": "tokens", "seq": 16, "n": 1, "ids": null, "text": " a", "attempt": 0, "backend": 0, "t": 1792642057.2185526}
+{"kind": "tokens", "seq": 17, "n": 1, "ids": null, "text": " write", "attempt": 0, "backend": 0, "t": 1792642057.2512093}
+{"kind": "tokens", "seq": 18, "n": 1, "ids": null, "text": "-ahead", "attempt": 0, "backend": 0, "t": 1792642057.2836933}
+{"kind": "tokens", "seq": 19, "n": 1, "ids": null, "text": " log", "attempt": 0, "backend": 0, "t": 1792642057.3165007}
+{"kind": "tokens", "seq": 20, "n": 1, "ids": null, "text": " ensure", "attempt": 0, "backend": 0, "t": 1792642057.3493066}
+{"kind": "tokens", "seq": 21, "n": 1, "ids": null, "text": " consistency", "attempt": 0, "backend": 0, "t": 1792642057.3820846}
+{"kind": "tokens", "seq": 22, "n": 1, "ids": null, "text": " in", "attempt": 0, "backend": 0, "t": 1792642057.4149213}
+{"kind": "tokens", "seq": 23, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642057.447683}
+{"kind": "tokens", "seq": 24, "n": 1, "ids": null, "text": " case", "attempt": 0, "backend": 0, "t": 1792642057.4805014}
+{"kind": "tokens", "seq": 25, "n": 1, "ids": null, "text": " of", "attempt": 0, "backend": 0, "t": 1792642057.5138173}
+{"kind": "tokens", "seq": 26, "n": 1, "ids": null, "text": " a", "attempt": 0, "backend": 0, "t": 1792642057.5461226}
+{"kind": "tokens", "seq": 27, "n": 1, "ids": null, "text": " crash", "attempt": 0, "backend": 0, "t": 1792642057.5788927}
+{"kind": "tokens", "seq": 28, "n": 1, "ids": null, "text": "?\n", "attempt": 0, "backend": 0, "t": 1792642057.6117015}
+{"kind": "tokens", "seq": 29, "n": 1, "ids": null, "text": "-", "attempt": 0, "backend": 0, "t": 1792642057.644539}
+{"kind": "tokens", "seq": 30, "n": 1, "ids": null, "text": " **", "attempt": 0, "backend": 0, "t": 1792642057.6773274}
+{"kind": "tokens", "seq": 31, "n": 1, "ids": null, "text": "Log", "attempt": 0, "backend": 0, "t": 1792642057.7101138}
+{"kind": "tokens", "seq": 32, "n": 1, "ids": null, "text": " Entries", "attempt": 0, "backend": 0, "t": 1792642057.7429054}
+{"kind": "tokens", "seq": 33, "n": 1, "ids": null, "text": "**:", "attempt": 0, "backend": 0, "t": 1792642057.775705}
+{"kind": "tokens", "seq": 34, "n": 1, "ids": null, "text": " What", "attempt": 0, "backend": 0, "t": 1792642057.8084884}
+{"kind": "tokens", "seq": 35, "n": 1, "ids": null, "text": " are", "attempt": 0, "backend": 0, "t": 1792642057.8413458}
+{"kind": "tokens", "seq": 36, "n": 1, "ids": null, "text": " log", "attempt": 0, "backend": 0, "t": 1792642057.8741531}
+{"kind": "tokens", "seq": 37, "n": 1, "ids": null, "text": " entries", "attempt": 0, "backend": 0, "t": 1792642057.9069214}
+{"kind": "tokens", "seq": 38, "n": 1, "ids": null, "text": " and", "attempt": 0, "backend": 0, "t": 1792642057.9397287}
+{"kind": "tokens", "seq": 39, "n": 1, "ids": null, "text": " how", "attempt": 0, "backend": 0, "t": 1792642057.9725564}
+{"kind": "tokens", "seq": 40, "n": 1, "ids": null, "text": " do", "attempt": 0, "backend": 0, "t": 1792642058.0053666}
+{"kind": "tokens", "seq": 41, "n": 1, "ids": null, "text": " they", "attempt": 0, "backend": 0, "t": 1792642058.0386455}
+{"kind": "tokens", "seq": 42, "n": 1, "ids": null, "text": " contain", "attempt": 0, "backend": 0, "t": 1792642058.0709825}
+{"kind": "tokens", "seq": 43, "n": 1, "ids": null, "text": " information", "attempt": 0, "backend": 0, "t": 1792642058.1038446}
+{"kind": "tokens", "seq": 44, "n": 1, "ids": null, "text": " related", "attempt": 0, "backend": 0, "t": 1792642058.136727}
+{"kind": "tokens", "seq": 45, "n": 1, "ids": null, "text": " to", "attempt": 0, "backend": 0, "t": 1792642058.1696072}
+{"kind": "tokens", "seq": 46, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642058.2024717}
+{"kind": "tokens", "seq": 47, "n": 1, "ids": null, "text": " database", "attempt": 0, "backend": 0, "t": 1792642058.235335}
+{"kind": "tokens", "seq": 48, "n": 1, "ids": null, "text": " operations", "attempt": 0, "backend": 0, "t": 1792642058.2682168}
+{"kind": "tokens", "seq": 49, "n": 1, "ids": null, "text": " (", "attempt": 0, "backend": 0, "t": 1792642058.301505}
+{"kind": "tokens", "seq": 50, "n": 1, "ids": null, "text": "INSERT", "attempt": 0, "backend": 0, "t": 1792642058.333898}
+{"kind": "tokens", "seq": 51, "n": 1, "ids": null, "text": ",", "attempt": 0, "backend": 0, "t": 1792642058.366979}
+{"kind": "tokens", "seq": 52, "n": 1, "ids": null, "text": " UPDATE", "attempt": 0, "backend": 0, "t": 1792642058.3996308}
+{"kind": "tokens", "seq": 53, "n": 1, "ids": null, "text": ",", "attempt": 0, "backend": 0, "t": 1792642058.43252}
+{"kind": "tokens", "seq": 54, "n": 1, "ids": null, "text": " DELETE", "attempt": 0, "backend": 0, "t": 1792642058.4653807}
+{"kind": "tokens", "seq": 55, "n": 1, "ids": null, "text": ",", "attempt": 0, "backend": 0, "t": 1792642058.4983034}
+{"kind": "tokens", "seq": 56, "n": 1, "ids": null, "text": " etc", "attempt": 0, "backend": 0, "t": 1792642058.5311296}
+{"kind": "tokens", "seq": 57, "n": 1, "ids": null, "text": ".)", "attempt": 0, "backend": 0, "t": 1792642058.563941}
+{"kind": "tokens", "seq": 58, "n": 1, "ids": null, "text": "?\n", "attempt": 0, "backend": 0, "t": 1792642058.596816}
+{"kind": "tokens", "seq": 59, "n": 1, "ids": null, "text": "-", "attempt": 0, "backend": 0, "t": 1792642058.6296813}
+{"kind": "tokens", "seq": 60, "n": 1, "ids": null, "text": " **", "attempt": 0, "backend": 0, "t": 1792642058.6629152}
+{"kind": "tokens", "seq": 61, "n": 1, "ids": null, "text": "Re", "attempt": 0, "backend": 0, "t": 1792642058.6954024}
+{"kind": "tokens", "seq": 62, "n": 1, "ids": null, "text": "covery", "attempt": 0, "backend": 0, "t": 1792642058.7282877}
+{"kind": "tokens", "seq": 63, "n": 1, "ids": null, "text": "**:", "attempt": 0, "backend": 0, "t": 1792642058.7611873}
+{"kind": "tokens", "seq": 64, "n": 1, "ids": null, "text": " How", "attempt": 0, "backend": 0, "t": 1792642058.7944527}
+{"kind": "tokens", "seq": 65, "n": 1, "ids": null, "text": " do", "attempt": 0, "backend": 0, "t": 1792642058.8268583}
+{"kind": "tokens", "seq": 66, "n": 1, "ids": null, "text": " database", "attempt": 0, "backend": 0, "t": 1792642058.8597097}
+{"kind": "tokens", "seq": 67, "n": 1, "ids": null, "text": " administrators", "attempt": 0, "backend": 0, "t": 1792642058.8925958}
+{"kind": "tokens", "seq": 68, "n": 1, "ids": null, "text": " recover", "attempt": 0, "backend": 0, "t": 1792642058.9254527}
+{"kind": "tokens", "seq": 69, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642058.958313}
+{"kind": "tokens", "seq": 70, "n": 1, "ids": null, "text": " database", "attempt": 0, "backend": 0, "t": 1792642058.9916203}
+{"kind": "tokens", "seq": 71, "n": 1, "ids": null, "text": " after", "attempt": 0, "backend": 0, "t": 1792642059.0239844}
+{"kind": "tokens", "seq": 72, "n": 1, "ids": null, "text": " a", "attempt": 0, "backend": 0, "t": 1792642059.0568445}
+{"kind": "tokens", "seq": 73, "n": 1, "ids": null, "text": " crash", "attempt": 0, "backend": 0, "t": 1792642059.0897236}
+{"kind": "tokens", "seq": 74, "n": 1, "ids": null, "text": "?\n\n", "attempt": 0, "backend": 0, "t": 1792642059.1226137}
+{"kind": "tokens", "seq": 75, "n": 1, "ids": null, "text": "###", "attempt": 0, "backend": 0, "t": 1792642059.1554952}
+{"kind": "tokens", "seq": 76, "n": 1, "ids": null, "text": " Write", "attempt": 0, "backend": 0, "t": 1792642059.1883411}
+{"kind": "tokens", "seq": 77, "n": 1, "ids": null, "text": "-A", "attempt": 0, "backend": 0, "t": 1792642059.2212503}
+{"kind": "tokens", "seq": 78, "n": 1, "ids": null, "text": "head", "attempt": 0, "backend": 0, "t": 1792642059.2541175}
+{"kind": "tokens", "seq": 79, "n": 1, "ids": null, "text": " Logging", "attempt": 0, "backend": 0, "t": 1792642059.28696}
+{"kind": "tokens", "seq": 80, "n": 1, "ids": null, "text": " in", "attempt": 0, "backend": 0, "t": 1792642059.3197968}
+{"kind": "tokens", "seq": 81, "n": 1, "ids": null, "text": " D", "attempt": 0, "backend": 0, "t": 1792642059.352685}
+{"kind": "tokens", "seq": 82, "n": 1, "ids": null, "text": "atabases", "attempt": 0, "backend": 0, "t": 1792642059.385548}
+{"kind": "tokens", "seq": 83, "n": 1, "ids": null, "text": "\n\n", "attempt": 0, "backend": 0, "t": 1792642059.4184074}
+{"kind": "tokens", "seq": 84, "n": 1, "ids": null, "text": "A", "attempt": 0, "backend": 0, "t": 1792642059.4512806}
+{"kind": "tokens", "seq": 85, "n": 1, "ids": null, "text": " write", "attempt": 0, "backend": 0, "t": 1792642059.4841568}
+{"kind": "tokens", "seq": 86, "n": 1, "ids": null, "text": "-ahead", "attempt": 0, "backend": 0, "t": 1792642059.5169804}
+{"kind": "tokens", "seq": 87, "n": 1, "ids": null, "text": " log", "attempt": 0, "backend": 0, "t": 1792642059.5498405}
+{"kind": "tokens", "seq": 88, "n": 1, "ids": null, "text": " (", "attempt": 0, "backend": 0, "t": 1792642059.5827346}
+{"kind": "tokens", "seq": 89, "n": 1, "ids": null, "text": "W", "attempt": 0, "backend": 0, "t": 1792642059.6155899}
+{"kind": "tokens", "seq": 90, "n": 1, "ids": null, "text": "AL", "attempt": 0, "backend": 0, "t": 1792642059.6484892}
+{"kind": "tokens", "seq": 91, "n": 1, "ids": null, "text": ")", "attempt": 0, "backend": 0, "t": 1792642059.6813657}
+{"kind": "tokens", "seq": 92, "n": 1, "ids": null, "text": " is", "attempt": 0, "backend": 0, "t": 1792642059.7142372}
+{"kind": "tokens", "seq": 93, "n": 1, "ids": null, "text": " a", "attempt": 0, "backend": 0, "t": 1792642059.747179}
+{"kind": "tokens", "seq": 94, "n": 1, "ids": null, "text": " fundamental", "attempt": 0, "backend": 0, "t": 1792642059.7799404}
+{"kind": "tokens", "seq": 95, "n": 1, "ids": null, "text": " mechanism", "attempt": 0, "backend": 0, "t": 1792642059.8127832}
+{"kind": "tokens", "seq": 96, "n": 1, "ids": null, "text": " used", "attempt": 0, "backend": 0, "t": 1792642059.8456502}
+{"kind": "tokens", "seq": 97, "n": 1, "ids": null, "text": " in", "attempt": 0, "backend": 0, "t": 1792642059.8785396}
+{"kind": "tokens", "seq": 98, "n": 1, "ids": null, "text": " databases", "attempt": 0, "backend": 0, "t": 1792642059.911429}
+{"kind": "tokens", "seq": 99, "n": 1, "ids": null, "text": " to", "attempt": 0, "backend": 0, "t": 1792642059.944297}
+{"kind": "tokens", "seq": 100, "n": 1, "ids": null, "text": " ensure", "attempt": 0, "backend": 0, "t": 1792642059.9776368}
+{"kind": "tokens", "seq": 101, "n": 1, "ids": null, "text": " data", "attempt": 0, "backend": 0, "t": 1792642060.0100424}
+{"kind": "tokens", "seq": 102, "n": 1, "ids": null, "text": " consistency", "attempt": 0, "backend": 0, "t": 1792642060.0429099}
+{"kind": "tokens", "seq": 103, "n": 1, "ids": null, "text": " and", "attempt": 0, "backend": 0, "t": 1792642060.0757842}
+{"kind": "tokens", "seq": 104, "n": 1, "ids": null, "text": " facilitate", "attempt": 0, "backend": 0, "t": 1792642060.1086333}
+{"kind": "tokens", "seq": 105, "n": 1, "ids": null, "text": " recovery", "attempt": 0, "backend": 0, "t": 1792642060.1419501}
+{"kind": "tokens", "seq": 106, "n": 1, "ids": null, "text": " in", "attempt": 0, "backend": 0, "t": 1792642060.1744852}
+{"kind": "tokens", "seq": 107, "n": 1, "ids": null, "text": " case", "attempt": 0, "backend": 0, "t": 1792642060.2073557}
+{"kind": "tokens", "seq": 108, "n": 1, "ids": null, "text": " of", "attempt": 0, "backend": 0, "t": 1792642060.2402744}
+{"kind": "tokens", "seq": 109, "n": 1, "ids": null, "text": " a", "attempt": 0, "backend": 0, "t": 1792642060.273189}
+{"kind": "tokens", "seq": 110, "n": 1, "ids": null, "text": " crash", "attempt": 0, "backend": 0, "t": 1792642060.3061383}
+{"kind": "tokens", "seq": 111, "n": 1, "ids": null, "text": ".", "attempt": 0, "backend": 0, "t": 1792642060.3389602}
+{"kind": "tokens", "seq": 112, "n": 1, "ids": null, "text": " The", "attempt": 0, "backend": 0, "t": 1792642060.3720632}
+{"kind": "tokens", "seq": 113, "n": 1, "ids": null, "text": " primary", "attempt": 0, "backend": 0, "t": 1792642060.4047844}
+{"kind": "tokens", "seq": 114, "n": 1, "ids": null, "text": " purpose", "attempt": 0, "backend": 0, "t": 1792642060.4379838}
+{"kind": "tokens", "seq": 115, "n": 1, "ids": null, "text": " of", "attempt": 0, "backend": 0, "t": 1792642060.4706068}
+{"kind": "tokens", "seq": 116, "n": 1, "ids": null, "text": " a", "attempt": 0, "backend": 0, "t": 1792642060.503526}
+{"kind": "tokens", "seq": 117, "n": 1, "ids": null, "text": " WAL", "attempt": 0, "backend": 0, "t": 1792642060.536412}
+{"kind": "tokens", "seq": 118, "n": 1, "ids": null, "text": " is", "attempt": 0, "backend": 0, "t": 1792642060.569305}
+{"kind": "tokens", "seq": 119, "n": 1, "ids": null, "text": " to", "attempt": 0, "backend": 0, "t": 1792642060.602238}
+{"kind": "tokens", "seq": 120, "n": 1, "ids": null, "text": " record", "attempt": 0, "backend": 0, "t": 1792642060.635272}
+{"kind": "tokens", "seq": 121, "n": 1, "ids": null, "text": " all", "attempt": 0, "backend": 0, "t": 1792642060.6680207}
+{"kind": "tokens", "seq": 122, "n": 1, "ids": null, "text": " changes", "attempt": 0, "backend": 0, "t": 1792642060.7008953}
+{"kind": "tokens", "seq": 123, "n": 1, "ids": null, "text": " to", "attempt": 0, "backend": 0, "t": 1792642060.7338564}
+{"kind": "tokens", "seq": 124, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642060.7667446}
+{"kind": "tokens", "seq": 125, "n": 1, "ids": null, "text": " database", "attempt": 0, "backend": 0, "t": 1792642060.799609}
+{"kind": "tokens", "seq": 126, "n": 1, "ids": null, "text": " before", "attempt": 0, "backend": 0, "t": 1792642060.8325596}
+{"kind": "tokens", "seq": 127, "n": 1, "ids": null, "text": " they", "attempt": 0, "backend": 0, "t": 1792642060.8659384}
+{"kind": "tokens", "seq": 128, "n": 1, "ids": null, "text": " are", "attempt": 0, "backend": 0, "t": 1792642060.898391}
+{"kind": "tokens", "seq": 129, "n": 1, "ids": null, "text": " applied", "attempt": 0, "backend": 0, "t": 1792642060.9313245}
+{"kind": "tokens", "seq": 130, "n": 1, "ids": null, "text": " to", "attempt": 0, "backend": 0, "t": 1792642060.9641902}
+{"kind": "tokens", "seq": 131, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642060.997088}
+{"kind": "tokens", "seq": 132, "n": 1, "ids": null, "text": " main", "attempt": 0, "backend": 0, "t": 1792642061.0301716}
+{"kind": "tokens", "seq": 133, "n": 1, "ids": null, "text": " database", "attempt": 0, "backend": 0, "t": 1792642061.0628605}
+{"kind": "tokens", "seq": 134, "n": 1, "ids": null, "text": " files", "attempt": 0, "backend": 0, "t": 1792642061.0957978}
+{"kind": "tokens", "seq": 135, "n": 1, "ids": null, "text": ".\n\n", "attempt": 0, "backend": 0, "t": 1792642061.1287212}
+{"kind": "tokens", "seq": 136, "n": 1, "ids": null, "text": "###", "attempt": 0, "backend": 0, "t": 1792642061.1615949}
+{"kind": "tokens", "seq": 137, "n": 1, "ids": null, "text": " Ens", "attempt": 0, "backend": 0, "t": 1792642061.1945229}
+{"kind": "tokens", "seq": 138, "n": 1, "ids": null, "text": "uring", "attempt": 0, "backend": 0, "t": 1792642061.2274108}
+{"kind": "tokens", "seq": 139, "n": 1, "ids": null, "text": " Cons", "attempt": 0, "backend": 0, "t": 1792642061.2603242}
+{"kind": "tokens", "seq": 140, "n": 1, "ids": null, "text": "istency", "attempt": 0, "backend": 0, "t": 1792642061.2932537}
+{"kind": "tokens", "seq": 141, "n": 1, "ids": null, "text": "\n\n", "attempt": 0, "backend": 0, "t": 1792642061.3261719}
+{"kind": "tokens", "seq": 142, "n": 1, "ids": null, "text": "When", "attempt": 0, "backend": 0, "t": 1792642061.3590744}
+{"kind": "tokens", "seq": 143, "n": 1, "ids": null, "text": " a", "attempt": 0, "backend": 0, "t": 1792642061.391977}
+{"kind": "tokens", "seq": 144, "n": 1, "ids": null, "text": " database", "attempt": 0, "backend": 0, "t": 1792642061.4249058}
+{"kind": "tokens", "seq": 145, "n": 1, "ids": null, "text": " operation", "attempt": 0, "backend": 0, "t": 1792642061.457813}
+{"kind": "tokens", "seq": 146, "n": 1, "ids": null, "text": " (", "attempt": 0, "backend": 0, "t": 1792642061.490715}
+{"kind": "tokens", "seq": 147, "n": 1, "ids": null, "text": "e", "attempt": 0, "backend": 0, "t": 1792642061.523586}
+{"kind": "tokens", "seq": 148, "n": 1, "ids": null, "text": ".g", "attempt": 0, "backend": 0, "t": 1792642061.55649}
+{"kind": "tokens", "seq": 149, "n": 1, "ids": null, "text": ".,", "attempt": 0, "backend": 0, "t": 1792642061.589421}
+{"kind": "tokens", "seq": 150, "n": 1, "ids": null, "text": " INSERT", "attempt": 0, "backend": 0, "t": 1792642061.6223698}
+{"kind": "tokens", "seq": 151, "n": 1, "ids": null, "text": ",", "attempt": 0, "backend": 0, "t": 1792642061.6552675}
+{"kind": "tokens", "seq": 152, "n": 1, "ids": null, "text": " UPDATE", "attempt": 0, "backend": 0, "t": 1792642061.6881425}
+{"kind": "tokens", "seq": 153, "n": 1, "ids": null, "text": ",", "attempt": 0, "backend": 0, "t": 1792642061.7210577}
+{"kind": "tokens", "seq": 154, "n": 1, "ids": null, "text": " DELETE", "attempt": 0, "backend": 0, "t": 1792642061.7539153}
+{"kind": "tokens", "seq": 155, "n": 1, "ids": null, "text": ")", "attempt": 0, "backend": 0, "t": 1792642061.78685}
+{"kind": "tokens", "seq": 156, "n": 1, "ids": null, "text": " is", "attempt": 0, "backend": 0, "t": 1792642061.8197937}
+{"kind": "tokens", "seq": 157, "n": 1, "ids": null, "text": " executed", "attempt": 0, "backend": 0, "t": 1792642061.8527157}
+{"kind": "tokens", "seq": 158, "n": 1, "ids": null, "text": ",", "attempt": 0, "backend": 0, "t": 1792642061.8855977}
+{"kind": "tokens", "seq": 159, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642061.918572}
+{"kind": "tokens", "seq": 160, "n": 1, "ids": null, "text": " WAL", "attempt": 0, "backend": 0, "t": 1792642061.9514725}
+{"kind": "tokens", "seq": 161, "n": 1, "ids": null, "text": " is", "attempt": 0, "backend": 0, "t": 1792642061.9843621}
+{"kind": "tokens", "seq": 162, "n": 1, "ids": null, "text": " updated", "attempt": 0, "backend": 0, "t": 1792642062.0177474}
+{"kind": "tokens", "seq": 163, "n": 1, "ids": null, "text": " first", "attempt": 0, "backend": 0, "t": 1792642062.0501459}
+{"kind": "tokens", "seq": 164, "n": 1, "ids": null, "text": ".", "attempt": 0, "backend": 0, "t": 1792642062.083067}
+{"kind": "tokens", "seq": 165, "n": 1, "ids": null, "text": " This", "attempt": 0, "backend": 0, "t": 1792642062.1159532}
+{"kind": "tokens", "seq": 166, "n": 1, "ids": null, "text": " means", "attempt": 0, "backend": 0, "t": 1792642062.1488552}
+{"kind": "tokens", "seq": 167, "n": 1, "ids": null, "text": " that", "attempt": 0, "backend": 0, "t": 1792642062.1817784}
+{"kind": "tokens", "seq": 168, "n": 1, "ids": null, "text": " even", "attempt": 0, "backend": 0, "t": 1792642062.2147331}
+{"kind": "tokens", "seq": 169, "n": 1, "ids": null, "text": " if", "attempt": 0, "backend": 0, "t": 1792642062.247623}
+{"kind": "tokens", "seq": 170, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642062.2805283}
+{"kind": "tokens", "seq": 171, "n": 1, "ids": null, "text": " database", "attempt": 0, "backend": 0, "t": 1792642062.3134067}
+{"kind": "tokens", "seq": 172, "n": 1, "ids": null, "text": " crashes", "attempt": 0, "backend": 0, "t": 1792642062.3463657}
+{"kind": "tokens", "seq": 173, "n": 1, "ids": null, "text": " before", "attempt": 0, "backend": 0, "t": 1792642062.379294}
+{"kind": "tokens", "seq": 174, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642062.4121835}
+{"kind": "tokens", "seq": 175, "n": 1, "ids": null, "text": " change", "attempt": 0, "backend": 0, "t": 1792642062.4450407}
+{"kind": "tokens", "seq": 176, "n": 1, "ids": null, "text": " can", "attempt": 0, "backend": 0, "t": 1792642062.4781673}
+{"kind": "tokens", "seq": 177, "n": 1, "ids": null, "text": " be", "attempt": 0, "backend": 0, "t": 1792642062.5108495}
+{"kind": "tokens", "seq": 178, "n": 1, "ids": null, "text": " written", "attempt": 0, "backend": 0, "t": 1792642062.5437567}
+{"kind": "tokens", "seq": 179, "n": 1, "ids": null, "text": " to", "attempt": 0, "backend": 0, "t": 1792642062.5766742}
+{"kind": "tokens", "seq": 180, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642062.6096137}
+{"kind": "tokens", "seq": 181, "n": 1, "ids": null, "text": " main", "attempt": 0, "backend": 0, "t": 1792642062.6429174}
+{"kind": "tokens", "seq": 182, "n": 1, "ids": null, "text": " database", "attempt": 0, "backend": 0, "t": 1792642062.6754594}
+{"kind": "tokens", "seq": 183, "n": 1, "ids": null, "text": " files", "attempt": 0, "backend": 0, "t": 1792642062.7084153}
+{"kind": "tokens", "seq": 184, "n": 1, "ids": null, "text": ",", "attempt": 0, "backend": 0, "t": 1792642062.7413325}
+{"kind": "tokens", "seq": 185, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642062.7743049}
+{"kind": "tokens", "seq": 186, "n": 1, "ids": null, "text": " WAL", "attempt": 0, "backend": 0, "t": 1792642062.8071346}
+{"kind": "tokens", "seq": 187, "n": 1, "ids": null, "text": " still", "attempt": 0, "backend": 0, "t": 1792642062.8400693}
+{"kind": "tokens", "seq": 188, "n": 1, "ids": null, "text": " holds", "attempt": 0, "backend": 0, "t": 1792642062.8729553}
+{"kind": "tokens", "seq": 189, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642062.906146}
+{"kind": "tokens", "seq": 190, "n": 1, "ids": null, "text": " record", "attempt": 0, "backend": 0, "t": 1792642062.938792}
+{"kind": "tokens", "seq": 191, "n": 1, "ids": null, "text": " of", "attempt": 0, "backend": 0, "t": 1792642062.9717143}
+{"kind": "tokens", "seq": 192, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642063.0046234}
+{"kind": "tokens", "seq": 193, "n": 1, "ids": null, "text": " operation", "attempt": 0, "backend": 0, "t": 1792642063.03793}
+{"kind": "tokens", "seq": 194, "n": 1, "ids": null, "text": " that", "attempt": 0, "backend": 0, "t": 1792642063.0704467}
+{"kind": "tokens", "seq": 195, "n": 1, "ids": null, "text": " was", "attempt": 0, "backend": 0, "t": 1792642063.1033652}
+{"kind": "tokens", "seq": 196, "n": 1, "ids": null, "text": " supposed", "attempt": 0, "backend": 0, "t": 1792642063.1363087}
+{"kind": "tokens", "seq": 197, "n": 1, "ids": null, "text": " to", "attempt": 0, "backend": 0, "t": 1792642063.16921}
+{"kind": "tokens", "seq": 198, "n": 1, "ids": null, "text": " be", "attempt": 0, "backend": 0, "t": 1792642063.2021043}
+{"kind": "tokens", "seq": 199, "n": 1, "ids": null, "text": " executed", "attempt": 0, "backend": 0, "t": 1792642063.2350528}
+{"kind": "tokens", "seq": 200, "n": 1, "ids": null, "text": ".", "attempt": 0, "backend": 0, "t": 1792642063.267895}
+{"kind": "tokens", "seq": 201, "n": 1, "ids": null, "text": " Upon", "attempt": 0, "backend": 0, "t": 1792642063.3008153}
+{"kind": "tokens", "seq": 202, "n": 1, "ids": null, "text": " recovery", "attempt": 0, "backend": 0, "t": 1792642063.3337097}
+{"kind": "tokens", "seq": 203, "n": 1, "ids": null, "text": ",", "attempt": 0, "backend": 0, "t": 1792642063.3666153}
+{"kind": "tokens", "seq": 204, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642063.399552}
+{"kind": "tokens", "seq": 205, "n": 1, "ids": null, "text": " database", "attempt": 0, "backend": 0, "t": 1792642063.432451}
+{"kind": "tokens", "seq": 206, "n": 1, "ids": null, "text": " can", "attempt": 0, "backend": 0, "t": 1792642063.465358}
+{"kind": "tokens", "seq": 207, "n": 1, "ids": null, "text": " safely", "attempt": 0, "backend": 0, "t": 1792642063.498262}
+{"kind": "tokens", "seq": 208, "n": 1, "ids": null, "text": " apply", "attempt": 0, "backend": 0, "t": 1792642063.5311823}
+{"kind": "tokens", "seq": 209, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642063.5640607}
+{"kind": "tokens", "seq": 210, "n": 1, "ids": null, "text": " changes", "attempt": 0, "backend": 0, "t": 1792642063.5969794}
+{"kind": "tokens", "seq": 211, "n": 1, "ids": null, "text": " recorded", "attempt": 0, "backend": 0, "t": 1792642063.6301389}
+{"kind": "tokens", "seq": 212, "n": 1, "ids": null, "text": " in", "attempt": 0, "backend": 0, "t": 1792642063.6630747}
+{"kind": "tokens", "seq": 213, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642063.695754}
+{"kind": "tokens", "seq": 214, "n": 1, "ids": null, "text": " WAL", "attempt": 0, "backend": 0, "t": 1792642063.7286582}
+{"kind": "tokens", "seq": 215, "n": 1, "ids": null, "text": " to", "attempt": 0, "backend": 0, "t": 1792642063.761945}
+{"kind": "tokens", "seq": 216, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642063.7944787}
+{"kind": "tokens", "seq": 217, "n": 1, "ids": null, "text": " database", "attempt": 0, "backend": 0, "t": 1792642063.8273718}
+{"kind": "tokens", "seq": 218, "n": 1, "ids": null, "text": " files", "attempt": 0, "backend": 0, "t": 1792642063.860292}
+{"kind": "tokens", "seq": 219, "n": 1, "ids": null, "text": ",", "attempt": 0, "backend": 0, "t": 1792642063.8932111}
+{"kind": "tokens", "seq": 220, "n": 1, "ids": null, "text": " ensuring", "attempt": 0, "backend": 0, "t": 1792642063.92608}
+{"kind": "tokens", "seq": 221, "n": 1, "ids": null, "text": " that", "attempt": 0, "backend": 0, "t": 1792642063.9590364}
+{"kind": "tokens", "seq": 222, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642063.9919274}
+{"kind": "tokens", "seq": 223, "n": 1, "ids": null, "text": " database", "attempt": 0, "backend": 0, "t": 1792642064.025141}
+{"kind": "tokens", "seq": 224, "n": 1, "ids": null, "text": " remains", "attempt": 0, "backend": 0, "t": 1792642064.0577188}
+{"kind": "tokens", "seq": 225, "n": 1, "ids": null, "text": " consistent", "attempt": 0, "backend": 0, "t": 1792642064.0906315}
+{"kind": "tokens", "seq": 226, "n": 1, "ids": null, "text": ".\n\n", "attempt": 0, "backend": 0, "t": 1792642064.123558}
+{"kind": "tokens", "seq": 227, "n": 1, "ids": null, "text": "###", "attempt": 0, "backend": 0, "t": 1792642064.1564374}
+{"kind": "tokens", "seq": 228, "n": 1, "ids": null, "text": " Log", "attempt": 0, "backend": 0, "t": 1792642064.1893783}
+{"kind": "tokens", "seq": 229, "n": 1, "ids": null, "text": " Entries", "attempt": 0, "backend": 0, "t": 1792642064.2223194}
+{"kind": "tokens", "seq": 230, "n": 1, "ids": null, "text": "\n\n", "attempt": 0, "backend": 0, "t": 1792642064.2552214}
+{"kind": "tokens", "seq": 231, "n": 1, "ids": null, "text": "Log", "attempt": 0, "backend": 0, "t": 1792642064.2881234}
+{"kind": "tokens", "seq": 232, "n": 1, "ids": null, "text": " entries", "attempt": 0, "backend": 0, "t": 1792642064.3210602}
+{"kind": "tokens", "seq": 233, "n": 1, "ids": null, "text": " are", "attempt": 0, "backend": 0, "t": 1792642064.3539255}
+{"kind": "tokens", "seq": 234, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642064.386845}
+{"kind": "tokens", "seq": 235, "n": 1, "ids": null, "text": " individual", "attempt": 0, "backend": 0, "t": 1792642064.4197562}
+{"kind": "tokens", "seq": 236, "n": 1, "ids": null, "text": " records", "attempt": 0, "backend": 0, "t": 1792642064.4526644}
+{"kind": "tokens", "seq": 237, "n": 1, "ids": null, "text": " in", "attempt": 0, "backend": 0, "t": 1792642064.4855928}
+{"kind": "tokens", "seq": 238, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642064.5189412}
+{"kind": "tokens", "seq": 239, "n": 1, "ids": null, "text": " WAL", "attempt": 0, "backend": 0, "t": 1792642064.5513952}
+{"kind": "tokens", "seq": 240, "n": 1, "ids": null, "text": ".", "attempt": 0, "backend": 0, "t": 1792642064.5848489}
+{"kind": "tokens", "seq": 241, "n": 1, "ids": null, "text": " Each", "attempt": 0, "backend": 0, "t": 1792642064.6172395}
+{"kind": "tokens", "seq": 242, "n": 1, "ids": null, "text": " log", "attempt": 0, "backend": 0, "t": 1792642064.6501565}
+{"kind": "tokens", "seq": 243, "n": 1, "ids": null, "text": " entry", "attempt": 0, "backend": 0, "t": 1792642064.6830735}
+{"kind": "tokens", "seq": 244, "n": 1, "ids": null, "text": " typically", "attempt": 0, "backend": 0, "t": 1792642064.7159839}
+{"kind": "tokens", "seq": 245, "n": 1, "ids": null, "text": " contains", "attempt": 0, "backend": 0, "t": 1792642064.749152}
+{"kind": "tokens", "seq": 246, "n": 1, "ids": null, "text": " the", "attempt": 0, "backend": 0, "t": 1792642064.7817976}
+{"kind": "tokens", "seq": 247, "n": 1, "ids": null, "text": " following", "attempt": 0, "backend": 0, "t": 1792642064.8147335}
+{"kind": "tokens", "seq": 248, "n": 1, "ids": null, "text": " information", "attempt": 0, "backend": 0, "t": 1792642064.8476372}
+{"kind": "tokens", "seq": 249, "n": 1, "ids": null, "text": ":\n\n", "attempt": 0, "backend": 0, "t": 1792642064.8810356}
+{"kind": "tokens", "seq": 250, "n": 1, "ids": null, "text": "-", "attempt": 0, "backend": 0, "t": 1792642064.9134855}
+{"kind": "tokens", "seq": 251, "n": 1, "ids": null, "text": " **", "attempt": 0, "backend": 0, "t": 1792642064.946405}
+{"kind": "tokens", "seq": 252, "n": 1, "ids": null, "text": "Operation", "attempt": 0, "backend": 0, "t": 1792642064.979323}
+{"kind": "tokens", "seq": 253, "n": 1, "ids": null, "text": " Type", "attempt": 0, "backend": 0, "t": 1792642065.0122359}
+{"kind": "tokens", "seq": 254, "n": 1, "ids": null, "text": "**:", "attempt": 0, "backend": 0, "t": 1792642065.0451136}
+{"kind": "tokens", "seq": 255, "n": 1, "ids": null, "text": " The", "attempt": 0, "backend": 0, "t": 1792642065.0784192}
+{"kind": "done", "finish_reason": "length", "error": null, "produced": 256, "attempts": 0, "t": 1792642065.0787005}
