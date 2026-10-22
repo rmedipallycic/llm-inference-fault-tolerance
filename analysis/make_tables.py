@@ -11,6 +11,7 @@ Reads experiments/<run>/run.json and trial_*.json and writes:
                               kill -> first recovered token
   paper/tables/env.tex        engine/library versions and GPU per configuration
   paper/tables/provenance.tex runs, trials, commits
+  paper/tables/gw_*.tex       Phase 3 gateway tables (see analysis/gw_tables.py)
 
 No number is typed by hand: re-running this script on the committed logs
 reproduces every table.
@@ -110,6 +111,8 @@ def load_runs(root):
             run = json.load(f)
         if run.get("run_type") != "measured":
             continue  # smoke runs are never reported
+        if "strategy" not in run.get("config", {}):
+            continue  # Phase 3 gateway runs: summarized by analysis/gateway_check.py
         G, G2 = run["reference"]["text"], run["reference_repeat"]["text"]
         trials = []
         for p in sorted(glob.glob(os.path.join(os.path.dirname(run_path), "trial_*.json"))):
@@ -250,6 +253,13 @@ def main():
                 f"\\texttt{{{tex(', '.join(sorted(commits)))}}}. "
                 f"In-flight chunks received after the kill: "
                 f"{max(in_flight) if in_flight else '--'} at most, over all trials.\n")
+
+    # Phase 3 gateway tables (analysis/gw_tables.py)
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import gw_tables
+    gm = gw_tables.write(a.root, a.out)
+    if gm:
+        print("gateway: " + ", ".join(f"{k}={v}" for k, v in gm.items()))
 
     print(f"wrote {len(rows)} anomaly rows, {len(repro)} reproducibility rows, "
           f"{len(lat)} latency rows to {a.out}/")

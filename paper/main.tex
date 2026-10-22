@@ -3,13 +3,16 @@
 \IfFileExists{lmodern.sty}{\usepackage[T1]{fontenc}\usepackage{lmodern}\usepackage{microtype}}{}
 \usepackage{amsmath}
 \usepackage{booktabs}
+\usepackage{graphicx}
+% shrink a table to the column width only if it is wider
+\newcommand{\fitcol}[1]{\setbox0\hbox{#1}\ifdim\wd0>\columnwidth\resizebox{\columnwidth}{!}{\box0}\else\box0\fi}
 \usepackage{xcolor}
 \usepackage{hyperref}
 \usepackage{fancyhdr}
 \hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=black,
-  pdftitle={What Does a Streaming Client See When an LLM Server Crashes? A Fault-Injection Study of Client-Visible Token Anomalies in vLLM and SGLang},
+  pdftitle={What Does a Streaming Client See When an LLM Server Crashes? Client-Visible Token Anomalies in vLLM and SGLang, and an Exactly-Once Gateway},
   pdfauthor={Rajshekar Medipally},
-  pdfkeywords={LLM serving, fault tolerance, fault injection, vLLM, SGLang, delivery semantics}}
+  pdfkeywords={LLM serving, fault tolerance, fault injection, vLLM, SGLang, delivery semantics, exactly-once, failover}}
 
 % Every number in this paper comes from analysis/make_tables.py run on the raw
 % logs committed under experiments/. \pending marks any passage still awaiting data.
@@ -21,11 +24,11 @@
 \renewcommand{\headrulewidth}{0pt}
 
 \title{What Does a Streaming Client See When an LLM Server Crashes?\\
-\large A Fault-Injection Study of Client-Visible Token Anomalies in vLLM and SGLang}
+\large Client-Visible Token Anomalies in vLLM and SGLang, and an Exactly-Once Gateway}
 \author{Rajshekar Medipally\\
 \small Independent researcher\\
 \small \url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}}
-\date{October 2026}
+\date{October 2026 \quad (version 2)}
 
 % Table rows come from paper/tables/*.tex, written by analysis/make_tables.py
 % from the committed raw logs. (\@@input is expandable, so safe inside tabular.)
@@ -36,7 +39,12 @@
 \def\ReproRows{\@@input tables/repro.tex }
 \def\PromptRows{\@@input tables/prompts.tex }
 \def\RetokRows{\@@input tables/retok.tex }
+\def\GwRestartRows{\@@input tables/gw_restart.tex }
+\def\GwFailoverRows{\@@input tables/gw_failover.tex }
+\def\GwOverheadRows{\@@input tables/gw_overhead.tex }
 \makeatother
+
+\input{tables/gw_macros.tex}
 
 \begin{document}
 \maketitle
@@ -49,24 +57,27 @@ last seconds to minutes. When a serving process fails mid-generation, the
 client is left holding a partial response, and the recovery it performs
 determines what it ultimately shows a user or hands to a downstream agent.
 We built an open-source fault-injection harness that SIGKILLs an unmodified
-OpenAI-compatible server at a chosen stream chunk, restarts it, applies a
-client recovery strategy, and records every streamed chunk, and applied it to vLLM and SGLang serving Llama~3.1~8B~Instruct on
-A10G GPUs (86 runs, 430 trials including ablations and follow-ups). In both engines' default configurations
-the failure-free output for a fixed prompt was not unique at temperature~0,
-for different reasons: in vLLM it depended deterministically on what the
-server had served before, through automatic prefix caching; in SGLang the
-first request after each start varied from start to start. Because a
-crashed server restarts cold, naive retry contradicted text the client had
-already displayed in 25 of 30 vLLM and 24 of 30 SGLang trials on the main
-prompt, and in at least one trial on 3 of 5 (vLLM) and 4 of 5 (SGLang) further prompts. Recompute, which resubmits
-the delivered text, never contradicted it but usually changed the final
-answer. Re-tokenization was ruled out as the cause. With each engine's
-deterministic mode enabled (vLLM batch invariance, SGLang deterministic
-inference), recompute reproduced the failure-free output exactly in every
-temperature-0 trial we ran (35 of 35; on vLLM also at temperature 0.8), and naive
-retry never contradicted the client at temperature 0. This is failure-free equivalence for sequential requests and fail-stop
-crashes, not an exactly-once protocol. Recovery latency was dominated by server restart (107--195\,s). All
-raw logs and the table-generating script are public.
+OpenAI-compatible server at a chosen stream chunk and records every streamed
+chunk, and applied it to vLLM and SGLang serving Llama~3.1~8B~Instruct on
+A10G GPUs. In both engines' default configurations the failure-free output
+for a fixed prompt was not unique at temperature~0, so naive retry
+contradicted text the client had already displayed in 25 of 30 vLLM and 24
+of 30 SGLang trials. Recompute, which resubmits the delivered text, never
+contradicted it; with each engine's deterministic mode it reproduced the
+failure-free output exactly. We then moved recovery out of the client into a
+gateway that numbers output positions, logs them before release, and resumes
+a failed request on a restarted or standby replica from the logged token ids.
+In \GwKillTrials{} injected failures (\GwVllmTrials{} on vLLM, \GwSglangTrials{}
+on SGLang) the client received every position exactly once. With the
+deterministic modes, recovery gave the failure-free text in \GwDetSameVllm{}
+(vLLM) and \GwDetSameSglang{} (SGLang) trials. Failing over to a replica on a
+second machine cut recovery from \GwRestartMinVllm--\GwRestartMaxVllm\,s of
+engine restart to \GwFailoverMin--\GwFailoverMax\,s, but gave the failure-free
+text only when the standby used the first machine's compiled-kernel caches:
+\GwOwnCacheSame{} trials with its own caches, identical software included,
+against \GwSharedCacheSame{} with copied ones. The gateway added
++0.05\,ms per output token on vLLM, none measurable on SGLang, and 32--45\,ms
+once per request. All raw logs and the table-generating script are public.
 \end{abstract}
 
 \section{Introduction}
@@ -97,7 +108,7 @@ server had served earlier; in SGLang the first request after each server
 start varied from start to start. Either way, the restarted server that
 answers a retry does not reproduce the text the client was already shown.
 
-This paper makes three contributions:
+This paper makes five contributions:
 \begin{enumerate}
   \item \textbf{Definitions.} Token-level delivery semantics for streamed
     generation, and client-visible anomalies defined against \emph{two}
@@ -114,11 +125,23 @@ This paper makes three contributions:
     both engines' default configurations failure-free output depends on
     server state, identifies prefix caching as a necessary factor in vLLM, and quantifies what
     that does to each recovery strategy.
+  \item \textbf{An exactly-once gateway} that sits in front of unmodified
+    engines, numbers and logs output positions before releasing them, and
+    resumes a failed request on a restarted or standby replica
+    (Section~\ref{sec:gateway}).
+  \item \textbf{A measured evaluation} of that gateway on both engines,
+    including failover between two machines, which finds that exactly-once
+    delivery is cheap and that exact text after failover requires the
+    standby to share the failed replica's compiled-kernel caches
+    (Section~\ref{sec:gweval}).
 \end{enumerate}
 
-The study deliberately uses unmodified engines and client-side recovery only.
-It establishes the baseline that a server-side exactly-once protocol, the next
-stage of this project, would have to improve on.
+The first part of the study (Sections~\ref{sec:method}--\ref{sec:followup})
+deliberately uses unmodified engines and client-side recovery only, and
+establishes the baseline. The second part
+(Sections~\ref{sec:gateway}--\ref{sec:gweval}) asks what a server-side
+protocol in front of the same engines achieves against it. This is version 2
+of the paper; version 1 contained the first part only.
 
 \section{Background}
 
@@ -131,9 +154,13 @@ and SGLang \cite{zheng2024sglang} batch requests at iteration granularity
 
 \paragraph{The state lost on failure.}
 The KV cache is a deterministic function of the weights and the token
-sequence, so it can always be rebuilt by prefill. What cannot be rebuilt from
-the prompt alone is the \emph{sampling path}: at temperature above zero, the
-continuation depends on random draws whose state lives in the dead process.
+sequence, so it can always be rebuilt by prefill, up to numerical
+differences between prefill and decode kernels. At temperature above zero
+the continuation also depends on random draws. Whether those can be
+reproduced after a restart depends on the engine: a sampler that keeps a
+running random state loses it with the process, while one that derives each
+draw from the request's seed and the token's position, as vLLM~0.31 does
+(Section~\ref{sec:gweval}), can repeat it.
 
 \paragraph{Rollback-recovery vocabulary.}
 Classic rollback-recovery distinguishes checkpointing from logging and defines
@@ -573,6 +600,210 @@ others, which we did not investigate. Throughput under load, which is what
 batch-invariant kernels are reported to cost \cite{he2025nondeterminism},
 was not measured.
 
+\section{An exactly-once gateway}
+\label{sec:gateway}
+
+The measurements above leave recovery to the client, which then has to
+resubmit, splice and deduplicate. The gateway (\texttt{gateway/}, about 650
+lines of Python with no dependencies beyond \texttt{requests}) moves that work
+to a process in front of unmodified engine replicas. A client uses the usual
+OpenAI-compatible streaming API and needs no recovery code.
+
+\paragraph{Protocol.} (1) \emph{Numbering}: every streamed entry carries
+\texttt{seq}, the position of its first output token, and \texttt{n}, the
+number of tokens it holds, in an extra field of the server-sent event.
+(2) \emph{Output commit}: each entry is appended to a per-request log file,
+optionally with \texttt{fsync}, before it is released to the client
+\cite{elnozahy2002survey}, so the log contains everything the client has
+seen. (3) \emph{Engine failure}: a broken stream, an HTTP error, or no chunk
+for a stall timeout counts as a failed attempt. The gateway picks a healthy
+replica, trying the others before the one that failed, and resubmits the
+prompt's token ids followed by the ids of every committed token, asking only
+for the remaining budget. Nothing is re-tokenized. This is the recompute
+strategy of Section~\ref{sec:model}, done once, on the server side.
+(4) \emph{Client reconnect}: a client that lost its connection asks for the
+request's stream from a given position and receives exactly the entries it
+has not seen. (5) \emph{Gateway restart}: on start, the gateway resumes every
+logged request that has no completion record.
+
+\paragraph{What it guarantees.} Every output position reaches the client at
+most once, and, unless the request fails for good, at least once, in order;
+the continuation never contradicts delivered text, because the delivered
+tokens are its context. It reproduces the failure-free text only where the
+engine does (Section~\ref{sec:followup}). The failure model is fail-stop
+crashes of engine and gateway processes, with the log directory and the
+client surviving.
+
+\paragraph{Resume modes.} With vLLM the gateway uses token ids
+(\texttt{/tokenize} for the prompt, token ids in the stream for the output),
+and \texttt{seq} counts tokens. SGLang's OpenAI-compatible stream did not
+return token ids in the form the gateway reads, so with SGLang it resubmits
+the prompt text plus the delivered text and \texttt{seq} counts chunks; the
+re-tokenization check of Section~\ref{sec:followup} was done on vLLM only.
+
+\paragraph{Tests.} Twelve tests (\texttt{tests/}) run the gateway and a mock
+engine as separate processes and SIGKILL them mid-stream: engine restart,
+failover, two failures in one request, temperature 0.8, text mode, client
+reconnect, gateway restart, and a negative control in which naive retry
+without the gateway repeats positions and the checker flags it.
+
+\section{Gateway evaluation}
+\label{sec:gweval}
+
+\paragraph{Setup.} The same instance type, machine image, model and prompt as
+above; vLLM~0.31.0 and SGLang~0.5.21, SGLang again inside the same container
+image; \texttt{max\_tokens}=256, seed 1234, 10 trials per run, requests one at
+a time. \emph{Restart}: one replica; the replica serving the request is
+SIGKILLed once the given number of positions has reached the client, and is
+restarted; the gateway waits for it. Temperature 0 and 0.8, kill after 25,
+128 and 230 positions, plus each engine's deterministic mode at temperature
+0 and 128 (\texttt{scripts/run\_gateway\_matrix.sh}). \emph{Failover}: two
+machines of the same type, same image, driver and vLLM version, with the
+gateway and replica~0 on the first and replica~1 on the second; replica~0 is
+killed after 128 positions and the gateway resumes on replica~1
+(\texttt{scripts/run\_failover\_two\_hosts.sh}). \emph{Overhead}: 30
+failure-free requests directly to the engine and 30 through the gateway,
+alternating, without and with \texttt{fsync}. Delivery is checked from the
+positions each client recorded (\texttt{gateway/check.py}); ``same text''
+means the client's final text equals one of the run's two failure-free
+references. Every table here is generated by \texttt{analysis/make\_tables.py}.
+
+\begin{table}[t]
+\centering\small
+\caption{Restart recovery through the gateway, 10 trials per row.
+Exactly-once: every position received once, request complete. Same text:
+final text equals either failure-free reference. Recovery: kill to the next
+position at the client, seconds, median (min--max).}
+\label{tab:gwrestart}
+\setlength{\tabcolsep}{3pt}
+\fitcol{%
+\begin{tabular}{@{}llrrccl@{}}
+\toprule
+Engine & Mode & $T$ & Kill & Exactly-once & Same text & Recovery s \\
+\midrule
+\GwRestartRows
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\paragraph{Delivery.} In all \GwKillTrials{} kill trials, \GwRestartTrials{}
+with restart and \GwFailoverTrials{} with failover, the client received
+every position exactly once: \GwDupPositions{} duplicated and
+\GwMissingPositions{} missing positions, every request complete, one recovery
+attempt each (Tables~\ref{tab:gwrestart} and~\ref{tab:gwfailover}). Without the
+gateway, naive retry contradicted the client in 25 of 30 (vLLM) and 24 of 30
+(SGLang) trials of the corresponding configurations (Section~\ref{sec:results}).
+
+\paragraph{Same text after restart.} With the deterministic modes the
+recovered text equalled the failure-free text in \GwDetSameVllm{} (vLLM) and
+\GwDetSameSglang{} (SGLang) trials, as client-side recompute did in
+Section~\ref{sec:followup}. In the default modes at temperature 0 it did so
+in \GwDefaultZeroSameVllm{} and \GwDefaultZeroSameSglang{} trials, where the
+two references themselves differed. At temperature 0.8 SGLang matched in
+\GwDefaultHotSameSglang{} trials: its 30 recovered texts all differed from
+one another, consistent with the request seed having no effect
+(Section~\ref{sec:results}). vLLM matched in \GwDefaultHotSameVllm{}, and more
+often the later the kill. That is explained by how vLLM~0.31 samples. Its
+model runner, which the server logs show was in use, picks a token by adding
+noise to the logits and taking the maximum, and for a request with an
+explicit seed it always draws the noise from a hash of the seed, the token's
+absolute position in the sequence, and the token id, keeping no running
+random state (\texttt{vllm/v1/worker/gpu/sample/gumbel.py} and
+\texttt{sampler.py}). A resumed request, whose tokens occupy the same
+positions, therefore draws the same noise, and its sample differs from the
+original only where the logits differ; the later the kill, the fewer tokens
+remain in which they can. Without an explicit seed vLLM chooses a random one
+per request, and the resumed part would be a fresh sample.
+
+\paragraph{Recovery is restart.} With one replica, recovery was the engine's
+restart: \GwRestartMinVllm--\GwRestartMaxVllm\,s on vLLM and
+\GwRestartMinSglang--\GwRestartMaxSglang\,s on SGLang (median per run, default
+mode). The gap between the engine answering its health check and the first
+recovered position was under 0.5\,s (median per run); it is known only to
+about one second, because the harness and the gateway poll the engine's
+health independently, so a few individual gaps come out slightly negative. The jump in vLLM's restart time between runs came from weight
+loading (45--47\,s in the first 44 starts, 69--126\,s in 33 of the next 35),
+not from the gateway; we did not establish why.
+
+\begin{table*}[t]
+\centering\small
+\caption{Failover between two machines (vLLM, kill after 128 positions, 10
+trials per row). Replica~1 setup: its own compiled-kernel caches or copies of
+replica~0's, and whether its Python packages were identical to replica~0's.
+Recovery in seconds, median (min--max).}
+\label{tab:gwfailover}
+\begin{tabular}{@{}lrlccl@{}}
+\toprule
+Mode & $T$ & Replica 1 setup & Exactly-once & Same text & Recovery s \\
+\midrule
+\GwFailoverRows
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\paragraph{Failover.} With a standby replica on a second machine, recovery
+took \GwFailoverMin--\GwFailoverMax\,s (median per run;
+Table~\ref{tab:gwfailover}): detecting the broken stream, checking the other
+replica's health, and prefilling the prompt and the delivered tokens there.
+That is about three orders of magnitude faster than restart, with the same
+exactly-once delivery.
+
+\paragraph{Exact text needed the same compiled state.} In batch-invariant
+mode each machine was repeatable on its own, but the second machine's
+failure-free answer differed from the first's from character
+\GwSplitChar{} on, a single word after which the two continue differently,
+and the recovered text matched in \GwOwnCacheSame{} trials. The difference
+was not the mode setting, which the replica's process environment confirmed,
+nor the hardware or driver (same instance type, image and driver), nor the
+Python packages: before the second batch-invariant run we set the 21 packages
+that differed to the first machine's versions, so that their \texttt{pip
+freeze} lists were byte-identical, and the answer still split at the same
+character. What remained different was each machine's compiled state: the
+torch.compile cache vLLM keeps (235\,MB on the first machine, 115\,MB on the
+second), FlashInfer's cache (792\,kB against 12\,kB), and TorchInductor's.
+With the first machine's three caches copied to the second, the two
+machines' failure-free answers were identical and the recovered text matched
+in \GwSharedCacheSame{} trials. We did not isolate which cache matters, or
+why artifacts compiled on identical machines differ; a plausible candidate is
+kernel autotuning, which chooses among variants by measured speed, but we
+did not test it. The consequence for failover is concrete: a standby gives
+exactly-once delivery and sub-second recovery regardless, but the same text
+as a failure-free run only if it runs in a deterministic mode and starts
+from the same compiled state as the replica it replaces. In default mode, failover with the second machine's own caches gave the
+failure-free text in 2 of 10 trials at temperature 0, where the references
+differed as after restart, and in 10 of 10 at temperature 0.8; a sampled token is less sensitive to a
+last-digit difference than a greedy choice at a near-tie, but ten trials do
+not show how much less.
+
+\begin{table*}[t]
+\centering\small
+\caption{Failure-free cost of the gateway: 30 requests direct to the engine
+and 30 through the gateway per row, alternating; medians, and the median of
+per-pair differences ($\Delta$). Direct requests send text without asking for
+token ids, as a client without the gateway would.}
+\label{tab:gwoverhead}
+\begin{tabular}{@{}llrrrrrrrrrr@{}}
+\toprule
+ & & & \multicolumn{3}{c}{Time to first token (ms)} & \multicolumn{3}{c}{Time per output token (ms)} & \multicolumn{3}{c}{End to end, 256 tokens (s)} \\
+\cmidrule(lr){4-6}\cmidrule(lr){7-9}\cmidrule(l){10-12}
+Engine & fsync & Pairs & direct & gateway & $\Delta$ & direct & gateway & $\Delta$ & direct & gateway & $\Delta$ \\
+\midrule
+\GwOverheadRows
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\paragraph{Overhead.} We expected, before these runs, that exactly-once delivery would cost
+little per token, since the log grows by one entry per step. That held (Table~\ref{tab:gwoverhead}): +0.05\,ms per output
+token on vLLM (0.15\%) and no measurable difference on SGLang, and
+end-to-end time within 0.06\,s on both. The cost was paid once per request,
+before the first token: 32--45\,ms, of which \texttt{fsync} accounted for
+3--6\,ms. This implementation makes extra round trips to the engine before
+generating (two health checks and, on vLLM, \texttt{/tokenize}); we did not
+measure how much of the added time each accounts for, and the figure is not a
+lower bound for exactly-once delivery. On SGLang the
+added time to first token did not show up end to end; we did not examine why.
+
 \section{Discussion}
 
 \paragraph{Two engines, two mechanisms, one consequence.} vLLM's variation
@@ -612,18 +843,20 @@ outcome exactly-once delivery would guarantee. That is equivalence in the
 tested configurations, not an exactly-once protocol: it relied on greedy
 decoding, sequential requests, and the operator enabling the mode.
 
-\paragraph{Why client-side recovery is not enough.} Even in the best case for
-recompute, the client cannot restore the server's state: neither the
-sampler's random state above temperature 0 nor, as measured here, whatever
-server state made $G$ differ from $G'$; and even with that state removed
-by disabling the prefix cache, recompute at temperature 0 did not reproduce
-the original continuation. Deterministic modes close
-this gap at temperature 0, but not, in SGLang, for sampled output, and they
-depend on the operator's configuration. Exactly-once delivery in general
-therefore requires state the client does not hold: a sequence-numbered token log, and
-the sampler state, committed before tokens are released, with recovery
-continuing from the log rather than regenerating. That protocol is the next
-stage of this project, and these measurements are its baseline.
+\paragraph{What the gateway changes.} Client-side recovery could not
+remove contradictions without the operator enabling a deterministic mode,
+and left every client to implement recompute and deduplication correctly.
+The gateway makes exactly-once delivery a property of the serving layer:
+every position once, in order, for unmodified clients and engines, in every
+trial we ran, at a per-token cost below 0.2\%. What it cannot add is
+determinism. Whether the recovered text equals a failure-free run is still
+decided by the engine: its deterministic mode, its sampler, and, after
+failover, whether the standby shares the failed replica's compiled state.
+Version~1 of this paper argued that exactly-once recovery above temperature
+0 would also need the sampler's state. On vLLM~0.31 with a fixed request seed
+it needs no engine change, because the sampler derives each draw from the
+seed and the position; on SGLang, whose default mode ignored the seed, it was
+not available.
 
 \section{Related work}
 
@@ -701,6 +934,15 @@ results, and were not tested.
     is a clean crash; GPU hangs and silent corruption are not modeled. With
     a single instance, recovery includes model reload; a warm standby would
     be faster. Restart time also drifted during the grid (see H3).
+\item \textbf{Gateway evaluation scope.} One prompt, one model, requests
+    one at a time, 10 trials per run; failover only on vLLM and only with the
+    kill after 128 positions; one pair of machines. The compiled-cache
+    finding rests on three batch-invariant runs on that pair, and which
+    cache matters was not isolated. The gateway's own durability was tested
+    only by killing its process with the log on local disk; a lost disk, a
+    replicated gateway, and concurrent requests were not tested. Recovery
+    times below one second are bounded by health-check polling. Its
+    overhead is that of this implementation.
 \end{itemize}
 
 \section{Conclusion and future work}
@@ -713,16 +955,21 @@ engines, and on three (vLLM) and four (SGLang) of five further prompts. The caus
 re-tokenization; in vLLM it required prefix caching, and in SGLang it was
 tied to server start. Enabling each engine's deterministic mode and
 recovering by recompute reproduced the failure-free output exactly in every
-temperature-0 trial we ran. A retry is not a replay by default, but with
-the right server configuration and client strategy it can be, for greedy
-decoding, in the configurations we tested.
+temperature-0 trial we ran.
 
-Next stages: (0) the throughput cost of the deterministic modes, other
-models, and sampled output under SGLang's deterministic mode; (1) a gateway that assigns sequence numbers,
-logs tokens and sampler state before release, and continues from the log on
-recovery, evaluated on the same harness for zero anomalies and per-token
-overhead; (2) measured recompute-versus-checkpoint cost curves for the KV
-cache; (3) an adaptive per-request checkpoint policy.
+A gateway that numbers and logs output positions and resumes from the logged
+token ids gave exactly-once delivery in all \GwKillTrials{} injected failures
+on both engines, for unmodified clients, at a per-token cost below 0.2\%;
+with a standby replica on a second machine it recovered in under 0.2\,s
+instead of minutes. Exact text after recovery remained the engine's
+property: it held in deterministic mode after restart, and after failover
+only when the standby shared the failed replica's compiled-kernel caches.
+
+Next stages: (1) isolate which compiled artifact makes identical machines
+differ, and whether autotuning is the cause; (2) concurrent requests and
+batching through the gateway, and the throughput cost of the deterministic
+modes; (3) measured recompute-versus-checkpoint cost curves for the KV
+cache; (4) an adaptive per-request checkpoint policy.
 
 \paragraph{Artifact.} Code, raw logs, and the table-generating script are at
 \url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}
