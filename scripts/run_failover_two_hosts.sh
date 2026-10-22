@@ -42,4 +42,4 @@ for T in $temps; do
     --max-tokens 256 --seed 1234 --temperature "$T" --kill-at 128 --trials "$TRIALS" \
     || echo "RUN FAILED: failover $MODE T=$T" | tee -a experiments/failed_gateway_runs_vllm.txt
 done
-python analysis/gateway_check.py --out experiments/gateway_summary_vllm.md || true
+python analysis/gateway_check.py --out experiments/gateway_summary.md || true

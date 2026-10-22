@@ -52,6 +52,15 @@ def timing(t0, times):
     return ttft, tpot, times[-1] - t0
 
 
+def load_conditions(root):
+    """Hand-recorded run conditions (experiments/run_conditions.json), if any."""
+    path = os.path.join(root, "run_conditions.json")
+    if not os.path.exists(path):
+        return {}
+    with open(path, encoding="utf-8") as fh:
+        return {k: v for k, v in json.load(fh).items() if not k.startswith("_")}
+
+
 def engine_mode(meta):
     env = meta["environment"].get("engine_env") or {}
     if env.get("VLLM_BATCH_INVARIANT") == "1":
@@ -61,7 +70,7 @@ def engine_mode(meta):
     return "default"
 
 
-def kill_row(run_dir, meta):
+def kill_row(run_dir, meta, conditions=None):
     trials = []
     for f in sorted(glob.glob(os.path.join(run_dir, "trial_*.json"))):
         with open(f, encoding="utf-8") as fh:
@@ -101,6 +110,7 @@ def kill_row(run_dir, meta):
         "resume_s": med(resume),
         "attempts": med([(t["client"].get("final") or {}).get("attempts") for t in trials], "{:.0f}"),
         "git_commit": (meta["environment"].get("git_commit") or "")[:7],
+        "condition": (conditions or {}).get(meta["run_id"], "-"),
     }
 
 
@@ -139,13 +149,14 @@ def main():
     ap.add_argument("--out", default=None, help="write the Markdown summary here")
     a = ap.parse_args()
     kills, overheads = [], []
+    conditions = load_conditions(a.root)
     for run_dir in sorted(glob.glob(os.path.join(a.root, "*_gw_*"))):
         mp = os.path.join(run_dir, "run.json")
         if not os.path.exists(mp):
             continue
         with open(mp, encoding="utf-8") as fh:
             meta = json.load(fh)
-        r = kill_row(run_dir, meta) if meta["config"].get("kill_at") is not None \
+        r = kill_row(run_dir, meta, conditions) if meta["config"].get("kill_at") is not None \
             else overhead_row(run_dir, meta)
         if r:
             (kills if "kill_at" in r else overheads).append(r)
