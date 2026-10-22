@@ -1,9 +1,23 @@
 # Phase 3: the exactly-once token gateway (RQ2)
 
-Status: **measured on vLLM 0.31.0** (one A10G, Llama 3.1 8B Instruct,
-restart mode, Oct 21, 2026); SGLang and two-replica failover not yet measured.
-Every number below is in [`experiments/gateway_summary_vllm.md`](../experiments/gateway_summary_vllm.md),
+Status: **measured** on vLLM 0.31.0 and SGLang 0.5.21 (AWS g5.xlarge, one
+A10G each, Llama 3.1 8B Instruct, Oct 21-22, 2026): restart recovery on both
+engines and failover between two machines on vLLM, 190 kill trials in all.
+Every number below is in [`experiments/gateway_summary.md`](../experiments/gateway_summary.md),
 which `python analysis/gateway_check.py` regenerates from the raw logs.
+
+**Summary.**
+* Exactly-once delivery held in all 190 kill trials: 0 duplicated and 0
+  missing output positions, every request completed.
+* With the engines' deterministic modes, restart recovery reproduced the
+  failure-free text in 10 of 10 trials on each engine.
+* Failing over to a replica on a second machine cut recovery from 108-185 s
+  (engine restart) to 0.16-0.17 s (median per run).
+* Exact text after failover needed more than the same software: with each
+  machine's own compiled-kernel cache it matched in 0 of 20 batch-invariant
+  trials; with the first machine's caches copied to the second, in 10 of 10.
+* The per-token cost of the gateway was below measurement resolution on SGLang
+  and +0.05 ms (0.15%) on vLLM; about 32-45 ms are added once per request.
 
 ## Why a gateway
 
@@ -54,7 +68,7 @@ client ──HTTP/SSE──► gateway ──HTTP/SSE──► engine replica 0 
 | No missing positions | unless the request fails for good (e.g. no replica comes back) | every committed entry is in the log and is replayed on reconnect |
 | Continuation never contradicts delivered text | always | the delivered token ids are the context for the continuation |
 | Final text equals a failure-free run | only if the engine is deterministic | Phase 1: vLLM batch invariance, SGLang deterministic inference |
-| Same *sample* at temperature > 0 | no | the engines' HTTP APIs do not expose the sampler's RNG position, so the proposal's "preserved sampler state" cannot be implemented without engine changes; the resumed part is a fresh sample |
+| Same *sample* at temperature > 0 | vLLM 0.31 with a fixed request `seed`, if the arithmetic matches; not SGLang 0.5.21 in its default mode | vLLM 0.31's sampler draws its noise from a hash of the request seed, the token position and the token id (`vllm/v1/worker/gpu/sample/gumbel.py`), so a resumed request, whose tokens sit at the same positions, draws the same noise; it keeps no running RNG state. Without an explicit seed vLLM picks a random one per request, so the resumed part is a fresh sample. SGLang ignored the OpenAI `seed` field in Phase 1, and its default-mode samples differed in every trial here |
 
 Failure model: fail-stop failures of engine processes and of the gateway
 process. The log directory must survive (local disk; a lost disk is out of
@@ -104,11 +118,12 @@ recovered output equalled the failure-free output in 10 of 10 trials (T = 0,
 kill at 128), and the two failure-free references were identical. In the
 default mode at T = 0, 2 of 30 recovered outputs equalled either failure-free
 reference, which themselves differed (the first request after a start differs
-from the second, as in Phase 1). At T = 0.8 the resumed part is a fresh
-sample; recovered outputs equalled a reference in 0, 1 and 10 of 10 trials
-for kills at 25, 128 and 230 tokens. With the seed fixed and few tokens left,
-the restarted sampler apparently produced the same tail; this is not a
-guarantee and is not reported as exact recovery.
+from the second, as in Phase 1). At T = 0.8, recovered outputs equalled a
+reference in 0, 1 and 10 of 10 trials for kills at 25, 128 and 230 tokens.
+With a fixed seed, vLLM 0.31 resamples the same noise after a resume (see the
+guarantee table), so the remaining differences come from the arithmetic: the
+later the kill, the fewer tokens are left in which a small numerical
+difference after the restart can change a choice.
 
 **Recovery time is engine restart.** Kill to first recovered token was
 107.6-108.4 s (median per run) in the first four runs and 173.0-184.8 s in the
@@ -141,7 +156,82 @@ and a `/tokenize` call) and asks for token ids in logprobs. That is a cost of
 this implementation, which could be cut (cached health state, client-side
 tokenization), not a measured lower bound for exactly-once delivery.
 
-## Measurements still to run (`scripts/run_gateway_matrix.sh`)
+## Measured results: failover between two machines (vLLM 0.31.0)
+
+Two g5.xlarge machines, same AMI, driver and vLLM 0.31.0 (setup below).
+Each trial starts on replica 0 (machine 1), which is SIGKILLed at position 128;
+the gateway resumes on replica 1 (machine 2). 10 trials per run, seed 1234.
+Run conditions that the records cannot capture themselves are listed in
+[`experiments/run_conditions.json`](../experiments/run_conditions.json), with
+evidence in `experiments/pip_freeze_machine1.txt` and `experiments/failover_machine2/`.
+
+| Run | Engine mode | Replica 1 setup | Exactly-once | Same text as failure-free | Recovery, median (range) |
+| --- | --- | --- | --- | --- | --- |
+| T = 0.0 | default | own cache, packages differ | 10/10 | 2/10 | 0.17 s (0.16-0.39) |
+| T = 0.8 | default | own cache, packages differ | 10/10 | 10/10 | 0.16 s (0.16-0.17) |
+| T = 0.0 | batch-invariant | own cache, packages differ | 10/10 | 0/10 | 0.17 s (0.16-0.41) |
+| T = 0.0 | batch-invariant | own cache, packages identical | 10/10 | 0/10 | 0.17 s (0.16-0.40) |
+| T = 0.0 | batch-invariant | machine 1's caches, packages identical | 10/10 | **10/10** | 0.17 s (0.16-0.41) |
+
+Recovery is kill to the next position at the client; no engine restart is on
+the path, so it is the time to notice the broken stream, check the other
+replica's health and prefill the prompt plus the delivered tokens there.
+
+**Why the text differed, and what fixed it.** In batch-invariant mode each
+machine was repeatable on its own (its two failure-free references were
+identical), but machine 2's failure-free answer differed from machine 1's
+from character 554 on, in both own-cache runs: a single word ("undoing the
+crash" against "undoing the effects of the crash") after which the two texts
+continue differently, the pattern of a near-tie decided by a last-digit
+difference in the arithmetic. It was not the batch-invariance setting (the
+replica's process environment had `VLLM_BATCH_INVARIANT=1`) or the packages
+(both machines: NVIDIA A10G, driver 595.91.07, same AMI; machine 2's VBIOS
+version was not recorded, but the hardware is ruled out by the cache result
+below):
+before the second run, the 21 packages that differed (20 by version, mostly
+web and HTTP libraries but also cuda-tile, cuda-bindings, cuda-core and
+cuda-python, and z3-solver missing) were set to machine 1's versions, making
+`pip freeze` byte-identical, and the answer still split at character 554.
+What still differed was each machine's own compiled state: vLLM's
+torch.compile cache (`~/.cache/vllm`, 235 MB on machine 1, 115 MB on machine 2),
+FlashInfer's cache (`~/.cache/flashinfer`, 792 KB against 12 KB) and
+TorchInductor's (`/tmp/torchinductor_ubuntu`). With machine 1's three caches
+copied to machine 2, machine 2's failure-free answer was identical to machine
+1's and all 10 failover trials reproduced the failure-free text. Which of the
+three caches matters, and why compiled artifacts built on identical machines
+differ, was not isolated. In default mode at T = 0.8 the failover outputs
+matched a reference in 10 of 10 trials even with machine 2's own cache; a
+sampled token is less sensitive to a last-digit difference than a greedy
+choice at a near-tie, but 10 trials do not show how much less.
+
+**Consequence for failover.** A standby replica gives exactly-once delivery
+and sub-second recovery regardless; it gives the same text as a failure-free
+run only if it runs in a deterministic mode *and* was started from the same
+compiled state as the replica it replaces.
+
+## Measured results (SGLang 0.5.21, restart mode)
+
+Grid: `PARTS="restart determ overhead" bash scripts/run_gateway_matrix.sh sglang`
+inside the Phase 1 container image (`lmsysorg/sglang:v0.5.21`, image id
+`b1259f3ea327`), commit `7abc6ea`, text resume mode, otherwise as for vLLM.
+
+* **Delivery:** exactly-once in 70 of 70 kill trials (0 duplicated, 0 missing
+  positions, all requests complete, one recovery attempt each).
+* **Same text:** with `--enable-deterministic-inference`, 10 of 10 (T = 0,
+  kill at 128). Default mode: 3 of 30 at T = 0; 0 of 30 at T = 0.8, where all
+  30 recovered texts differed from each other and the two references already
+  differed at the second character, consistent with SGLang ignoring the OpenAI
+  `seed` field (Phase 1).
+* **Recovery:** 129.8-137.8 s (median per run) in default mode and 178.8 s in
+  deterministic mode, again all SGLang restart: the engine-ready-to-first-token
+  gap was -0.31 to 0.24 s (median per run; known only to about 1 s, as above).
+* **Overhead** (30 pairs each): time to first token +31.7 ms (70.1 -> 101.8 ms)
+  and +34.6 ms with fsync (64.7 -> 101.8 ms); time per output token
+  32.81 -> 32.69 and 32.70 ms; end-to-end, 256 tokens, 8.44 -> 8.44 s and
+  8.43 -> 8.44 s. So no measurable per-token or end-to-end cost; why the added
+  time to first token does not show up end to end was not examined.
+
+## Measurement plan (`scripts/run_gateway_matrix.sh`)
 
 * **restart**: one replica, T = 0.0 and 0.8, kill at 10/50/90% of 256
   tokens, 10 trials each: delivery check, recovery latency, equality with the
@@ -153,8 +243,8 @@ tokenization), not a measured lower bound for exactly-once delivery.
   Direct requests use a text prompt without logprobs, as a client without the
   gateway would; the gateway's own token-id requests are part of its cost.
 * **failover**: two replicas on two GPUs (skipped on a single A10G, where two
-  8B replicas do not fit). Not yet run.
-* **SGLang**: the same grid in text mode. Not yet run.
+  8B replicas do not fit); run instead across two machines, below.
+* **SGLang**: the same grid in text mode, from the container, below.
 
 ### Failover across two machines
 
@@ -175,7 +265,9 @@ gateway resumes on replica 1 over the private network. The run records
 replica 1's `/version`, a failure-free reference generated on it, and the
 command it was started with (`scripts/failover_common.sh` defines it for both
 machines). Copy `~/remote_replica_<mode>.log` from machine 2 into the run's
-folder before committing.
+folder before committing. To make the replicas compiled-state identical, copy
+`~/.cache/vllm`, `~/.cache/flashinfer` and `/tmp/torchinductor_$USER` from
+machine 1 to machine 2 before starting replica 1.
 
 ### SGLang
 

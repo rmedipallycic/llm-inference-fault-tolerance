@@ -90,4 +90,4 @@ for PART in $PARTS; do
   esac
 done
 
-"$PY" analysis/gateway_check.py --out "experiments/gateway_summary_${ENGINE}.md" || true
+"$PY" analysis/gateway_check.py --out experiments/gateway_summary.md || true
