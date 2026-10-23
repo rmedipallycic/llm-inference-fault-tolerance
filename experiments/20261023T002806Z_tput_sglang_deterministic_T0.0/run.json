@@ -1,0 +1,135 @@
+{
+ "run_id": "20261023T002806Z_tput_sglang_deterministic_T0.0",
+ "run_type": "measured",
+ "engine": "sglang",
+ "label": "deterministic",
+ "config": {
+  "run_type": "measured",
+  "engine": "sglang",
+  "label": "deterministic",
+  "server_cmd": "python3 -m sglang.launch_server --model-path meta-llama/Llama-3.1-8B-Instruct --port 8000 --context-length 4096 --mem-fraction-static 0.85 --enable-deterministic-inference",
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "port": 8000,
+  "concurrency": "1,4,16,32",
+  "requests_per_level": null,
+  "warmup": 4,
+  "max_tokens": 256,
+  "temperature": 0.0,
+  "seed": 1234,
+  "extra_body": null,
+  "ready_timeout": 900.0
+ },
+ "levels": [
+  1,
+  4,
+  16,
+  32
+ ],
+ "counts": [
+  12,
+  16,
+  64,
+  128
+ ],
+ "prompts": [
+  {
+   "id": "wal",
+   "text": "Explain, in a few paragraphs, how a write-ahead log lets a database recover after a crash."
+  },
+  {
+   "id": "tcp",
+   "text": "Describe how the TCP three-way handshake works and why each step is needed."
+  },
+  {
+   "id": "story",
+   "text": "Write a short story about a lighthouse keeper who finds a message in a bottle."
+  },
+  {
+   "id": "coffee",
+   "text": "List the steps to brew a cup of pour-over coffee, with a brief explanation of each step."
+  },
+  {
+   "id": "threads",
+   "text": "Explain the difference between a process and a thread in an operating system, with examples."
+  },
+  {
+   "id": "crisis",
+   "text": "Summarize the main causes and consequences of the 2008 financial crisis in a few paragraphs."
+  }
+ ],
+ "environment": {
+  "packages": {
+   "vllm": null,
+   "sglang": "0.5.21",
+   "torch": "2.13.0+cu130",
+   "transformers": "5.12.1",
+   "requests": "2.34.2"
+  },
+  "gpu_count": 1,
+  "gpus": [
+   {
+    "index": "0",
+    "name": "NVIDIA A10G",
+    "memory_total": "23028 MiB",
+    "driver": "595.91.07"
+   }
+  ],
+  "git_commit": "b164136de13c223fd9dda0a96ff16465067df6bd",
+  "git_dirty": false,
+  "argv": [
+   "/work/harness/run_throughput.py",
+   "--run-type",
+   "measured",
+   "--engine",
+   "sglang",
+   "--label",
+   "deterministic",
+   "--server-cmd",
+   "python3 -m sglang.launch_server --model-path meta-llama/Llama-3.1-8B-Instruct --port 8000 --context-length 4096 --mem-fraction-static 0.85 --enable-deterministic-inference",
+   "--model",
+   "meta-llama/Llama-3.1-8B-Instruct",
+   "--concurrency",
+   "1,4,16,32"
+  ],
+  "engine_env": {
+   "CUDA_HOME": "/usr/local/cuda",
+   "FLASHINFER_VERSION": "0.6.18",
+   "SGLANG_BUILD_COMMIT": "e00930c5489053f26d86b179cee0d087f846acbb",
+   "SGLANG_BUILD_URL": "https://github.com/sgl-project/sglang/actions/runs/36824467195",
+   "SGLANG_IMAGE_TAG": "lmsysorg/sglang:v0.5.21",
+   "SGLANG_RUST_BUILD_MODE": "never"
+  },
+  "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+  "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.39",
+  "hostname": "ip-172-31-6-222",
+  "started_utc": "2026-10-23T00:28:06.355133+00:00"
+ },
+ "ready_s": 138.15351526199993,
+ "level_windows": [
+  {
+   "level": 1,
+   "requests": 12,
+   "t_start_mono": 4738.282883462,
+   "t_end_mono": 4956.46975695
+  },
+  {
+   "level": 4,
+   "requests": 16,
+   "t_start_mono": 4956.469789021,
+   "t_end_mono": 5028.334093903
+  },
+  {
+   "level": 16,
+   "requests": 64,
+   "t_start_mono": 5028.334129114,
+   "t_end_mono": 5098.594178206
+  },
+  {
+   "level": 32,
+   "requests": 128,
+   "t_start_mono": 5098.594227687,
+   "t_end_mono": 5167.261636668
+  }
+ ],
+ "finished_utc": "2026-10-23T00:38:46.486029+00:00"
+}
