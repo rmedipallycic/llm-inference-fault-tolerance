@@ -1,0 +1,76 @@
+{
+ "run_id": "20261026T234245Z_kvnet_s1",
+ "run_type": "measured",
+ "config": {
+  "role": "send",
+  "run_type": "measured",
+  "peer": "172.31.6.222",
+  "port": 8000,
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "lengths": "512,1024,2048,4096,8192,16384,32768",
+  "reps": 5,
+  "sustained": 15,
+  "streams": 1,
+  "device": "cuda",
+  "kv_bytes_per_token": null
+ },
+ "peer": "172.31.6.222",
+ "peer_info": {
+  "ready": true,
+  "device": "cuda",
+  "hostname": "ip-172-31-6-222"
+ },
+ "kv_bytes_per_token": 131072,
+ "lengths": [
+  512,
+  1024,
+  2048,
+  4096,
+  8192,
+  16384,
+  32768
+ ],
+ "environment": {
+  "packages": {
+   "vllm": "0.31.0",
+   "sglang": null,
+   "torch": "2.13.0",
+   "transformers": "5.17.0",
+   "requests": "2.34.2"
+  },
+  "gpu_count": 1,
+  "gpus": [
+   {
+    "index": "0",
+    "name": "NVIDIA A10G",
+    "memory_total": "23028 MiB",
+    "driver": "595.91.07"
+   }
+  ],
+  "git_commit": "43cc9f6489017088115298ce163ad99436429bbf",
+  "git_dirty": false,
+  "argv": [
+   "/home/ubuntu/llm-inference-fault-tolerance/harness/kv_net_bench.py",
+   "send",
+   "--run-type",
+   "measured",
+   "--peer",
+   "172.31.6.222",
+   "--port",
+   "8000",
+   "--model",
+   "meta-llama/Llama-3.1-8B-Instruct",
+   "--streams",
+   "1"
+  ],
+  "engine_env": {},
+  "python": "3.12.15 (main, Oct  9 2026, 15:22:32) [Clang 22.1.3 ]",
+  "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.43",
+  "hostname": "ip-172-31-5-141",
+  "started_utc": "2026-10-26T23:42:45.433389+00:00"
+ },
+ "device": "cuda",
+ "torch": "2.13.0+cu130",
+ "gpu": "NVIDIA A10G",
+ "finished_utc": "2026-10-26T23:47:29.321711+00:00"
+}
