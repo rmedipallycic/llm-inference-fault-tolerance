@@ -93,6 +93,36 @@ def main():
         disk = (copy[L]["disk_read_s"] or 0) + (host or 0)
         lines.append(f"| {L} | {fmt(rc)} | {fmt(host)} | {fmt(rc / host if rc and host else None, '{:.1f}')} "
                      f"| {fmt(disk)} | {fmt(rc / disk if rc and disk else None, '{:.2f}')} |")
+
+    # Phase 4 step 2: KV-sized transfers to a second machine (harness/kv_net_bench.py)
+    net = load(a.root, "*_kvnet_*", "records.jsonl")
+    if net:
+        lines += ["", "### KV copy to a second machine (raw bandwidth)", "",
+                  "Total = sender d2h + network + receiver h2d (the time until the standby holds "
+                  "the KV cache on its GPU). Ratio = recompute time / total; above 1 means the "
+                  "copy would have been faster than recomputing on the standby.", "",
+                  "| run_id | streams | part | L | MB | network s | Gbit/s | total s | ratio |",
+                  "|---|---|---|---|---|---|---|---|---|"]
+        for r in net:
+            for part in ("sizes-1", "sizes-2"):
+                for L in r["lengths"]:
+                    rs = [x for x in r["records"] if x["part"] == part and x["length"] == L]
+                    if not rs:
+                        continue
+                    nets = med(x["remote_recv_s"] for x in rs)
+                    tot = med(x["d2h_s"] + x["net_and_remote_h2d_s"] for x in rs)
+                    rc = med(recompute.get(L, [None]))
+                    lines.append(
+                        f"| {r['run_id']} | {r['config']['streams']} | {part} | {L} "
+                        f"| {rs[0]['bytes'] / 1e6:.0f} | {fmt(nets)} "
+                        f"| {fmt(rs[0]['bytes'] * 8 / nets / 1e9 if nets else None, '{:.1f}')} "
+                        f"| {fmt(tot)} | {fmt(rc / tot if rc and tot else None, '{:.2f}')} |")
+        lines += ["", "Sustained part: Gbit/s of each back-to-back transfer of the largest size, "
+                  "in order (a falling sequence means the burst allowance ran out).", ""]
+        for r in net:
+            seq = [x for x in r["records"] if x["part"] == "sustained"]
+            lines.append(f"- {r['run_id']} ({r['config']['streams']} streams): "
+                         + ", ".join(f"{x['bytes'] * 8 / x['remote_recv_s'] / 1e9:.1f}" for x in seq))
     text = "\n".join(lines) + "\n"
     if a.out:
         with open(a.out, "w", encoding="utf-8") as fh:
