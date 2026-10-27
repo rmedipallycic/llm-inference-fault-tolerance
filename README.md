@@ -1,12 +1,12 @@
 # Fault-Tolerant LLM Inference Systems
 
-**A fault-injection study of what a streaming client sees when an LLM server (vLLM, SGLang) crashes mid-generation. Exactly-once token delivery and adaptive KV-cache checkpointing are planned later phases (see the phase table below).**
+**A fault-injection study of what a streaming client sees when an LLM server (vLLM, SGLang) crashes mid-generation, an exactly-once token gateway, and measurements of when a KV-cache checkpoint beats recomputing it. An adaptive checkpoint policy is the next phase (see the phase table below).**
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23377448.svg)](https://doi.org/10.5281/zenodo.23377448)
 
 **Paper (preprint):** Medipally, R. (2026). *What Does a Streaming Client See When an LLM Server Crashes? A Fault-Injection Study of Client-Visible Token Anomalies in vLLM and SGLang.* Zenodo. https://doi.org/10.5281/zenodo.23377448
 
-> **Status (October 14, 2026):** Phase 1 measured on vLLM 0.31.0 and SGLang 0.5.21 (AWS g5.xlarge, one A10G each, Llama 3.1 8B Instruct): 86 runs, 430 trials, including cache ablations, both engines' deterministic modes, a token-id recompute check, and five further prompts. Raw logs are in [`experiments/`](experiments/), and results are in the [paper](paper/main.pdf) ([DOI 10.5281/zenodo.23377448](https://doi.org/10.5281/zenodo.23377448)) and summarized below.
+> **Status (October 26, 2026):** Phases 1-4 measured on vLLM 0.31.0 and SGLang 0.5.21 (AWS g5.xlarge, one A10G each, Llama 3.1 8B Instruct). Phase 1: 86 runs, 430 fault-injection trials ([paper](paper/main.pdf), [DOI 10.5281/zenodo.23377448](https://doi.org/10.5281/zenodo.23377448)); Phase 2 follow-up: throughput of the fixes under load ([results](docs/throughput.md)); Phase 3: an exactly-once gateway, 190 of 190 kill trials ([results](docs/gateway.md), paper version 2); Phase 4: recompute versus KV checkpoint ([results](docs/checkpoint.md)). Raw logs are in [`experiments/`](experiments/). Phase 5 (adaptive policy) is next.
 
 ---
 
@@ -127,9 +127,9 @@ Measured on vLLM 0.31.0 and SGLang 0.5.21 with identical harness code, one A10G 
 | Phase | Gate to pass before the next phase | Status |
 | --- | --- | --- |
 | 1. Harness and baselines | Fault injection runs end to end on unmodified vLLM and SGLang, logs committed | Done: 86 runs, 430 trials committed (SGLang via its official container; [note](docs/sglang-attempt.md)) |
-| 2. RQ1 characterization | Measured anomaly counts for naive retry and recompute | Done for both engines: six prompts, cache ablations, deterministic modes ([paper](paper/main.pdf)); throughput cost of the fixes not yet measured |
+| 2. RQ1 characterization | Measured anomaly counts for naive retry and recompute | Done for both engines: six prompts, cache ablations, deterministic modes ([paper](paper/main.pdf)). Throughput cost of the fixes under concurrent load: deterministic modes 0.46-0.57x of default and still one output per prompt at 32 requests in flight; disabling vLLM's prefix cache costs nothing but no longer makes output unique under batching ([results](docs/throughput.md)) |
 | 3. Exactly-once gateway (RQ2) | Zero client anomalies across injected trials, overhead measured | Gate met on both engines: exactly-once delivery in 190 of 190 kill trials (vLLM 120 incl. failover, SGLang 70); deterministic modes gave the failure-free text in 10 of 10 on each engine; failover to a second machine recovers in 0.17 s instead of 108-185 s, with exact text only when the standby shares the compiled-kernel cache; per-token cost +0.05 ms (vLLM), not measurable (SGLang) ([results](docs/gateway.md)) |
-| 4. Checkpoint microbenchmarks (RQ3) | Measured recompute-cost and checkpoint-cost curves | Not started |
+| 4. Checkpoint microbenchmarks (RQ3) | Measured recompute-cost and checkpoint-cost curves | Gate met (raw copy times, 512-32K tokens): prefill 0.14-12.5 s; restoring from host memory 25-39x faster, from a second machine 1.9-3.1x faster (4 TCP streams, 9.9 Gbit/s; 1 stream 5.0 Gbit/s), from local disk slower below 32K. The hypothesised crossover appears only for disk ([results](docs/checkpoint.md)) |
 | 5. Adaptive policy (RQ4) | Compared against all baselines on mixed workload | Not started |
 
 ## Repository Structure
@@ -142,17 +142,22 @@ llm-inference-fault-tolerance/
 ├── docs/
 │   ├── proposal.md          # full research proposal
 │   ├── harness-validation.md # smoke-test note
-│   └── sglang-attempt.md    # SGLang setup: failed host install, working container
+│   ├── sglang-attempt.md    # SGLang setup: failed host install, working container
+│   ├── gateway.md           # Phase 3 results: exactly-once gateway
+│   ├── throughput.md        # Phase 2 follow-up: cost of the anomaly fixes under load
+│   └── checkpoint.md        # Phase 4 results: recompute versus KV checkpoint
 ├── harness/                 # fault-injection harness (Phase 1), gateway trial runner and mock engine (Phase 3)
 ├── gateway/                 # exactly-once token gateway (Phase 3; see docs/gateway.md)
 ├── tests/                   # gateway tests against harness/mock_engine.py (no GPU)
 ├── policies/                # fixed and adaptive checkpoint policies (planned)
-├── experiments/             # raw logs from measured runs only (86 runs, 430 trials)
+├── experiments/             # raw logs from measured runs only, and the generated summaries
 ├── analysis/                # analyze.py (per-trial metrics) and make_tables.py (paper tables), both from raw logs
 ├── scripts/run_matrix.sh    # vLLM measurement grid
 ├── scripts/sgl_grid.sh      # SGLang grid + radix ablation (runs inside the SGLang container)
 ├── scripts/extras_*.sh      # follow-up runs: deterministic modes, token-id recompute, more prompts
 ├── scripts/run_gateway_matrix.sh # Phase 3 grid: restart, deterministic, overhead, failover
+├── scripts/run_throughput.sh # Phase 2 follow-up: throughput of the fixes (vLLM, SGLang)
+├── scripts/run_phase4*.sh   # Phase 4: prefill sweep, KV copy, KV transfer to a second machine
 ├── paper/                   # paper (preprint) with measured vLLM and SGLang results
 └── smoke_tests/summary.csv  # harness smoke test only, not results
 ```
