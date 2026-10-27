@@ -24,4 +24,7 @@ fi
 REPLICA_CMD="vllm serve $MODEL --max-model-len $MAX_MODEL_LEN $KV_ARGS"
 VLLM_VERSION="$(python -c 'import vllm; print(vllm.__version__)' 2>/dev/null || echo unknown)"
 REPLICA_DESC="vllm $VLLM_VERSION, offload $MODE, env: $ENGINE_ENV, cmd: $REPLICA_CMD --host 0.0.0.0 --port 8000"
+# A SIGKILLed vLLM leaves its CPU-tier shared-memory file behind; remove it before
+# any start (one vLLM per machine, so nothing live is removed).
+PRESTART_CMD="rm -f /dev/shm/vllm_offload_*.mmap"
 CLEAR_CMD="find $KV_DIR -type f -name '*.bin*' -delete"   # block files only; keep config.json and dirs

@@ -93,6 +93,8 @@ def main():
     p.add_argument("--random-prompt-len", type=int, default=0,
                    help="Phase 5 Option B: every request gets its own prompt of this many "
                         "pseudo-random token ids instead of harness/prompts.json")
+    p.add_argument("--pre-start-cmd", default=None,
+                   help="shell command run before the server starts")
     p.add_argument("--clear-cmd", default=None,
                    help="shell command run before the warm-up and before every level "
                         "(Phase 5 Option B: empty the shared KV directory)")
@@ -118,7 +120,8 @@ def main():
     if a.run_type == "measured" and env["git_dirty"]:
         print("WARNING: uncommitted changes; the logged commit will not match the code that ran.")
     url = f"http://127.0.0.1:{a.port}"
-    server = ServerProcess(a.server_cmd, url, os.path.join(out, "server.log"))
+    server = ServerProcess(a.server_cmd, url, os.path.join(out, "server.log"),
+                           pre_start=a.pre_start_cmd)
 
     def random_ids(tag):
         rng = random.Random(f"ovh-{a.random_prompt_len}-{tag}")

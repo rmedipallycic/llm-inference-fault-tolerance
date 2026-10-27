@@ -10,6 +10,7 @@ cd "$(dirname "$0")/.."
 source scripts/phase5b_common.sh "${1:-all}"
 export $ENGINE_ENV
 eval "$CLEAR_CMD"
+eval "$PRESTART_CMD"
 run_once() {
   eval "$REPLICA_CMD --port 8000" > "$HOME/phase5b_smoke_$1.log" 2>&1 &
   for i in $(seq 1 300); do curl -s localhost:8000/v1/models >/dev/null && break; sleep 2; done
@@ -25,7 +26,8 @@ time.sleep(5)
 m = requests.get("http://localhost:8000/metrics").text
 print("\n".join(l for l in m.splitlines() if l.startswith("vllm:kv_offload") and "_bucket" not in l))
 PY
-  pkill -9 -f -- "--port 8000"; sleep 10
+  pkill -9 -f "vllm serve"; pkill -9 -f EngineCore; sleep 10   # the engine is a separate process
+  eval "$PRESTART_CMD"
 }
 echo "=== first server (stores)";  run_once 1
 echo "files in $KV_DIR: $(find "$KV_DIR" -type f | wc -l), size $(du -sh "$KV_DIR" | cut -f1)"

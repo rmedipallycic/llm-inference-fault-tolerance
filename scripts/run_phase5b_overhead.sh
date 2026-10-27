@@ -19,7 +19,7 @@ for REP in $(seq 1 "$REPS"); do
     env $ENGINE_ENV python -m harness.run_throughput --run-type measured --engine vllm \
         --label "offload-$M" --server-cmd "$REPLICA_CMD --port 8000" --model "$MODEL" \
         --concurrency 1,4 --requests-per-level 8,16 --random-prompt-len 4096 \
-        --clear-cmd "$CLEAR_CMD" \
+        --clear-cmd "$CLEAR_CMD" --pre-start-cmd "$PRESTART_CMD" \
       || echo "RUN FAILED: overhead $M" | tee -a experiments/failed_phase5b_runs.txt
     pkill -9 -f -- "--port 8000" 2>/dev/null || true
     sleep 10

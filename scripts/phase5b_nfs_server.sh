@@ -5,7 +5,7 @@
 set -euo pipefail
 SIZE="${SIZE:-6G}"
 sudo apt-get install -y -q nfs-kernel-server >/dev/null
-sudo mkdir -p /srv/kv
+sudo mkdir -p /srv/kv /etc/exports.d
 mountpoint -q /srv/kv || sudo mount -t tmpfs -o size="$SIZE",mode=1777 tmpfs /srv/kv
 echo "/srv/kv 172.31.0.0/16(rw,async,no_subtree_check,no_root_squash,fsid=1)" | sudo tee /etc/exports.d/kv.exports >/dev/null
 sudo exportfs -ra

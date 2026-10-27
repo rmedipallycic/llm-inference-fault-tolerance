@@ -18,8 +18,11 @@ IS_WINDOWS = sys.platform.startswith("win")
 
 
 class ServerProcess:
-    def __init__(self, command, base_url, log_path):
+    def __init__(self, command, base_url, log_path, pre_start=None):
         self.command = command
+        # Shell command run before every start, e.g. to remove shared-memory
+        # files a SIGKILLed vLLM leaves behind (Phase 5 Option B).
+        self.pre_start = pre_start
         self.base_url = base_url.rstrip("/")
         self.log_path = log_path
         self.proc = None
@@ -27,6 +30,9 @@ class ServerProcess:
 
     def start(self):
         self._log = open(self.log_path, "a", encoding="utf-8")
+        if self.pre_start:
+            r = subprocess.run(["bash", "-c", self.pre_start], capture_output=True, text=True)
+            self._log.write(f"\n=== pre-start rc={r.returncode}: {self.pre_start}\n")
         self._log.write(f"\n=== start {time.time():.6f} cmd: {self.command}\n")
         self._log.flush()
         kwargs = {"stdout": self._log, "stderr": subprocess.STDOUT}

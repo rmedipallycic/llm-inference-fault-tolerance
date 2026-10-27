@@ -81,6 +81,8 @@ def main():
     p.add_argument("--trials", type=int, default=5)
     p.add_argument("--seed", type=int, default=1234)
     p.add_argument("--clear-cmd", default=None, help="shell command run before every trial")
+    p.add_argument("--pre-start-cmd", default=None,
+                   help="shell command run before every start of replica 0")
     p.add_argument("--port", type=int, default=8000)
     p.add_argument("--gateway-port", type=int, default=9000)
     p.add_argument("--ready-timeout", type=float, default=900.0)
@@ -95,7 +97,7 @@ def main():
         print("WARNING: uncommitted changes; the logged commit will not match the code that ran.")
     url = f"http://127.0.0.1:{a.port}"
     server = ServerProcess(a.server_cmd.replace("{port}", str(a.port)), url,
-                           os.path.join(out, "server_0.log"))
+                           os.path.join(out, "server_0.log"), pre_start=a.pre_start_cmd)
     gw_url = f"http://127.0.0.1:{a.gateway_port}"
     gw_cmd = [sys.executable, "-m", "gateway.server", "--backends", f"{url},{a.remote.rstrip('/')}",
               "--model", a.model, "--port", str(a.gateway_port),

@@ -21,7 +21,7 @@ for L in $LENGTHS; do
   python -m harness.run_ckpt_failover --run-type measured --label "$MODE" \
       --server-cmd "$REPLICA_CMD --port {port}" --model "$MODEL" \
       --remote "$REMOTE" --remote-desc "$REPLICA_DESC" --prompt-len "$L" \
-      --kill-at 128 --trials "$TRIALS" --clear-cmd "$CLEAR_CMD" \
+      --kill-at 128 --trials "$TRIALS" --clear-cmd "$CLEAR_CMD" --pre-start-cmd "$PRESTART_CMD" \
     || echo "RUN FAILED: failover $MODE L=$L" | tee -a experiments/failed_phase5b_runs.txt
 done
 python analysis/phase5b.py --out experiments/phase5b_summary.md >/dev/null || true
