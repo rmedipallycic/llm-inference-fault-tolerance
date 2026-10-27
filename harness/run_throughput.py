@@ -22,6 +22,8 @@ Example (one A10G, vLLM default):
 import argparse
 import json
 import os
+import random
+import subprocess
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -88,6 +90,12 @@ def main():
     p.add_argument("--seed", type=int, default=1234)
     p.add_argument("--extra-body", default=None, help="JSON merged into every request")
     p.add_argument("--ready-timeout", type=float, default=900.0)
+    p.add_argument("--random-prompt-len", type=int, default=0,
+                   help="Phase 5 Option B: every request gets its own prompt of this many "
+                        "pseudo-random token ids instead of harness/prompts.json")
+    p.add_argument("--clear-cmd", default=None,
+                   help="shell command run before the warm-up and before every level "
+                        "(Phase 5 Option B: empty the shared KV directory)")
     a = p.parse_args()
 
     levels = [int(x) for x in a.concurrency.split(",")]
@@ -101,8 +109,9 @@ def main():
         prompts = json.load(f)
     extra = json.loads(a.extra_body) if a.extra_body else {}
 
+    kind = f"ckptovh_L{a.random_prompt_len}" if a.random_prompt_len else "tput"
     run_id = (f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}"
-              f"_tput_{a.engine}_{a.label}_T{a.temperature}")
+              f"_{kind}_{a.engine}_{a.label}_T{a.temperature}")
     out = os.path.join(REPO, OUT_DIRS[a.run_type], run_id)
     os.makedirs(out, exist_ok=True)
     env = environment()
@@ -110,6 +119,14 @@ def main():
         print("WARNING: uncommitted changes; the logged commit will not match the code that ran.")
     url = f"http://127.0.0.1:{a.port}"
     server = ServerProcess(a.server_cmd, url, os.path.join(out, "server.log"))
+
+    def random_ids(tag):
+        rng = random.Random(f"ovh-{a.random_prompt_len}-{tag}")
+        return [rng.randrange(1000, 120000) for _ in range(a.random_prompt_len)]
+
+    def clear():
+        if a.clear_cmd:
+            subprocess.run(["bash", "-c", a.clear_cmd], timeout=600)
 
     def body_for(prompt_text):
         b = {"model": a.model, "prompt": prompt_text, "max_tokens": a.max_tokens,
@@ -126,16 +143,22 @@ def main():
         server.start()
         meta["ready_s"] = server.wait_ready(timeout_s=a.ready_timeout)
         print(f"{run_id}: server ready after {meta['ready_s']:.0f} s")
+        clear()
         for i in range(a.warmup):           # not recorded: first-request effects
-            one_request(url, body_for(prompts[i % len(prompts)]["text"]))
+            one_request(url, body_for(random_ids(f"w{i}") if a.random_prompt_len
+                                      else prompts[i % len(prompts)]["text"]))
         records = []
         lock = threading.Lock()
         seq = [0]
 
         def job(level, k):
-            pr = prompts[k % len(prompts)]
-            rec = one_request(url, body_for(pr["text"]))
-            rec.update({"level": level, "k": k, "prompt_id": pr["id"]})
+            if a.random_prompt_len:
+                rec = one_request(url, body_for(random_ids(f"{level}-{k}")))
+                rec.update({"level": level, "k": k, "prompt_id": f"random-{level}-{k}"})
+            else:
+                pr = prompts[k % len(prompts)]
+                rec = one_request(url, body_for(pr["text"]))
+                rec.update({"level": level, "k": k, "prompt_id": pr["id"]})
             with lock:
                 rec["done_order"] = seq[0]
                 seq[0] += 1
@@ -143,6 +166,7 @@ def main():
 
         meta["level_windows"] = []
         for level, n in zip(levels, counts):
+            clear()
             t0 = time.monotonic()
             with ThreadPoolExecutor(max_workers=level) as ex:
                 list(ex.map(lambda k: job(level, k), range(n)))
