@@ -6,7 +6,7 @@
 
 **Paper (preprint):** Medipally, R. (2026). *What Does a Streaming Client See When an LLM Server Crashes? A Fault-Injection Study of Client-Visible Token Anomalies in vLLM and SGLang.* Zenodo. https://doi.org/10.5281/zenodo.23377448
 
-> **Status (October 26, 2026):** Phases 1-4 measured on vLLM 0.31.0 and SGLang 0.5.21 (AWS g5.xlarge, one A10G each, Llama 3.1 8B Instruct). Phase 1: 86 runs, 430 fault-injection trials ([paper](paper/main.pdf), [DOI 10.5281/zenodo.23377448](https://doi.org/10.5281/zenodo.23377448)); Phase 2 follow-up: throughput of the fixes under load ([results](docs/throughput.md)); Phase 3: an exactly-once gateway, 190 of 190 kill trials ([results](docs/gateway.md), paper version 2); Phase 4: recompute versus KV checkpoint ([results](docs/checkpoint.md)). Raw logs are in [`experiments/`](experiments/). Phase 5 (adaptive policy) is next.
+> **Status (October 26, 2026):** Phases 1-4 measured on vLLM 0.31.0 and SGLang 0.5.21 (AWS g5.xlarge, one A10G each, Llama 3.1 8B Instruct). Phase 1: 86 runs, 430 fault-injection trials ([paper](paper/main.pdf), [DOI 10.5281/zenodo.23377448](https://doi.org/10.5281/zenodo.23377448)); Phase 2 follow-up: throughput of the fixes under load ([results](docs/throughput.md)); Phase 3: an exactly-once gateway, 190 of 190 kill trials ([results](docs/gateway.md), paper version 2); Phase 4: recompute versus KV checkpoint ([results](docs/checkpoint.md)); Phase 5 simulation, clearly separated from measurements ([results](docs/phase5-simulation.md)). Raw logs are in [`experiments/`](experiments/).
 
 ---
 
@@ -130,7 +130,7 @@ Measured on vLLM 0.31.0 and SGLang 0.5.21 with identical harness code, one A10G 
 | 2. RQ1 characterization | Measured anomaly counts for naive retry and recompute | Done for both engines: six prompts, cache ablations, deterministic modes ([paper](paper/main.pdf)). Throughput cost of the fixes under concurrent load: deterministic modes 0.46-0.57x of default and still one output per prompt at 32 requests in flight; disabling vLLM's prefix cache costs nothing but no longer makes output unique under batching ([results](docs/throughput.md)) |
 | 3. Exactly-once gateway (RQ2) | Zero client anomalies across injected trials, overhead measured | Gate met on both engines: exactly-once delivery in 190 of 190 kill trials (vLLM 120 incl. failover, SGLang 70); deterministic modes gave the failure-free text in 10 of 10 on each engine; failover to a second machine recovers in 0.17 s instead of 108-185 s, with exact text only when the standby shares the compiled-kernel cache; per-token cost +0.05 ms (vLLM), not measurable (SGLang) ([results](docs/gateway.md)) |
 | 4. Checkpoint microbenchmarks (RQ3) | Measured recompute-cost and checkpoint-cost curves | Gate met (raw copy times, 512-32K tokens): prefill 0.14-12.5 s; restoring from host memory 25-39x faster, from a second machine 1.9-3.1x faster (4 TCP streams, 9.9 Gbit/s; 1 stream 5.0 Gbit/s), from local disk slower below 32K. The hypothesised crossover appears only for disk ([results](docs/checkpoint.md)) |
-| 5. Adaptive policy (RQ4) | Compared against all baselines on mixed workload | Not started |
+| 5. Adaptive policy (RQ4) | Compared against all baselines on mixed workload | Option A (simulation from measured costs) done: no-go for an adaptive policy by the rule fixed beforehand; at realistic failure rates no checkpoint pays off in expected completion time, but checkpointing the prompt cuts p99 recovery after a decode-phase failure from 9.1 s to about 1 s ([plan](docs/phase5-plan.md), [results](docs/phase5-simulation.md)). Next: measure the decode-path cost of a real checkpoint inside vLLM (Option B, narrowed) |
 
 ## Repository Structure
 
@@ -145,11 +145,14 @@ llm-inference-fault-tolerance/
 │   ├── sglang-attempt.md    # SGLang setup: failed host install, working container
 │   ├── gateway.md           # Phase 3 results: exactly-once gateway
 │   ├── throughput.md        # Phase 2 follow-up: cost of the anomaly fixes under load
-│   └── checkpoint.md        # Phase 4 results: recompute versus KV checkpoint
+│   ├── checkpoint.md        # Phase 4 results: recompute versus KV checkpoint
+│   ├── phase5-plan.md       # Phase 5 plan and decision rule (written before the simulation)
+│   └── phase5-simulation.md # Phase 5 Option A: simulation results (not measurements)
 ├── harness/                 # fault-injection harness (Phase 1), gateway trial runner and mock engine (Phase 3)
 ├── gateway/                 # exactly-once token gateway (Phase 3; see docs/gateway.md)
 ├── tests/                   # gateway tests against harness/mock_engine.py (no GPU)
-├── policies/                # fixed and adaptive checkpoint policies (planned)
+├── policies/                # checkpoint policies and the Phase 5 simulator (inputs read from experiments/)
+├── simulation/              # SIMULATION output only (Phase 5), kept apart from measured results
 ├── experiments/             # raw logs from measured runs only, and the generated summaries
 ├── analysis/                # analyze.py (per-trial metrics) and make_tables.py (paper tables), both from raw logs
 ├── scripts/run_matrix.sh    # vLLM measurement grid
