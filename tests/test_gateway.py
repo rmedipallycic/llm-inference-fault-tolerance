@@ -257,6 +257,34 @@ class GatewayTests(unittest.TestCase):
         shown = raw_text(events)
         self.assertIsNotNone(first_divergence(shown, text_of(events)))
 
+    # Phase 5 Option B found a client losing an event whose text held non-ASCII
+    # characters: requests decoded the stream as Latin-1 and split a JSON line on
+    # U+0085. The gateway now sends ASCII-only JSON with charset=utf-8, and
+    # gateway.client splits raw bytes.
+
+    def test_non_ascii_text_survives_failover(self):
+        engines, gw, gw_url, _ = self.setup(2, engine_args=("--tricky-text",))
+        hook, st = self.kill_at(20, lambda e: engines[e["backend"]])
+        res = stream_via_gateway(gw_url, self.body(), on_event=hook)
+        self.assertIn("t_kill", st)
+        self.assert_exactly_once(res)
+        text = text_of(res["events"])
+        self.assertIn("\u0445", text)
+        self.assertIn("\u2028", text)
+
+    def test_naive_latin1_client_sees_every_event(self):
+        engines, gw, gw_url, _ = self.setup(1, engine_args=("--tricky-text",))
+        seqs = []
+        with requests.post(gw_url + "/v1/completions", json={**self.body(), "stream": True},
+                           stream=True, timeout=30) as r:
+            r.encoding = "latin-1"                    # what requests assumed before the fix
+            for raw in r.iter_lines(decode_unicode=True):
+                if raw and raw.startswith("data:") and raw[5:].strip() != "[DONE]":
+                    g = json.loads(raw[5:]).get("gateway") or {}
+                    if "seq" in g:
+                        seqs.append(g["seq"])
+        self.assertEqual(seqs, list(range(MAX_TOKENS)))
+
 
 class UnitTests(unittest.TestCase):
     def test_delivery_counts(self):

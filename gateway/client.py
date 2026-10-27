@@ -12,9 +12,23 @@ import time
 import requests
 
 
+def sse_lines(resp):
+    """Lines of a server-sent-event stream, split on \\n / \\r only.
+
+    Splitting the raw bytes matters: decoded text would be split by
+    str.splitlines() on U+0085, U+2028 and other characters too, and requests
+    decodes a text/event-stream without a charset as Latin-1, which turns some
+    UTF-8 bytes into U+0085. Either cuts a JSON event in two and loses it
+    (found in Phase 5 Option B with random-token prompts).
+    """
+    for raw in resp.iter_lines():
+        if raw:
+            yield raw.decode("utf-8", errors="replace")
+
+
 def _events(resp):
-    for raw in resp.iter_lines(decode_unicode=True):
-        if not raw or not raw.startswith("data:"):
+    for raw in sse_lines(resp):
+        if not raw.startswith("data:"):
             continue
         data = raw[5:].strip()
         if data == "[DONE]":

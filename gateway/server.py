@@ -48,6 +48,7 @@ from urllib.parse import parse_qs, urlparse
 
 import requests
 
+from gateway.client import sse_lines
 from gateway.tokenlog import TokenLog, committed, read_log
 
 VLLM_IDS_FIELDS = {"logprobs": 1, "return_tokens_as_token_ids": True}
@@ -139,8 +140,8 @@ class Generation:
                 if r.status_code != 200:
                     self._last_reason = f"HTTP {r.status_code}: {r.text[:200]}"
                     return None
-                for raw in r.iter_lines(decode_unicode=True):
-                    if not raw or not raw.startswith("data:"):
+                for raw in sse_lines(r):
+                    if not raw.startswith("data:"):
                         continue
                     data = raw[5:].strip()
                     if data == "[DONE]":
@@ -336,7 +337,9 @@ def sse_chunk(gen, e=None, finish_reason=None):
             out["gateway"]["ids"] = e["ids"]
     else:
         out["gateway"] = {"attempts": gen.attempt, "error": gen.error}
-    return "data: " + json.dumps(out, ensure_ascii=False) + "\n\n"
+    # ensure_ascii: every non-ASCII character is escaped, so no client can split an
+    # event in two however it decodes or splits lines (Phase 5 Option B finding)
+    return "data: " + json.dumps(out, ensure_ascii=True) + "\n\n"
 
 
 def make_handler(gw):
@@ -356,7 +359,7 @@ def make_handler(gw):
 
         def _stream(self, gen, from_seq):
             self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Content-Type", "text/event-stream; charset=utf-8")
             self.send_header("Cache-Control", "no-cache")
             self.send_header("X-Gateway-Request-Id", gen.req_id)
             self.end_headers()

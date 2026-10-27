@@ -11,7 +11,9 @@ per chunk, like vLLM and SGLang, so that tests can kill it mid-stream:
     prefix caching, Phase 1);
   * temperature > 0 samples from a seeded RNG that restarts with every request
     (like an engine that does not expose its RNG position);
-  * /tokenize and the vLLM token-id logprobs format are supported.
+  * /tokenize and the vLLM token-id logprobs format are supported;
+  * --tricky-text makes every 5th token's text non-ASCII, including U+2028 and a
+    character whose UTF-8 contains byte 0x85 (tests SSE framing; Phase 5B).
 
   python -m harness.mock_engine --port 8100 --delay 0.01
 """
@@ -79,15 +81,18 @@ def make_handler(state):
             as_ids = bool(body.get("return_tokens_as_token_ids"))
             n = int(body.get("max_tokens", 16))
             self.send_response(200)
-            self.send_header("Content-Type", "text/event-stream")
+            self.send_header("Content-Type", "text/event-stream; charset=utf-8")
             self.end_headers()
             for i in range(n):
                 tok = next_token(ctx, salt, rng)
                 ctx.append(tok)
-                ch = {"index": 0, "text": f" w{tok}",
+                text = f" w{tok}"
+                if state["tricky"] and tok % 5 == 0:
+                    text = f" \u0445\u2028w{tok}\u2026"     # Cyrillic kha (D1 85), LS, ellipsis
+                ch = {"index": 0, "text": text,
                       "finish_reason": "length" if i == n - 1 else None,
                       "logprobs": {"tokens": [f"token_id:{tok}"]} if as_ids else None}
-                self.wfile.write(("data: " + json.dumps({"choices": [ch]}) + "\n\n").encode())
+                self.wfile.write(("data: " + json.dumps({"choices": [ch]}, ensure_ascii=False) + "\n\n").encode())
                 self.wfile.flush()
                 time.sleep(state["delay"])
             self.wfile.write(b"data: [DONE]\n\n")
@@ -101,8 +106,10 @@ def main():
     p.add_argument("--delay", type=float, default=0.01, help="seconds per token")
     p.add_argument("--history-dependent", action="store_true")
     p.add_argument("--model", default="mock")
+    p.add_argument("--tricky-text", action="store_true")
     a = p.parse_args()
-    state = {"model": a.model, "delay": a.delay, "history": a.history_dependent, "served": 0}
+    state = {"model": a.model, "delay": a.delay, "history": a.history_dependent, "served": 0,
+             "tricky": a.tricky_text}
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(state))
     srv.daemon_threads = True
     srv.serve_forever()
