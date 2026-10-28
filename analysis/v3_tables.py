@@ -175,9 +175,11 @@ def p5b(root, out, mac):
                 mbs = [x for x in r["loaded_mb"] if x is not None]
                 f.write(f"{r['L']:,}".replace(",", "{,}") + f" & {r['mode']} & {r['exactly_once']}/{r['trials']} "
                         f"& {med_rng(r['rec'])} & {statistics.median(r['ttft']):.2f} "
-                        f"& {f'{statistics.median(mbs):,.0f}'.replace(',', '{,}') if mbs and r['mode'] != 'none' else '--'} \\\\\n")
+                        f"& {f'{statistics.median(mbs):,.0f}'.replace(',', '{,}') if mbs and r['mode'] != 'none' else '--'} "
+                        f"& {r['echo']}/{r['trials']} \\\\\n")
         mac["PfbTrials"] = str(sum(r["trials"] for r in fo))
         mac["PfbExactlyOnce"] = str(sum(r["exactly_once"] for r in fo))
+        mac["PfbEcho"] = str(sum(r["echo"] for r in fo))
         get = {(r["L"], r["mode"]): r for r in fo}
         for L, tag in ((4096, "Four"), (16384, "Sixteen")):
             for m in phase5b.MODES:

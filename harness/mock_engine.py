@@ -13,7 +13,13 @@ per chunk, like vLLM and SGLang, so that tests can kill it mid-stream:
     (like an engine that does not expose its RNG position);
   * /tokenize and the vLLM token-id logprobs format are supported;
   * --tricky-text makes every 5th token's text non-ASCII, including U+2028 and a
-    character whose UTF-8 contains byte 0x85 (tests SSE framing; Phase 5B).
+    character whose UTF-8 contains byte 0x85 (tests SSE framing; Phase 5B);
+  * --resume-echo imitates two things vLLM 0.31 did in Phase 5B: a "pending" token
+    (id % 7 == 3, like a byte that is only part of a UTF-8 character) streams
+    empty text and its text arrives with the next token, and /detokenize of ids
+    ending in one decodes it as U+FFFD; and a request whose token-id prompt ends
+    in a pending token returns the whole decoded prompt as its first token's text;
+  * /detokenize is supported.
 
   python -m harness.mock_engine --port 8100 --delay 0.01
 """
@@ -36,6 +42,21 @@ def tokenize(text):
         m = WORD.match(w)
         ids.append(int(m.group(1)) % VOCAB if m else zlib.crc32(w.encode()) % VOCAB)
     return ids
+
+
+def surface(tok):
+    return "" if tok == BOS else f" w{tok}"
+
+
+def pending(tok):
+    return tok % 7 == 3
+
+
+def detokenize(ids, echo):
+    out = "".join(surface(t) for t in ids)
+    if echo and ids and pending(ids[-1]):
+        out = out[:-len(surface(ids[-1]))] + "\ufffd"
+    return out
 
 
 def next_token(ctx, salt, rng=None):
@@ -70,6 +91,9 @@ def make_handler(state):
             body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", "0"))) or b"{}")
             if self.path == "/tokenize":
                 return self._json(200, {"tokens": tokenize(body.get("prompt", ""))})
+            if self.path == "/detokenize":
+                return self._json(200, {"prompt": detokenize([int(t) for t in body.get("tokens", [])],
+                                                             state["echo"])})
             if self.path != "/v1/completions":
                 return self._json(404, {"error": "not found"})
             p = body.get("prompt", "")
@@ -83,12 +107,21 @@ def make_handler(state):
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream; charset=utf-8")
             self.end_headers()
+            echo = state["echo"] and isinstance(p, list) and bool(ctx) and pending(ctx[-1])
+            held = ""
             for i in range(n):
                 tok = next_token(ctx, salt, rng)
                 ctx.append(tok)
-                text = f" w{tok}"
+                text = surface(tok)
                 if state["tricky"] and tok % 5 == 0:
                     text = f" \u0445\u2028w{tok}\u2026"     # Cyrillic kha (D1 85), LS, ellipsis
+                if state["echo"]:
+                    if echo:                               # vLLM: decoded prompt + new token
+                        text, echo = "".join(surface(t) for t in ctx[:-1]) + text, False
+                    elif pending(tok) and i < n - 1:
+                        held, text = held + text, ""
+                    else:
+                        text, held = held + text, ""
                 ch = {"index": 0, "text": text,
                       "finish_reason": "length" if i == n - 1 else None,
                       "logprobs": {"tokens": [f"token_id:{tok}"]} if as_ids else None}
@@ -107,9 +140,10 @@ def main():
     p.add_argument("--history-dependent", action="store_true")
     p.add_argument("--model", default="mock")
     p.add_argument("--tricky-text", action="store_true")
+    p.add_argument("--resume-echo", action="store_true")
     a = p.parse_args()
     state = {"model": a.model, "delay": a.delay, "history": a.history_dependent, "served": 0,
-             "tricky": a.tricky_text}
+             "tricky": a.tricky_text, "echo": a.resume_echo}
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(state))
     srv.daemon_threads = True
     srv.serve_forever()

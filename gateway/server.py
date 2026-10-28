@@ -10,13 +10,25 @@ replicas (vLLM, SGLang). For every request it:
   3. if the engine dies or stalls mid-stream, resumes generation on a healthy
      replica (a restarted one, or another one) by resubmitting the prompt plus
      every token already committed, asking only for the remaining tokens;
-  4. lets a client that lost its connection reconnect and receive exactly the
-     entries it has not seen: GET /v1/streams/<req_id>?from_seq=N.
+  4. lets a client that lost its connection reconnect and receive the entries
+     from a position it names: GET /v1/streams/<req_id>?from_seq=N. The client
+     keeps N (one past the last position it consumed); the gateway does not
+     know what a client received, only what it committed.
 
-What this guarantees, and what it does not:
+What this guarantees, and what it does not (failure model: fail-stop crashes
+of engines and the gateway; the log directory survives; a reconnecting client
+remembers its last consumed position):
   * Every output position reaches the client at most once and, unless the
-    request fails for good, at least once; positions arrive in order. This is
-    what the gateway adds to an unmodified engine.
+    request fails for good, at least once; positions arrive in order. A
+    position is a token in ids mode and a chunk in text mode. This is what the
+    gateway adds to an unmodified engine.
+  * In ids mode the text of every entry after a failure is derived from the
+    token ids (engine /detokenize of the output ids), not taken from the
+    engine's stream, until the engine's own text agrees again: an engine
+    resumed from a token-id prompt can return the whole decoded prompt and the
+    delivered text as the text of its first token (vLLM 0.31, Phase 5 Option
+    B). So the concatenated text a client shows equals the decoding of the
+    delivered token ids, not only the positions.
   * The continuation after a failure is generated with the delivered tokens
     as context, so it never contradicts what the client has already shown.
   * It is the same text as a failure-free run only if the engine itself is
@@ -81,6 +93,7 @@ class Generation:
         self.error = None
         self.cond = threading.Condition()
         self.log = TokenLog(log_path, fsync=gw.fsync)
+        self._pending_ids, self._pending_text, self._engine_text_ok = [], "", False
 
     # ---- producer -------------------------------------------------------
     def produced(self):
@@ -133,6 +146,7 @@ class Generation:
     def _stream_from(self, backend, body):
         """Stream one engine attempt. Returns finish_reason, or None if it broke."""
         self._last_reason = None
+        self._pending_ids, self._pending_text, self._engine_text_ok = [], "", False
         url = self.gw.backends[backend] + "/v1/completions"
         try:
             with requests.post(url, json=body, stream=True,
@@ -146,6 +160,7 @@ class Generation:
                     data = raw[5:].strip()
                     if data == "[DONE]":
                         # a clean end without a finish_reason: the engine stopped early
+                        self._accept("", None, backend, final=True)
                         return "stop"
                     try:
                         payload = json.loads(data)
@@ -157,8 +172,7 @@ class Generation:
                     if self.gw.mode == "ids" and text and ids is None:
                         raise RuntimeError("ids mode, but the engine returned no token ids; "
                                            "use --mode text or pass the right --ids-fields")
-                    if text or ids:
-                        self._commit(text, ids, backend)
+                    self._accept(text, ids, backend, final=bool(ch.get("finish_reason")))
                     if ch.get("finish_reason"):
                         return ch["finish_reason"]
             self._last_reason = "stream ended without finish_reason"
@@ -166,10 +180,54 @@ class Generation:
             self._last_reason = f"{type(e).__name__}: {str(e)[:200]}"
         return None
 
-    def _commit(self, text, ids, backend):
+    def _accept(self, text, ids, backend, final):
+        """Commit one engine event, deriving its text from token ids after a failure.
+
+        On a resumed attempt (ids mode), the text released for new tokens is
+        detokenize(delivered ids + new ids) minus the text already released. Tokens
+        whose decoding ends in an incomplete character (U+FFFD) are held back, not
+        committed, until it completes or the request ends; a held-back token that is
+        lost in a further failure was never released and is simply regenerated. Once
+        an event's engine text equals the derived text, the engine is trusted again
+        for the rest of the attempt. If /detokenize fails or the derived text does
+        not extend what was released, the engine's text is used and the entry says so.
+        """
+        derive = (self.gw.mode == "ids" and self.attempt >= 1 and self.gw.derive_text
+                  and not self._engine_text_ok)
+        if not derive:
+            if text or ids:
+                self._commit(text, ids, backend)
+            return
+        if ids:
+            self._pending_ids += ids
+            self._pending_text += text
+        if not self._pending_ids:
+            return
+        released = self.delivered_text()
+        try:
+            full = self.gw.detokenize(backend, self.delivered_ids() + self._pending_ids)
+        except (requests.RequestException, KeyError, ValueError):
+            full = None
+        if full is None or not full.startswith(released):
+            self._commit(self._pending_text, self._pending_ids, backend,
+                         text_source="engine (derivation failed)")
+            self._pending_ids, self._pending_text, self._engine_text_ok = [], "", True
+            return
+        delta = full[len(released):]
+        if delta.endswith("\ufffd") and not final:
+            return                                   # incomplete character: hold back
+        same = delta == self._pending_text
+        self._commit(delta, self._pending_ids, backend,
+                     text_source="engine" if same else "detokenized",
+                     engine_text_chars=None if same else len(self._pending_text))
+        self._pending_ids, self._pending_text = [], ""
+        self._engine_text_ok = same
+
+    def _commit(self, text, ids, backend, **extra):
         n = len(ids) if ids is not None else 1
         entry = {"kind": "tokens", "seq": self.produced(), "n": n, "ids": ids, "text": text,
                  "attempt": self.attempt, "backend": backend}
+        entry.update({k: v for k, v in extra.items() if v is not None})
         entry = self.log.append(entry)           # durable before the client sees it
         with self.cond:
             self.entries.append(entry)
@@ -204,7 +262,8 @@ class Generation:
 
 class Gateway:
     def __init__(self, backends, model, log_dir, mode="ids", ids_fields=None, fsync=False,
-                 stall_timeout=60.0, recovery_timeout=900.0, max_attempts=5, health_poll=0.5):
+                 stall_timeout=60.0, recovery_timeout=900.0, max_attempts=5, health_poll=0.5,
+                 derive_text=True):
         self.backends = [b.rstrip("/") for b in backends]
         self.model = model
         self.log_dir = log_dir
@@ -215,6 +274,7 @@ class Gateway:
         self.recovery_timeout = recovery_timeout
         self.max_attempts = max_attempts
         self.health_poll = health_poll
+        self.derive_text = derive_text
         self.gens = {}
         self.lock = threading.Lock()
         os.makedirs(log_dir, exist_ok=True)
@@ -247,6 +307,12 @@ class Gateway:
                           timeout=30)
         r.raise_for_status()
         return r.json()["tokens"]
+
+    def detokenize(self, backend, ids):
+        r = requests.post(self.backends[backend] + "/detokenize",
+                          json={"model": self.model, "tokens": ids}, timeout=30)
+        r.raise_for_status()
+        return r.json()["prompt"]
 
     # ---- requests -------------------------------------------------------
     def start(self, request, req_id=None):
@@ -428,6 +494,9 @@ def main():
     p.add_argument("--recovery-timeout", type=float, default=900.0,
                    help="seconds to wait for a healthy backend after a failure")
     p.add_argument("--max-attempts", type=int, default=5)
+    p.add_argument("--engine-text-after-resume", action="store_true",
+                   help="ids mode: release the engine's own text after a failure instead of "
+                        "deriving it from token ids (the behaviour before this option existed)")
     p.add_argument("--health-poll", type=float, default=0.5,
                    help="seconds between health checks while waiting for a backend")
     a = p.parse_args()
@@ -435,7 +504,7 @@ def main():
                  ids_fields=json.loads(a.ids_fields) if a.ids_fields else None,
                  fsync=a.fsync, stall_timeout=a.stall_timeout,
                  recovery_timeout=a.recovery_timeout, max_attempts=a.max_attempts,
-                 health_poll=a.health_poll)
+                 health_poll=a.health_poll, derive_text=not a.engine_text_after_resume)
     resumed = gw.recover_unfinished()
     if resumed:
         print(f"resuming {len(resumed)} unfinished request(s) from {a.log_dir}", flush=True)

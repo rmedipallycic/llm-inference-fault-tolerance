@@ -286,6 +286,45 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(seqs, list(range(MAX_TOKENS)))
 
 
+    # ------------------------------------------------------------------
+    # Phase 5 Option B also found vLLM, resumed from a token-id prompt that ended
+    # in part of a UTF-8 character, returning the whole decoded prompt (and the
+    # delivered text) as its first token's text. Positions stayed exactly-once,
+    # but the text a client concatenates did not. The mock's --resume-echo
+    # imitates that; the gateway now derives resumed text from the token ids.
+
+    def _kill_on_pending(self, engines):
+        state = {}
+
+        def hook(e):
+            ids = e.get("ids") or []
+            if not state and e["seq"] >= 10 and ids and ids[-1] % 7 == 3:
+                state["t_kill"] = time.time()
+                engines[e["backend"]].kill()
+        return hook, state
+
+    def test_client_visible_text_after_resume_equals_failure_free(self):
+        engines, gw, gw_url, urls = self.setup(2, engine_args=("--resume-echo",))
+        expected = direct(urls[1])
+        hook, st = self._kill_on_pending(engines)
+        res = stream_via_gateway(gw_url, self.body(), on_event=hook)
+        self.assertIn("t_kill", st)
+        self.assert_exactly_once(res)
+        self.assertEqual(raw_text(res["events"]), expected)      # what a naive client shows
+        self.assertEqual(text_of(res["events"]), expected)
+
+    def test_negative_control_engine_text_after_resume(self):
+        engines, gw, gw_url, urls = self.setup(2, engine_args=("--resume-echo",),
+                                               gw_args=("--engine-text-after-resume",))
+        expected = direct(urls[1])
+        hook, st = self._kill_on_pending(engines)
+        res = stream_via_gateway(gw_url, self.body(), on_event=hook)
+        self.assertIn("t_kill", st)
+        self.assert_exactly_once(res)                             # positions still fine
+        self.assertNotEqual(raw_text(res["events"]), expected)    # text is not
+        self.assertGreater(len(raw_text(res["events"])), len(expected))
+
+
 class UnitTests(unittest.TestCase):
     def test_delivery_counts(self):
         ev = [{"seq": 0, "n": 2}, {"seq": 2, "n": 1}, {"seq": 2, "n": 1}, {"seq": 5, "n": 1}]

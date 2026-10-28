@@ -12,6 +12,11 @@ offload mode and prompt length, delivery (every position exactly once), recovery
 latency (kill to the next position at the client) and the KV bytes the standby
 loaded from the shared directory during the trial (vllm:kv_offload_load_bytes,
 from its /metrics before and after).
+
+"Echo": trials in which the text of the first entry after the resume repeated
+the text already delivered (vLLM returned the decoded prompt and delivered text
+as that token's text; see docs/phase5b.md). Positions can be exactly-once while
+the concatenated text is not.
 """
 import argparse
 import glob
@@ -79,6 +84,18 @@ def overhead(root):
     return rows
 
 
+def echoed(trial):
+    ev = trial["client"]["events"]
+    i = next((k for k, e in enumerate(ev) if (e["attempt"] or 0) >= 1), None)
+    if i is None:
+        return False
+    before = "".join(e["text"] for e in ev[:i])
+    t = ev[i]["text"] or ""
+    # the delivered text appears again inside a much longer text (decoded prompt +
+    # delivered text + the new token's text)
+    return bool(before) and len(t) > len(before) + 64 and before in t
+
+
 def failover(root):
     rows = []
     for run in load_runs(root, "*_ckptfo_*"):
@@ -98,6 +115,7 @@ def failover(root):
         rows.append({"run_id": run["run_id"], "mode": run["label"], "L": run["config"]["prompt_len"],
                      "trials": len(trials), "killed": sum(1 for t in trials if "t_kill" in t),
                      "exactly_once": eo,
+                     "echo": sum(1 for t in trials if echoed(t)),
                      "rec": [t["recovery_latency_s"] for t in trials],
                      "ttft": [t["ttft_s"] for t in trials],
                      "loaded_mb": [x / 1e6 if x is not None else None for x in loaded]})
@@ -135,14 +153,14 @@ def main():
     if fo:
         L += ["### Failover to the standby (kill position in the run id)", "",
               "| run_id | mode | prompt tokens | trials | killed | exactly-once | recovery s, median (min-max) "
-              "| TTFT s, median | KV the standby loaded, MB, median (vllm:kv_offload_load_bytes delta) |",
-              "|---|---|---|---|---|---|---|---|---|"]
+              "| TTFT s, median | KV the standby loaded, MB, median (vllm:kv_offload_load_bytes delta) | echo |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
         for r in sorted(fo, key=lambda r: (r["L"], MODES.index(r["mode"]) if r["mode"] in MODES else 9)):
             rec = [x for x in r["rec"] if x is not None]
             rr = f"{med(rec):.2f} ({min(rec):.2f}-{max(rec):.2f})" if rec else "-"
             L.append(f"| {r['run_id']} | {r['mode']} | {r['L']} | {r['trials']} | {r['killed']} "
                      f"| {r['exactly_once']}/{r['trials']} | {rr} | {fmt(med(r['ttft']), '{:.2f}')} "
-                     f"| {fmt(med(r['loaded_mb']), '{:.0f}')} |")
+                     f"| {fmt(med(r['loaded_mb']), '{:.0f}')} | {r['echo']}/{r['trials']} |")
         L.append("")
     text = "\n".join(L) + "\n"
     if a.out:

@@ -98,13 +98,30 @@ position at the client. Code: commit c1b065e.
 
 ## 3. Two things found along the way
 
-**vLLM can return the whole decoded prompt as the text of one token.** In 9 of
-the 30 failover trials (all three modes, both lengths), the first event
-after the resume carried a text field of 24,000-97,000 characters: the
-decoded prompt plus the new token. The token ids were correct, delivery was
-exactly-once, and these trials were not the slow ones. We did not trace the
-cause inside vLLM (presumably its incremental detokenizer when a request
-starts from a token-id prompt), and a client that concatenates `text` would show it as garbage.
+**Positions were exactly-once; the text a client shows was not.** In 9 of
+the 30 failover trials (all three modes, both lengths; column "echo" in the
+summary), the first entry after the resume carried a text of 24,000-97,000
+characters: the decoded prompt, then the text already delivered, then the new
+token's text. Token ids and positions were correct, but a client that
+concatenates `text` would have shown the prompt and repeated what it had already
+displayed. The 9 trials are exactly those in which the last delivered token
+streamed with empty text, as a token holding only part of a UTF-8 character does
+(the random-token prompts make the model emit such tokens), and none of the
+other 21; these were not the slow trials. None of the 190 Phase 3 trials showed
+it, but a kill inside a multi-byte character (emoji, CJK) could. We did not
+trace the cause inside vLLM.
+
+**Fix (after these runs, not yet run on a GPU).** In ids mode the gateway now
+derives the text of resumed entries from token ids: it calls the engine's
+`/detokenize` on the delivered ids plus the new ones, releases only the text
+beyond what it already released, holds back a token whose decoding ends in an
+incomplete character (U+FFFD), and goes back to the engine's text once the two
+agree. `--engine-text-after-resume` restores the old behaviour. The mock engine's
+`--resume-echo` imitates vLLM's behaviour; `tests/test_gateway.py` checks that a
+naive client's concatenated text equals the failure-free text after a failover,
+and a negative control with the old behaviour fails that check. This relies on
+decoding the output ids alone matching their decoding in context, which holds
+for Llama 3's byte-level tokenizer.
 
 **The gateway's event stream could be mis-split by a client.** One of those
 long texts (in 2 of the 9) contained U+0085 (NEL). The gateway sent `text/event-stream` with no
