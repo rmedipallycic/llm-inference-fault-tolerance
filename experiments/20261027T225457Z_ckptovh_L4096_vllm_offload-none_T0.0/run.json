@@ -1,0 +1,125 @@
+{
+ "run_id": "20261027T225457Z_ckptovh_L4096_vllm_offload-none_T0.0",
+ "run_type": "measured",
+ "engine": "vllm",
+ "label": "offload-none",
+ "config": {
+  "run_type": "measured",
+  "engine": "vllm",
+  "label": "offload-none",
+  "server_cmd": "vllm serve meta-llama/Llama-3.1-8B-Instruct --max-model-len 17000  --port 8000",
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "port": 8000,
+  "concurrency": "1,4",
+  "requests_per_level": "8,16",
+  "warmup": 4,
+  "max_tokens": 256,
+  "temperature": 0.0,
+  "seed": 1234,
+  "extra_body": null,
+  "ready_timeout": 900.0,
+  "random_prompt_len": 4096,
+  "pre_start_cmd": "rm -f /dev/shm/vllm_offload_*.mmap",
+  "clear_cmd": "find /srv/kv -type f -name '*.bin*' -delete"
+ },
+ "levels": [
+  1,
+  4
+ ],
+ "counts": [
+  8,
+  16
+ ],
+ "prompts": [
+  {
+   "id": "wal",
+   "text": "Explain, in a few paragraphs, how a write-ahead log lets a database recover after a crash."
+  },
+  {
+   "id": "tcp",
+   "text": "Describe how the TCP three-way handshake works and why each step is needed."
+  },
+  {
+   "id": "story",
+   "text": "Write a short story about a lighthouse keeper who finds a message in a bottle."
+  },
+  {
+   "id": "coffee",
+   "text": "List the steps to brew a cup of pour-over coffee, with a brief explanation of each step."
+  },
+  {
+   "id": "threads",
+   "text": "Explain the difference between a process and a thread in an operating system, with examples."
+  },
+  {
+   "id": "crisis",
+   "text": "Summarize the main causes and consequences of the 2008 financial crisis in a few paragraphs."
+  }
+ ],
+ "environment": {
+  "packages": {
+   "vllm": "0.31.0",
+   "sglang": null,
+   "torch": "2.13.0",
+   "transformers": "5.17.0",
+   "requests": "2.34.2"
+  },
+  "gpu_count": 1,
+  "gpus": [
+   {
+    "index": "0",
+    "name": "NVIDIA A10G",
+    "memory_total": "23028 MiB",
+    "driver": "595.91.07"
+   }
+  ],
+  "git_commit": "d9dd74631bee453eff3790ab3e5f1ff5485a9c67",
+  "git_dirty": false,
+  "argv": [
+   "/home/ubuntu/llm-inference-fault-tolerance/harness/run_throughput.py",
+   "--run-type",
+   "measured",
+   "--engine",
+   "vllm",
+   "--label",
+   "offload-none",
+   "--server-cmd",
+   "vllm serve meta-llama/Llama-3.1-8B-Instruct --max-model-len 17000  --port 8000",
+   "--model",
+   "meta-llama/Llama-3.1-8B-Instruct",
+   "--concurrency",
+   "1,4",
+   "--requests-per-level",
+   "8,16",
+   "--random-prompt-len",
+   "4096",
+   "--clear-cmd",
+   "find /srv/kv -type f -name '*.bin*' -delete",
+   "--pre-start-cmd",
+   "rm -f /dev/shm/vllm_offload_*.mmap"
+  ],
+  "engine_env": {
+   "VLLM_USE_FLASHINFER_SAMPLER": "0"
+  },
+  "python": "3.12.15 (main, Oct  9 2026, 15:22:32) [Clang 22.1.3 ]",
+  "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.43",
+  "hostname": "ip-172-31-5-141",
+  "started_utc": "2026-10-27T22:54:57.988495+00:00"
+ },
+ "ready_s": 138.138654717,
+ "level_windows": [
+  {
+   "level": 1,
+   "requests": 8,
+   "t_start_mono": 2386.49265965,
+   "t_end_mono": 2464.568084487
+  },
+  {
+   "level": 4,
+   "requests": 16,
+   "t_start_mono": 2464.584055389,
+   "t_end_mono": 2520.61077144
+  }
+ ],
+ "finished_utc": "2026-10-27T23:00:10.563181+00:00"
+}
