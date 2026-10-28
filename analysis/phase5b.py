@@ -135,7 +135,7 @@ def main():
     if fo:
         L += ["### Failover to the standby (kill position in the run id)", "",
               "| run_id | mode | prompt tokens | trials | killed | exactly-once | recovery s, median (min-max) "
-              "| TTFT s, median | standby kv_offload_load_bytes delta, MB, median (all transfer types summed) |",
+              "| TTFT s, median | KV the standby loaded, MB, median (vllm:kv_offload_load_bytes delta) |",
               "|---|---|---|---|---|---|---|---|---|"]
         for r in sorted(fo, key=lambda r: (r["L"], MODES.index(r["mode"]) if r["mode"] in MODES else 9)):
             rec = [x for x in r["rec"] if x is not None]

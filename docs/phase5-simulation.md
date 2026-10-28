@@ -80,6 +80,8 @@ Two limits on that gain, both visible in the simulation:
 
 ## What Option B becomes
 
+**Done:** the live measurements are in [phase5b.md](phase5b.md). In short, the decode-path cost was under 1% at one request at a time (beta near 0, not 0.1-1), the prompt's checkpoint instead costs 5-9% in time to first token, and recovery at 16K prompt tokens fell from 5.17 s to 0.66-0.74 s. The plan as written before those runs:
+
 Not an adaptive policy. The live work worth doing is: stream the prompt's KV
 (and optionally every k tokens) to the standby from inside vLLM, measure the
 decode slowdown beta under load, and inject failures to measure recovery latency
