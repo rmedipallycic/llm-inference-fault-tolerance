@@ -65,7 +65,7 @@ per prompt, all concurrency levels), range over the six prompts:
 | Configuration | Repetition 1 | Repetition 2 |
 |---|---|---|
 | vLLM default | 5-8 | 5-9 |
-| vLLM prefix caching off | 4-10 | 4-9 |
+| vLLM prefix caching off | 5-10 | 4-9 |
 | vLLM batch-invariant | **1** | **1** |
 | SGLang default | 3-6 | 3-6 |
 | SGLang deterministic | **1** | **1** |

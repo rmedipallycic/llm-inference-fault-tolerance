@@ -12,6 +12,7 @@ Reads experiments/<run>/run.json and trial_*.json and writes:
   paper/tables/env.tex        engine/library versions and GPU per configuration
   paper/tables/provenance.tex runs, trials, commits
   paper/tables/gw_*.tex       Phase 3 gateway tables (see analysis/gw_tables.py)
+  paper/tables/{tput,restore,sim,p5b_*,v3_macros}.tex  Phases 2, 4, 5 (analysis/v3_tables.py)
 
 No number is typed by hand: re-running this script on the committed logs
 reproduces every table.
@@ -260,6 +261,11 @@ def main():
     gm = gw_tables.write(a.root, a.out)
     if gm:
         print("gateway: " + ", ".join(f"{k}={v}" for k, v in gm.items()))
+
+    # Paper version 3: Phases 2, 4 and 5 (analysis/v3_tables.py)
+    import v3_tables
+    vm = v3_tables.write(a.root, a.out)
+    print("v3: " + ", ".join(f"{k}={v}" for k, v in vm.items()))
 
     print(f"wrote {len(rows)} anomaly rows, {len(repro)} reproducibility rows, "
           f"{len(lat)} latency rows to {a.out}/")
