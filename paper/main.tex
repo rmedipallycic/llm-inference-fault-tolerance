@@ -675,31 +675,37 @@ after the last entry it consumed. Under these assumptions:
     text in Section~\ref{sec:live}.
 \end{itemize}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\begin{tikzpicture}[font=\footnotesize, node distance=0.5cm and 0.6cm,
-  box/.style={draw, rounded corners=2pt, align=center, minimum height=0.9cm, inner sep=3pt},
-  >={Stealth[length=2mm]}]
-\node[box] (client) {Client};
-\node[box, right=0.8cm of client] (gw) {Gateway\\[-1pt]\scriptsize numbers, logs,\\[-2pt]\scriptsize resumes};
-\node[box, below=0.35cm of gw, minimum height=0.6cm] (log) {\scriptsize token log};
-\node[box, right=0.9cm of gw, yshift=0.75cm] (r0) {Replica 0\\[-1pt]\scriptsize machine 1};
-\node[box, right=0.9cm of gw, yshift=-0.75cm] (r1) {Standby\\[-1pt]\scriptsize machine 2};
-\node[box, right=0.6cm of r1, yshift=0.75cm, minimum height=0.6cm, dashed] (kv) {\scriptsize KV store\\[-2pt]\scriptsize (Sec.~\ref{sec:live})};
-\draw[<->] (client) -- node[above]{\scriptsize SSE} (gw);
-\draw[->] (gw) -- (log);
-\draw[->] (gw) -- node[above, sloped]{\scriptsize ids} (r0);
-\draw[->, dashed] (gw) -- node[above, sloped]{\scriptsize resume} (r1);
-\draw[->, dashed] (r0) -- (kv);
-\draw[->, dashed] (kv) -- (r1);
-\end{tikzpicture}
-\caption{The serving path evaluated in this paper. The gateway commits each
-numbered entry to its log before releasing it; on a failure it resumes on a
-restarted replica or the standby with the prompt and delivered token ids. In
-Section~\ref{sec:live}, both replicas also write KV-cache blocks to a store the
-standby can read.}
+\resizebox{\textwidth}{!}{%
+\begin{tikzpicture}[font=\small,
+  box/.style={draw, rounded corners=2pt, align=center, minimum width=2.6cm, minimum height=1.15cm, inner sep=4pt},
+  lab/.style={font=\footnotesize, align=center, fill=white, inner sep=1.5pt},
+  >={Stealth[length=2.2mm]}]
+\node[box] (client) at (0,0) {Client\\[1pt]\footnotesize keeps its last position};
+\node[box, minimum width=3.4cm] (gw) at (7.2,0) {Gateway\\[1pt]\footnotesize numbers positions,\\\footnotesize commits, resumes};
+\node[box, minimum width=2.4cm, minimum height=0.8cm] (log) at (7.2,-2.4) {Token log\\\footnotesize (local disk)};
+\node[box] (r0) at (14,1.9) {Replica 0\\[1pt]\footnotesize vLLM / SGLang, machine 1};
+\node[box] (r1) at (14,-1.9) {Standby (replica 1)\\[1pt]\footnotesize machine 2};
+\node[box, dashed, minimum width=2.4cm] (kv) at (19.8,0) {KV-block store\\\footnotesize RAM disk on machine 2,\\\footnotesize NFS on machine 1};
+\draw[<->, thick] (client) -- node[lab, above=3pt]{stream of entries (seq, n, text)} node[lab, below=3pt]{reconnect: from\_seq} (gw);
+\draw[->] (gw) -- node[lab, right=3pt]{commit before release} (log);
+\draw[->, thick] (gw.east) -- node[lab, above, sloped, pos=0.5]{(1) prompt token ids} (r0.west);
+\draw[->, thick, dashed] (gw.east) -- node[lab, below, sloped, pos=0.5]{(3) prompt + delivered ids} (r1.west);
+\node[font=\footnotesize, text=black] at (14,3.0) {(2) SIGKILL};
+\draw[->, dashed] (r0.east) -- node[lab, above, sloped]{write blocks} (kv.north);
+\draw[->, dashed] (kv.south) -- node[lab, below, sloped]{read blocks} (r1.east);
+\end{tikzpicture}}
+\caption{The serving path evaluated in this paper. The gateway numbers every
+output position and commits each entry to its log before releasing it to the
+client; a client that reconnects names the position it needs. When the serving
+replica fails (2), the gateway resumes the request on a restarted replica or on
+the standby (3) with the prompt and the delivered token ids. In
+Section~\ref{sec:live} (dashed store), both replicas also offload KV-cache
+blocks to a store the standby can read, so it loads them instead of
+recomputing them.}
 \label{fig:arch}
-\end{figure}
+\end{figure*}
 
 \paragraph{Resume modes.} With vLLM the gateway uses token ids
 (\texttt{/tokenize} for the prompt, token ids in the stream for the output),
@@ -1311,9 +1317,9 @@ checkpointing captures most of that gain (Figure~\ref{fig:recovery}).
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}
-\begin{axis}[xbar, xmode=log, scale only axis, width=0.42\columnwidth, height=5cm,
+\begin{axis}[xbar, xmode=log, scale only axis, width=0.33\columnwidth, height=5cm,
   xmin=0.05, xmax=2000, log origin=infty, bar width=6pt, enlarge y limits=0.08,
-  xlabel={Recovery latency, s (log scale)}, xlabel style={font=\footnotesize},
+  xlabel={Measured recovery latency, s (log scale)}, xlabel style={font=\footnotesize},
   ytick={1,...,7}, y dir=reverse, yticklabel style={font=\scriptsize, align=right},
   yticklabels={{Restart, one replica},{Failover, recompute, short},
     {Failover, recompute, 4K},{Failover, KV ckpt (prompt), 4K},
@@ -1329,8 +1335,8 @@ checkpointing captures most of that gain (Figure~\ref{fig:recovery}).
   (\PfbSixteenAll,7) [\PfbSixteenAll]};
 \end{axis}
 \end{tikzpicture}
-\caption{Recovery latency (kill to the next position at the client) by
-mechanism, vLLM. Restart and the short-prompt failover are medians per run
+\caption{Measured recovery latency (kill to the next position at the
+client) by mechanism, vLLM; no simulated values. Restart and the short-prompt failover are medians per run
 from Section~\ref{sec:gweval} (bar at the lowest run median); 4K and 16K
 are medians over five trials from Section~\ref{sec:live}. Serving cost:
 none for restart and recompute failover; for the KV checkpoint, under 1\% in

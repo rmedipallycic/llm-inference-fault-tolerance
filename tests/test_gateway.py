@@ -313,6 +313,18 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(raw_text(res["events"]), expected)      # what a naive client shows
         self.assertEqual(text_of(res["events"]), expected)
 
+    def test_client_token_id_prompt_ending_mid_character(self):
+        # no failure: the echo can also happen on the first attempt when the client
+        # sends a token-id prompt that ends in a pending token
+        from harness.mock_engine import detokenize
+        engines, gw, gw_url, urls = self.setup(1, engine_args=("--resume-echo",))
+        prompt = [500, 11, 12, 13, 17]               # 17 % 7 == 3: pending
+        res = stream_via_gateway(gw_url, {**self.body(), "prompt": prompt})
+        self.assert_exactly_once(res)
+        ids = [t for e in res["events"] for t in e["ids"]]
+        self.assertEqual(raw_text(res["events"]).rstrip("\ufffd"), detokenize(ids, True).rstrip("\ufffd")[:len(raw_text(res["events"]).rstrip("\ufffd"))])
+        self.assertLess(len(raw_text(res["events"])), len(detokenize(ids, True)) + 16)
+
     def test_negative_control_engine_text_after_resume(self):
         engines, gw, gw_url, urls = self.setup(2, engine_args=("--resume-echo",),
                                                gw_args=("--engine-text-after-resume",))

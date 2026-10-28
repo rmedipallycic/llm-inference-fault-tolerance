@@ -166,7 +166,7 @@ def p5b(root, out, mac):
                 f.write(f"{m} & {rng([x[0] for x in c1])} & {rng([x[1] for x in c1], '{:.2f}')} "
                         f"& {rng([x[3] for x in c1], '{:.3f}')} & {rng([x[1] for x in c4], '{:.2f}')} "
                         f"& {rng([x[3] for x in c4], '{:.3f}')} \\\\\n")
-    fo = phase5b.failover(root)
+    fo = [r for r in phase5b.failover(root) if r["C"] == 1]
     if fo:
         fo = sorted(fo, key=lambda r: (r["L"], phase5b.MODES.index(r["mode"])))
         with open(os.path.join(out, "p5b_fo.tex"), "w", encoding="utf-8") as f:

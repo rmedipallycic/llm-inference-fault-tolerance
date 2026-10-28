@@ -22,12 +22,13 @@ remembers its last consumed position):
     request fails for good, at least once; positions arrive in order. A
     position is a token in ids mode and a chunk in text mode. This is what the
     gateway adds to an unmodified engine.
-  * In ids mode the text of every entry after a failure is derived from the
-    token ids (engine /detokenize of the output ids), not taken from the
-    engine's stream, until the engine's own text agrees again: an engine
-    resumed from a token-id prompt can return the whole decoded prompt and the
-    delivered text as the text of its first token (vLLM 0.31, Phase 5 Option
-    B). So the concatenated text a client shows equals the decoding of the
+  * In ids mode the text of every entry after a failure, and from the start
+    when the client itself sent token ids, is derived from the token ids
+    (engine /detokenize of the output ids), not taken from the engine's stream,
+    until the engine's own text agrees again: an engine given a token-id prompt
+    that ends inside a UTF-8 character can return the whole decoded prompt (and
+    the delivered text) as the text of its first token (vLLM 0.31, Phase 5
+    Option B). A text prompt tokenized by the gateway ends on a whole character. So the concatenated text a client shows equals the decoding of the
     delivered token ids, not only the positions.
   * The continuation after a failure is generated with the delivered tokens
     as context, so it never contradicts what the client has already shown.
@@ -87,6 +88,7 @@ class Generation:
         self.req_id = req_id
         self.request = request
         self.prompt_ids = prompt_ids
+        self.ids_from_client = isinstance(request.get("prompt"), list)
         self.entries = list(entries or [])          # committed "tokens" entries
         self.attempt = 0
         self.finish_reason = None
@@ -183,7 +185,8 @@ class Generation:
     def _accept(self, text, ids, backend, final):
         """Commit one engine event, deriving its text from token ids after a failure.
 
-        On a resumed attempt (ids mode), the text released for new tokens is
+        On a resumed attempt (ids mode), and on the first attempt of a request whose
+        prompt the client sent as token ids, the text released for new tokens is
         detokenize(delivered ids + new ids) minus the text already released. Tokens
         whose decoding ends in an incomplete character (U+FFFD) are held back, not
         committed, until it completes or the request ends; a held-back token that is
@@ -192,8 +195,8 @@ class Generation:
         for the rest of the attempt. If /detokenize fails or the derived text does
         not extend what was released, the engine's text is used and the entry says so.
         """
-        derive = (self.gw.mode == "ids" and self.attempt >= 1 and self.gw.derive_text
-                  and not self._engine_text_ok)
+        derive = (self.gw.mode == "ids" and self.gw.derive_text and not self._engine_text_ok
+                  and (self.attempt >= 1 or self.ids_from_client))
         if not derive:
             if text or ids:
                 self._commit(text, ids, backend)

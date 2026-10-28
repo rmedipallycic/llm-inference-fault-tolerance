@@ -16,7 +16,10 @@ from its /metrics before and after).
 "Echo": trials in which the text of the first entry after the resume repeated
 the text already delivered (vLLM returned the decoded prompt and delivered text
 as that token's text; see docs/phase5b.md). Positions can be exactly-once while
-the concatenated text is not.
+the concatenated text is not. "Text ok": records whose concatenated client text
+equals the standby's /detokenize of the delivered ids (recorded from the
+revised harness on; "-" for earlier runs). With --concurrency C each trial has C
+records, one per request, and the counts are over records.
 """
 import argparse
 import glob
@@ -116,6 +119,9 @@ def failover(root):
                      "trials": len(trials), "killed": sum(1 for t in trials if "t_kill" in t),
                      "exactly_once": eo,
                      "echo": sum(1 for t in trials if echoed(t)),
+                     "C": run["config"].get("concurrency", 1),
+                     "text_ok": [t["text_check"]["equal"] for t in trials if t.get("text_check")],
+                     "commit": run["environment"].get("git_commit", "")[:7],
                      "rec": [t["recovery_latency_s"] for t in trials],
                      "ttft": [t["ttft_s"] for t in trials],
                      "loaded_mb": [x / 1e6 if x is not None else None for x in loaded]})
@@ -153,14 +159,19 @@ def main():
     if fo:
         L += ["### Failover to the standby (kill position in the run id)", "",
               "| run_id | mode | prompt tokens | trials | killed | exactly-once | recovery s, median (min-max) "
-              "| TTFT s, median | KV the standby loaded, MB, median (vllm:kv_offload_load_bytes delta) | echo |",
-              "|---|---|---|---|---|---|---|---|---|---|"]
-        for r in sorted(fo, key=lambda r: (r["L"], MODES.index(r["mode"]) if r["mode"] in MODES else 9)):
+              "| TTFT s, median | KV the standby loaded, MB, median (vllm:kv_offload_load_bytes delta) | echo "
+              "| C | text ok | commit |",
+              "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+        for r in sorted(fo, key=lambda r: (r["C"], r["L"], MODES.index(r["mode"]) if r["mode"] in MODES else 9,
+                                           r["run_id"])):
             rec = [x for x in r["rec"] if x is not None]
+            tok = f"{sum(1 for x in r['text_ok'] if x)}/{len(r['text_ok'])}" if r["text_ok"] else "-"
             rr = f"{med(rec):.2f} ({min(rec):.2f}-{max(rec):.2f})" if rec else "-"
             L.append(f"| {r['run_id']} | {r['mode']} | {r['L']} | {r['trials']} | {r['killed']} "
                      f"| {r['exactly_once']}/{r['trials']} | {rr} | {fmt(med(r['ttft']), '{:.2f}')} "
-                     f"| {fmt(med(r['loaded_mb']), '{:.0f}')} | {r['echo']}/{r['trials']} |")
+                     f"| {fmt(med(r['loaded_mb']), '{:.0f}')} | {r['echo']}/{r['trials']} | {r['C']} "
+                     f"| {tok} "
+                     f"| {r['commit']} |")
         L.append("")
     text = "\n".join(L) + "\n"
     if a.out:

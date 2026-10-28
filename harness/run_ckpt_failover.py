@@ -13,7 +13,14 @@ connector at all (the recompute baseline). In every trial:
     the standby either loads the matching blocks from the shared directory or
     recomputes them;
   * the standby's offloading counters (/metrics, vllm:kv_offload_*) are read
-    before and after, as evidence of whether blocks were loaded.
+    before and after, as evidence of whether blocks were loaded;
+  * after the trial, the client-visible text (the concatenated text of every
+    event) is compared with the standby's /detokenize of the delivered token
+    ids: positions can be exactly-once while the text is not (Phase 5B).
+
+--concurrency C sends C requests at once (distinct prompts) and kills replica 0
+once request 0 has received --kill-at positions; every request is checked. One
+record per request: trial_<k>.json for C=1, trial_<k>_r<j>.json otherwise.
 
 Raw records only; analysis/phase5b.py summarizes.
 
@@ -35,7 +42,7 @@ from datetime import datetime, timezone
 
 import requests
 
-from gateway.check import delivery
+from gateway.check import delivery, raw_text
 from gateway.client import stream_via_gateway
 from harness.run_gateway_trial import wait_http
 from harness.run_trial import OUT_DIRS, environment
@@ -56,6 +63,25 @@ def offload_metrics(url):
     except requests.RequestException as e:
         return {"error": str(e)}
     return {"lines": [ln for ln in text.splitlines() if METRIC.match(ln)]}
+
+
+def decoded_text(url, model, ids):
+    try:
+        r = requests.post(url + "/detokenize", json={"model": model, "tokens": ids}, timeout=60)
+        r.raise_for_status()
+        return r.json()["prompt"]
+    except (requests.RequestException, KeyError, ValueError) as e:
+        return {"error": str(e)}
+
+
+def same_text(shown, decoded):
+    """Client text equals the decoding of the delivered ids. If the output ends in an
+    incomplete character, decoding gives U+FFFD where the engine may have flushed
+    something else; only the text before it is compared then."""
+    if shown == decoded:
+        return True
+    d = decoded.rstrip("\ufffd")
+    return d != decoded and shown.startswith(d) and len(shown) - len(d) <= 16
 
 
 def run_cmd(cmd):
@@ -79,6 +105,7 @@ def main():
     p.add_argument("--max-tokens", type=int, default=256)
     p.add_argument("--kill-at", type=int, default=128)
     p.add_argument("--trials", type=int, default=5)
+    p.add_argument("--concurrency", type=int, default=1)
     p.add_argument("--seed", type=int, default=1234)
     p.add_argument("--clear-cmd", default=None, help="shell command run before every trial")
     p.add_argument("--pre-start-cmd", default=None,
@@ -89,7 +116,7 @@ def main():
     a = p.parse_args()
 
     run_id = (f"{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')}_ckptfo_{a.label}"
-              f"_L{a.prompt_len}_k{a.kill_at}")
+              f"_L{a.prompt_len}_k{a.kill_at}" + (f"_c{a.concurrency}" if a.concurrency > 1 else ""))
     out = os.path.join(REPO, OUT_DIRS[a.run_type], run_id)
     os.makedirs(out, exist_ok=True)
     env = environment()
@@ -126,20 +153,23 @@ def main():
             server.wait_ready(a.ready_timeout)
             wait_http(a.remote + "/v1/models", a.ready_timeout)
             clear = run_cmd(a.clear_cmd)
-            body = {"model": a.model, "prompt": random_prompt(a.prompt_len, f"{run_id}-{k}"),
-                    "max_tokens": a.max_tokens, "temperature": 0.0, "seed": a.seed,
-                    "ignore_eos": True}
+            C = a.concurrency
+            bodies = [{"model": a.model,
+                       "prompt": random_prompt(a.prompt_len, f"{run_id}-{k}" + (f"-{j}" if C > 1 else "")),
+                       "max_tokens": a.max_tokens, "temperature": 0.0, "seed": a.seed,
+                       "ignore_eos": True} for j in range(C)]
             m_before = offload_metrics(a.remote)
-            st, restarts = {}, []
+            st, restarts, lock = {}, [], threading.Lock()
 
             def hook(e):
-                if st or e["seq"] + e["n"] < a.kill_at:
-                    return
-                if e["backend"] != 0:
-                    st["not_killed"] = f"serving backend {e['backend']}"
-                    return
-                st["delivered_at_kill"] = e["seq"] + e["n"]
-                st["t_kill"] = server.kill()
+                with lock:
+                    if st or e["seq"] + e["n"] < a.kill_at:
+                        return
+                    if e["backend"] != 0:
+                        st["not_killed"] = f"serving backend {e['backend']}"
+                        return
+                    st["delivered_at_kill"] = e["seq"] + e["n"]
+                    st["t_kill"] = server.kill()
 
                 def restart():
                     t0 = time.time()
@@ -149,28 +179,48 @@ def main():
                 th.start()
                 st["thread"] = th
 
-            t0 = time.monotonic()
-            res = stream_via_gateway(gw_url, body, on_event=hook)
-            res["t_start_mono"] = t0
+            results = [None] * C
+
+            def client(j):
+                t0 = time.monotonic()
+                res = stream_via_gateway(gw_url, bodies[j], on_event=hook if j == 0 else None)
+                res["t_start_mono"] = t0
+                results[j] = res
+
+            threads = [threading.Thread(target=client, args=(j,)) for j in range(C)]
+            for th in threads:
+                th.start()
+            for th in threads:
+                th.join()
             if "thread" in st:
                 st.pop("thread").join(a.ready_timeout)
             m_after = offload_metrics(a.remote)
-            ev = res["events"]
-            after = [e for e in ev if (e["attempt"] or 0) >= 1]
-            first = ev[0]["t_mono"] - t0 if ev else None
-            rec = {"trial": k, "run_id": run_id, "prompt_len": a.prompt_len, "kill_at": a.kill_at,
-                   **st, "restarts": restarts, "clear": clear, "client": res,
-                   "delivery": delivery(ev), "ttft_s": first,
-                   "remote_metrics_before": m_before, "remote_metrics_after": m_after,
-                   "recovery_latency_s": (after[0]["t_wall"] - st["t_kill"])
-                   if after and "t_kill" in st else None}
-            with open(os.path.join(out, f"trial_{k:03d}.json"), "w", encoding="utf-8") as f:
-                json.dump(rec, f, indent=1)
-            d = rec["delivery"]
-            print(f"trial {k}: {d['positions']} positions, dup {d['duplicated_positions']}, "
-                  f"missing {d['missing_positions']}, TTFT {first and round(first, 2)} s, "
-                  f"recovery {rec['recovery_latency_s'] and round(rec['recovery_latency_s'], 3)} s",
-                  flush=True)
+            for j, res in enumerate(results):
+                ev = res["events"]
+                after = [e for e in ev if (e["attempt"] or 0) >= 1]
+                first = ev[0]["t_mono"] - res["t_start_mono"] if ev else None
+                ids = [t for e in ev for t in (e.get("ids") or [])]
+                dec = decoded_text(a.remote, a.model, ids)
+                shown = raw_text(ev)
+                rec = {"trial": k, "request": j, "concurrency": C, "run_id": run_id,
+                       "prompt_len": a.prompt_len, "kill_at": a.kill_at,
+                       **st, "restarts": restarts, "clear": clear, "client": res,
+                       "delivery": delivery(ev), "ttft_s": first,
+                       "text_check": {"shown_chars": len(shown),
+                                      "decoded_chars": len(dec) if isinstance(dec, str) else None,
+                                      "equal": same_text(shown, dec) if isinstance(dec, str) else None,
+                                      "error": dec.get("error") if isinstance(dec, dict) else None},
+                       "remote_metrics_before": m_before, "remote_metrics_after": m_after,
+                       "recovery_latency_s": (after[0]["t_wall"] - st["t_kill"])
+                       if after and "t_kill" in st else None}
+                name = f"trial_{k:03d}.json" if C == 1 else f"trial_{k:03d}_r{j:02d}.json"
+                with open(os.path.join(out, name), "w", encoding="utf-8") as f:
+                    json.dump(rec, f, indent=1)
+                d = rec["delivery"]
+                print(f"trial {k} req {j}: {d['positions']} positions, dup {d['duplicated_positions']}, "
+                      f"missing {d['missing_positions']}, text ok {rec['text_check']['equal']}, "
+                      f"TTFT {first and round(first, 2)} s, recovery "
+                      f"{rec['recovery_latency_s'] and round(rec['recovery_latency_s'], 3)} s", flush=True)
     finally:
         if gw_proc is not None:
             gw_proc.kill()
