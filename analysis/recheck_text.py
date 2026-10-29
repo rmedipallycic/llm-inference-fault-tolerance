@@ -6,7 +6,8 @@ shows special tokens that the stream omits. That rule is wrong when the model
 writes such a string as ordinary text (seen: "<|reserved_special_token_173|>"
 spelled out from ordinary tokens). Here special tokens are identified by id:
 the reference text is tokenizer.decode(ids, skip_special_tokens=True), which is
-what the engine's stream shows.
+what the engine's stream shows, decoded with the prompt as context (the text the
+output adds to the prompt's decoding).
 
 Run on a machine with the model's tokenizer (Phase 5B: the first machine):
   HF_HUB_OFFLINE=1 python analysis/recheck_text.py --model meta-llama/Llama-3.1-8B-Instruct
@@ -41,8 +42,19 @@ def main():
             ev = t["client"]["events"]
             ids = [i for e in ev for i in (e.get("ids") or [])]
             shown = "".join(e["text"] for e in ev)
-            variants = {name: tok.decode(ids, skip_special_tokens=True, clean_up_tokenization_spaces=c)
-                        for name, c in (("plain", False), ("cleanup", True))}
+            prompt = t["client"].get("prompt_ids") or []
+            hdr = os.path.join(d, "gateway_log", f"{t['client'].get('req_id')}.jsonl")
+            if not prompt and os.path.exists(hdr):
+                with open(hdr, encoding="utf-8") as fh:
+                    prompt = json.loads(fh.readline()).get("prompt_ids") or []
+
+            def dec(c):
+                # the text the output adds to the prompt's decoding
+                kw = {"skip_special_tokens": True, "clean_up_tokenization_spaces": c}
+                base = tok.decode(prompt, **kw).rstrip("\ufffd") if prompt else ""
+                full = tok.decode(prompt + ids, **kw)
+                return full[len(base):] if full.startswith(base) else full
+            variants = {"plain": dec(False), "cleanup": dec(True)}
             match = [k for k, v in variants.items() if compare(shown, v)]
             ref = variants["plain"]
             first = next((i for i in range(min(len(shown), len(ref))) if shown[i] != ref[i]),

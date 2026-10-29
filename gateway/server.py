@@ -190,8 +190,8 @@ class Generation:
 
         Applies on a resumed attempt (ids mode), and on the first attempt of a request
         whose prompt the client sent as token ids. The new tokens' text is derived as
-        detokenize(delivered + new ids) minus detokenize(delivered ids) (without a
-        trailing incomplete character, U+FFFD). Then:
+        detokenize(prompt + delivered + new ids) minus detokenize(prompt + delivered
+        ids) (without a trailing incomplete character, U+FFFD). Then:
           * derived text ends in U+FFFD: the new tokens hold part of a character; hold
             them back (not committed, not released) until it completes or the request
             ends; held tokens lost in a further failure are simply regenerated;
@@ -217,7 +217,10 @@ class Generation:
         if not self._pending_ids:
             return
         try:
-            done = self.delivered_ids()
+            # decoded with the prompt as context: a character can start in the prompt
+            # and end in the output (Phase 5B rerun: three first-attempt echoes passed
+            # when the output ids were decoded alone)
+            done = (self.prompt_ids or []) + self.delivered_ids()
             base = self.gw.detokenize(backend, done).rstrip("\ufffd") if done else ""
             full = self.gw.detokenize(backend, done + self._pending_ids)
         except (requests.RequestException, KeyError, ValueError):

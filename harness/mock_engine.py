@@ -65,17 +65,30 @@ def shown(tok):
     return f"<|s{tok}|>" if special(tok) else surface(tok)
 
 
+def trail(tok):
+    return tok % 7 == 4 and not special(tok)
+
+
 def pending(tok):
     return tok % 7 == 3 and not special(tok)
 
 
 def detokenize(ids, echo):
     # like bytes of an unfinished UTF-8 character: every trailing pending token
-    # decodes to U+FFFD until a non-pending token completes it
+    # decodes to U+FFFD until a non-pending token completes it; and a "trail" token
+    # (id % 7 == 4) at the very start of a list decodes to U+FFFD, like a
+    # continuation byte without its lead byte, so decoding output ids without the
+    # prompt differs from decoding them in context when a character spans the two
     k = len(ids)
     while echo and k > 0 and pending(ids[k - 1]):
         k -= 1
-    return "".join(shown(t) for t in ids[:k]) + "\ufffd" * (len(ids) - k)
+    out = []
+    for i, t in enumerate(ids[:k]):
+        if echo and i == 0 and trail(t):       # a list that starts mid-character
+            out.append("\ufffd")
+        else:
+            out.append(shown(t))
+    return "".join(out) + "\ufffd" * (len(ids) - k)
 
 
 def next_token(ctx, salt, rng=None):

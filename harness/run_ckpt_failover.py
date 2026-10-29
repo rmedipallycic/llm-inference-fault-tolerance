@@ -65,11 +65,17 @@ def offload_metrics(url):
     return {"lines": [ln for ln in text.splitlines() if METRIC.match(ln)]}
 
 
-def decoded_text(url, model, ids):
-    try:
-        r = requests.post(url + "/detokenize", json={"model": model, "tokens": ids}, timeout=60)
+def decoded_text(url, model, ids, prompt=()):
+    """The text the output ids add to the prompt's decoding (a character can start in
+    the prompt and end in the output, so the output is decoded in context)."""
+    def detok(x):
+        r = requests.post(url + "/detokenize", json={"model": model, "tokens": list(x)}, timeout=60)
         r.raise_for_status()
         return r.json()["prompt"]
+    try:
+        base = detok(prompt).rstrip("\ufffd") if prompt else ""
+        full = detok(list(prompt) + list(ids))
+        return full[len(base):] if full.startswith(base) else full
     except (requests.RequestException, KeyError, ValueError) as e:
         return {"error": str(e)}
 
@@ -206,7 +212,7 @@ def main():
                 after = [e for e in ev if (e["attempt"] or 0) >= 1]
                 first = ev[0]["t_mono"] - res["t_start_mono"] if ev else None
                 ids = [t for e in ev for t in (e.get("ids") or [])]
-                dec = decoded_text(a.remote, a.model, ids)
+                dec = decoded_text(a.remote, a.model, ids, bodies[j]["prompt"])
                 shown = raw_text(ev)
                 rec = {"trial": k, "request": j, "concurrency": C, "run_id": run_id,
                        "prompt_len": a.prompt_len, "kill_at": a.kill_at,

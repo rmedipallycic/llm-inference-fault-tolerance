@@ -330,8 +330,9 @@ class GatewayTests(unittest.TestCase):
         res = stream_via_gateway(gw_url, {**self.body(), "prompt": prompt})
         self.assert_exactly_once(res)
         ids = [t for e in res["events"] for t in e["ids"]]
-        self.assertEqual(raw_text(res["events"]).rstrip("\ufffd"), detokenize(ids, True).rstrip("\ufffd")[:len(raw_text(res["events"]).rstrip("\ufffd"))])
-        self.assertLess(len(raw_text(res["events"])), len(detokenize(ids, True)) + 16)
+        # the text the output adds to the prompt's decoding (no repeated prompt)
+        expected = detokenize(prompt + ids, True)[len(detokenize(prompt, True).rstrip("\ufffd")):]
+        self.assertEqual(raw_text(res["events"]).rstrip("\ufffd"), expected.rstrip("\ufffd"))
 
     def test_special_tokens_are_not_shown_after_resume(self):
         # /detokenize shows special tokens (<|eot_id|>), the engine's stream does not;
@@ -384,6 +385,28 @@ class GatewayTests(unittest.TestCase):
             t.join()
         for res in results:
             self.assert_exactly_once(res, positions=20)
+
+    def test_token_id_prompt_whose_last_character_ends_in_the_output(self):
+        # A token-id prompt that ends inside a character, completed by the first
+        # output token: vLLM repeated the whole prompt as that token's text, and
+        # decoding the output ids alone (without the prompt) did not recognise it
+        # (Phase 5B rerun, 3 of 390 records).
+        from harness import mock_engine as m
+        prompt = None
+        for last in range(1000, 2000):
+            if last % 7 == 3:
+                cand = [500, 11, 12, 13, last]
+                if m.trail(m.next_token(cand, 0)):
+                    prompt = cand
+                    break
+        self.assertIsNotNone(prompt)
+        engines, gw, gw_url, urls = self.setup(1, engine_args=("--resume-echo",))
+        res = stream_via_gateway(gw_url, {**self.body(), "prompt": prompt})
+        self.assert_exactly_once(res)
+        ids = [t for e in res["events"] for t in e["ids"]]
+        # the text the output adds to the prompt's decoding
+        expected = m.detokenize(prompt + ids, True)[len(m.detokenize(prompt, True).rstrip("\ufffd")):]
+        self.assertEqual(raw_text(res["events"]).rstrip("\ufffd"), expected.rstrip("\ufffd"))
 
     def test_negative_control_engine_text_after_resume(self):
         engines, gw, gw_url, urls = self.setup(2, engine_args=("--resume-echo", "--delay", "0.05"),
