@@ -8,11 +8,13 @@ continues; this exercises the client-resume path. The client picks the request
 id itself, so a submission that failed before the gateway answered is retried
 under the same id (resumed if the gateway had started it, submitted otherwise).
 """
+import http.client
 import json
 import time
 import uuid
 
 import requests
+import urllib3
 
 
 def sse_lines(resp):
@@ -37,7 +39,12 @@ def sse_lines(resp):
         return
     buf = b""
     while True:
-        data = raw.read1(65536)
+        try:
+            data = raw.read1(65536)
+        except (urllib3.exceptions.HTTPError, http.client.HTTPException, OSError) as e:
+            # read1 raises urllib3's errors directly; iter_lines() wrapped them. A
+            # stream cut mid-chunk (a killed vLLM) must look like any broken stream.
+            raise requests.exceptions.ChunkedEncodingError(f"stream broken: {e}") from e
         if not data:
             break
         buf += data

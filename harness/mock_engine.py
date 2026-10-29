@@ -22,6 +22,8 @@ per chunk, like vLLM and SGLang, so that tests can kill it mid-stream:
   * --special-tokens makes ids with id % 50 == 7 special: streamed text omits them
     (like skip_special_tokens) while /detokenize shows them as "<|s7|>", as vLLM's
     /detokenize shows Llama 3's <|eot_id|>;
+  * --chunked streams with HTTP/1.1 chunked transfer encoding, as vLLM and SGLang
+    do (a kill then cuts the stream mid-chunk);
   * /detokenize is supported.
 
   python -m harness.mock_engine --port 8100 --delay 0.01
@@ -68,10 +70,12 @@ def pending(tok):
 
 
 def detokenize(ids, echo):
-    out = "".join(shown(t) for t in ids)
-    if echo and ids and pending(ids[-1]) and not special(ids[-1]):
-        out = out[:-len(shown(ids[-1]))] + "\ufffd"
-    return out
+    # like bytes of an unfinished UTF-8 character: every trailing pending token
+    # decodes to U+FFFD until a non-pending token completes it
+    k = len(ids)
+    while echo and k > 0 and pending(ids[k - 1]):
+        k -= 1
+    return "".join(shown(t) for t in ids[:k]) + "\ufffd" * (len(ids) - k)
 
 
 def next_token(ctx, salt, rng=None):
@@ -119,9 +123,19 @@ def make_handler(state):
             state["served"] += 1
             as_ids = bool(body.get("return_tokens_as_token_ids"))
             n = int(body.get("max_tokens", 16))
+            chunked = state["chunked"]
+            if chunked:
+                self.protocol_version = "HTTP/1.1"
+                self.close_connection = True
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream; charset=utf-8")
+            if chunked:
+                self.send_header("Transfer-Encoding", "chunked")
             self.end_headers()
+
+            def out(b):
+                self.wfile.write(f"{len(b):x}\r\n".encode() + b + b"\r\n" if chunked else b)
+                self.wfile.flush()
             echo = state["echo"] and isinstance(p, list) and bool(ctx) and pending(ctx[-1])
             held = ""
             for i in range(n):
@@ -140,10 +154,11 @@ def make_handler(state):
                 ch = {"index": 0, "text": text,
                       "finish_reason": "length" if i == n - 1 else None,
                       "logprobs": {"tokens": [f"token_id:{tok}"]} if as_ids else None}
-                self.wfile.write(("data: " + json.dumps({"choices": [ch]}, ensure_ascii=False) + "\n\n").encode())
-                self.wfile.flush()
+                out(("data: " + json.dumps({"choices": [ch]}, ensure_ascii=False) + "\n\n").encode())
                 time.sleep(state["delay"])
-            self.wfile.write(b"data: [DONE]\n\n")
+            out(b"data: [DONE]\n\n")
+            if chunked:
+                self.wfile.write(b"0\r\n\r\n")
 
     return H
 
@@ -157,10 +172,13 @@ def main():
     p.add_argument("--tricky-text", action="store_true")
     p.add_argument("--resume-echo", action="store_true")
     p.add_argument("--special-tokens", action="store_true")
+    p.add_argument("--chunked", action="store_true")
     a = p.parse_args()
     SPECIAL["on"] = a.special_tokens
     state = {"model": a.model, "delay": a.delay, "history": a.history_dependent, "served": 0,
-             "tricky": a.tricky_text, "echo": a.resume_echo}
+             "tricky": a.tricky_text, "echo": a.resume_echo,
+             "chunked": a.chunked}
+    ThreadingHTTPServer.request_queue_size = 1024     # many concurrent clients in tests
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(state))
     srv.daemon_threads = True
     srv.serve_forever()

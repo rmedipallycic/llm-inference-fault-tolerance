@@ -66,6 +66,8 @@ from gateway.tokenlog import TokenLog, committed, read_log
 
 VLLM_IDS_FIELDS = {"logprobs": 1, "return_tokens_as_token_ids": True}
 REQ_ID_RE = re.compile(r"^[A-Za-z0-9_.-]{1,128}$")
+# special-token text as /detokenize shows it (Llama 3 <|eot_id|>, Qwen <|im_end|>, ...)
+SPECIAL_TOKEN = re.compile(r"<\|[A-Za-z0-9_]+\|>")
 
 
 def ids_from_logprobs(lp):
@@ -197,8 +199,9 @@ class Generation:
           * engine text is longer and ends with the derived text: the engine repeated
             earlier text (vLLM 0.31 returned the decoded prompt and delivered text);
             release only the derived text;
-          * otherwise release the engine's text, which, unlike /detokenize, omits
-            special tokens such as <|eot_id|>.
+          * otherwise release the engine's text.
+        Special-token strings (<|...|>), which /detokenize shows and the stream
+        omits, are removed from the derived text before comparing.
         After that first commit the engine's text is used for the rest of the attempt.
         If /detokenize fails, the engine's text is used and the entry says so.
         """
@@ -223,7 +226,8 @@ class Generation:
         if full is None or not full.startswith(base):
             self._commit(engine, self._pending_ids, backend, text_source="engine (derivation failed)")
         else:
-            delta = full[len(base):]
+            # /detokenize shows special tokens (<|eot_id|>) that the stream omits
+            delta = SPECIAL_TOKEN.sub("", full[len(base):])
             if delta.endswith("\ufffd") and not final:
                 return                               # incomplete character: hold back
             if engine == delta:
@@ -323,11 +327,17 @@ class Gateway:
         r.raise_for_status()
         return r.json()["tokens"]
 
-    def detokenize(self, backend, ids):
-        r = requests.post(self.backends[backend] + "/detokenize",
-                          json={"model": self.model, "tokens": ids}, timeout=30)
-        r.raise_for_status()
-        return r.json()["prompt"]
+    def detokenize(self, backend, ids, tries=3):
+        for k in range(tries):
+            try:
+                r = requests.post(self.backends[backend] + "/detokenize",
+                                  json={"model": self.model, "tokens": ids}, timeout=30)
+                r.raise_for_status()
+                return r.json()["prompt"]
+            except requests.RequestException:
+                if k == tries - 1:
+                    raise
+                time.sleep(0.05 * (k + 1))
 
     # ---- requests -------------------------------------------------------
     def start(self, request, req_id=None):

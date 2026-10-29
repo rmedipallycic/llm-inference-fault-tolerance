@@ -346,6 +346,29 @@ class GatewayTests(unittest.TestCase):
         self.assertNotIn("<|", raw_text(res["events"]))
         self.assertEqual(raw_text(res["events"]), expected)
 
+    def test_failover_from_chunked_engine(self):
+        # vLLM streams with chunked transfer encoding; a kill cuts the stream
+        # mid-chunk, which urllib3 reports with its own exception (Phase 5B rerun:
+        # requests stopped at the kill until the reader wrapped it)
+        engines, gw, gw_url, urls = self.setup(2, engine_args=("--chunked", "--delay", "0.03"))
+        expected = direct(urls[1])
+        hook, st = self.kill_at(20, lambda e: engines[e["backend"]])
+        res = stream_via_gateway(gw_url, self.body(), on_event=hook)
+        self.assertIn("t_kill", st)
+        self.assert_exactly_once(res)
+        self.assertEqual(raw_text(res["events"]), expected)
+        self.assertTrue(any(e["attempt"] for e in res["events"]))
+
+    def test_client_visible_text_chunked_engine(self):
+        engines, gw, gw_url, urls = self.setup(2, engine_args=("--chunked", "--resume-echo",
+                                                               "--special-tokens", "--delay", "0.05"))
+        expected = direct(urls[1])
+        hook, st = self._kill_on_pending(engines, min_seq=28)
+        res = stream_via_gateway(gw_url, self.body(), on_event=hook)
+        self.assertIn("t_kill", st)
+        self.assert_exactly_once(res)
+        self.assertEqual(raw_text(res["events"]), expected)
+
     def test_burst_of_clients_all_delivered(self):
         # 64 clients at once: none may be lost (Phase 5B: the default listen backlog
         # reset connections, and those requests never started)
