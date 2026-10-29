@@ -8,6 +8,10 @@ import glob
 import json
 import os
 import statistics
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "analysis"))
+import gw_timing  # noqa: E402
 
 
 def _runs(root, pattern, recfile):
@@ -79,10 +83,16 @@ def load(root="experiments"):
         for tp in sorted(glob.glob(os.path.join(d, "trial_*.json"))):
             with open(tp, encoding="utf-8") as f:
                 t = json.load(f)
-            if t.get("recovery_latency_s") is not None:
-                ds.append(t["recovery_latency_s"] - recompute_s(params, n_prompt + t["delivered_at_kill"]))
+            # recovery from the gateway's log, not the client (analysis/gw_timing.py:
+            # the client saw events late until commit 64c39ec)
+            rec = gw_timing.recovery_s(gw_timing.entries(d, t["client"].get("req_id")), t.get("t_kill"))
+            if rec is not None:
+                ds.append(rec - recompute_s(params, n_prompt + t["delivered_at_kill"]))
         src.setdefault("failover", []).append(os.path.basename(d))
-    params["detect_s"] = statistics.median(ds)
+    # can come out slightly negative if R(n) at this short length overestimates the
+    # prefill; a negative switch time is not meaningful, so it is clamped at zero
+    params["detect_s_raw"] = statistics.median(ds)
+    params["detect_s"] = max(0.0, params["detect_s_raw"])
     params["sources"] = src
     return params
 
