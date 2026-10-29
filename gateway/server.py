@@ -200,8 +200,9 @@ class Generation:
             earlier text (vLLM 0.31 returned the decoded prompt and delivered text);
             release only the derived text;
           * otherwise release the engine's text.
-        Special-token strings (<|...|>), which /detokenize shows and the stream
-        omits, are removed from the derived text before comparing.
+        Special tokens, which /detokenize shows and the stream omits, are left out
+        of the derived text; a token is special if it decodes on its own to exactly
+        <|...|> (by id, so ordinary text of that shape is kept).
         After that first commit the engine's text is used for the rest of the attempt.
         If /detokenize fails, the engine's text is used and the entry says so.
         """
@@ -222,15 +223,18 @@ class Generation:
             # when the output ids were decoded alone)
             done = (self.prompt_ids or []) + self.delivered_ids()
             base = self.gw.detokenize(backend, done).rstrip("\ufffd") if done else ""
-            full = self.gw.detokenize(backend, done + self._pending_ids)
+            # special tokens (<|eot_id|>), which /detokenize shows and the stream omits,
+            # are recognised by id: a token that decodes on its own to exactly <|...|>.
+            # Text the model writes in that shape from ordinary tokens is kept.
+            new = [t for t in self._pending_ids if not self.gw.is_special(backend, t)]
+            full = self.gw.detokenize(backend, done + new)
         except (requests.RequestException, KeyError, ValueError):
             full = base = None
         engine = self._pending_text
         if full is None or not full.startswith(base):
             self._commit(engine, self._pending_ids, backend, text_source="engine (derivation failed)")
         else:
-            # /detokenize shows special tokens (<|eot_id|>) that the stream omits
-            delta = SPECIAL_TOKEN.sub("", full[len(base):])
+            delta = full[len(base):]
             if delta.endswith("\ufffd") and not final:
                 return                               # incomplete character: hold back
             if engine == delta:
@@ -297,6 +301,7 @@ class Gateway:
         self.max_attempts = max_attempts
         self.health_poll = health_poll
         self.derive_text = derive_text
+        self._special = {}
         self.gens = {}
         self.lock = threading.Lock()
         os.makedirs(log_dir, exist_ok=True)
@@ -329,6 +334,12 @@ class Gateway:
                           timeout=30)
         r.raise_for_status()
         return r.json()["tokens"]
+
+    def is_special(self, backend, tok):
+        """A token that decodes on its own to exactly <|...|> (cached per token id)."""
+        if tok not in self._special:
+            self._special[tok] = bool(SPECIAL_TOKEN.fullmatch(self.detokenize(backend, [tok])))
+        return self._special[tok]
 
     def detokenize(self, backend, ids, tries=3):
         for k in range(tries):

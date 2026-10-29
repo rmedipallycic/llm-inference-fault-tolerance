@@ -421,6 +421,37 @@ class GatewayTests(unittest.TestCase):
         self.assertGreater(len(raw_text(res["events"])), len(expected))
 
 
+class TextDerivationTests(unittest.TestCase):
+    """Generation._accept against a stub /detokenize (no processes)."""
+    VOCAB = {100: "Hi", 1: "<|", 2: "lit", 3: "|>", 4: " ok", 9: "<|eot_id|>"}
+
+    def gen(self):
+        from gateway.server import Gateway, Generation
+        self.tmp = tempfile.mkdtemp()
+        gw = Gateway(["http://127.0.0.1:1"], "m", self.tmp)
+        gw.detokenize = lambda backend, ids, tries=3: "".join(self.VOCAB[i] for i in ids)
+        g = Generation(gw, "r1", {"prompt": [100]}, os.path.join(self.tmp, "r1.jsonl"), [100])
+        return g
+
+    def tearDown(self):
+        shutil.rmtree(getattr(self, "tmp", ""), ignore_errors=True)
+
+    def test_literal_special_token_text_is_kept(self):
+        # the model writes "<|lit|>" with ordinary tokens; the engine repeats the
+        # prompt in front of it. The repetition goes, the literal text stays.
+        g = self.gen()
+        g._accept("Hi<|lit|>", [1, 2, 3], 0, final=False)
+        self.assertEqual(g.delivered_text(), "<|lit|>")
+        g._accept(" ok", [4], 0, final=True)
+        self.assertEqual(g.delivered_text(), "<|lit|> ok")
+
+    def test_real_special_token_is_not_shown(self):
+        g = self.gen()
+        g._accept("", [9], 0, final=False)        # the stream omits <|eot_id|>
+        g._accept(" ok", [4], 0, final=True)
+        self.assertEqual(g.delivered_text(), " ok")
+
+
 class UnitTests(unittest.TestCase):
     def test_delivery_counts(self):
         ev = [{"seq": 0, "n": 2}, {"seq": 2, "n": 1}, {"seq": 2, "n": 1}, {"seq": 5, "n": 1}]

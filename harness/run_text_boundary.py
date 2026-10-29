@@ -17,7 +17,7 @@ script provokes the case on purpose, on one machine, without failures:
 
   python -m harness.run_text_boundary --run-type measured \\
     --server-cmd "vllm serve MODEL --port {port} --max-model-len 4096" --model MODEL
-Writes experiments/<ts>_textboundary_derive and <ts>_textboundary_engine.
+Writes experiments/<ts>_textboundary_{derive,engine}_c{C} for each --concurrency level.
 """
 import argparse
 import json
@@ -26,6 +26,7 @@ import re
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 
 import requests
@@ -87,6 +88,8 @@ def main():
     p.add_argument("--model", required=True)
     p.add_argument("--max-prompts", type=int, default=60)
     p.add_argument("--max-tokens", type=int, default=32)
+    p.add_argument("--concurrency", default="1 16",
+                   help="space-separated: requests in flight at once, one run each")
     p.add_argument("--port", type=int, default=8000)
     p.add_argument("--ready-timeout", type=float, default=900.0)
     a = p.parse_args()
@@ -96,7 +99,7 @@ def main():
     if a.run_type == "measured" and env["git_dirty"]:
         print("WARNING: uncommitted changes; the logged commit will not match the code that ran.")
     url = f"http://127.0.0.1:{a.port}"
-    first = os.path.join(REPO, OUT_DIRS[a.run_type], f"{ts}_textboundary_engine")
+    first = os.path.join(REPO, OUT_DIRS[a.run_type], f"{ts}_textboundary_server")
     os.makedirs(first, exist_ok=True)
     server = ServerProcess(a.server_cmd.replace("{port}", str(a.port)), url,
                            os.path.join(first, "server_0.log"))
@@ -106,40 +109,50 @@ def main():
         server.wait_ready(a.ready_timeout)
         prompts = boundary_prompts(url, a.model, a.max_prompts)
         print(f"{len(prompts)} prompts ending inside a character", flush=True)
+        levels = [int(x) for x in a.concurrency.split()]
         for label, gport, extra in (("derive", 9000, []), ("engine", 9001, ["--engine-text-after-resume"])):
-            out = os.path.join(REPO, OUT_DIRS[a.run_type], f"{ts}_textboundary_{label}")
-            os.makedirs(out, exist_ok=True)
             cmd = [sys.executable, "-m", "gateway.server", "--backends", url, "--model", a.model,
-                   "--port", str(gport), "--log-dir", os.path.join(out, "gateway_log"),
-                   "--mode", "ids"] + extra
-            log = open(os.path.join(out, "gateway.log"), "a", encoding="utf-8")
-            logs.append(log)
-            gws.append(subprocess.Popen(cmd, cwd=REPO, stdout=log, stderr=subprocess.STDOUT))
-            wait_http(f"http://127.0.0.1:{gport}/health", 60)
-            meta = {"run_id": os.path.basename(out), "run_type": a.run_type, "label": label,
-                    "config": {**vars(a), "gateway_cmd": cmd, "concurrency": 1, "prompt_len": None},
-                    "environment": env, "texts": TEXTS, "n_prompts": len(prompts)}
-            with open(os.path.join(out, "run.json"), "w", encoding="utf-8") as f:
-                json.dump(meta, f, indent=2)
-            ok = 0
-            for k, prompt in enumerate(prompts):
-                t0 = time.monotonic()
-                res = stream_via_gateway(f"http://127.0.0.1:{gport}",
-                                         {"model": a.model, "prompt": prompt, "max_tokens": a.max_tokens,
-                                          "temperature": 0.0, "seed": 1234, "ignore_eos": True})
-                res["t_start_mono"] = t0
-                ev = res["events"]
-                ids = [t for e in ev for t in (e.get("ids") or [])]
-                ref = in_context(url, a.model, prompt, ids)
-                shown = raw_text(ev)
-                equal = shown == ref or (ref.endswith("�") and shown.startswith(ref.rstrip("�")))
-                ok += equal
-                rec = {"trial": k, "prompt_ids": prompt, "client": res, "delivery": delivery(ev),
-                       "text_check": {"equal": equal, "shown_chars": len(shown), "decoded_chars": len(ref)}}
-                with open(os.path.join(out, f"trial_{k:03d}.json"), "w", encoding="utf-8") as f:
-                    json.dump(rec, f, indent=1)
-            print(f"{label}: client text equals the in-context decoding in {ok} of {len(prompts)}",
-                  flush=True)
+                   "--port", str(gport), "--log-dir", None, "--mode", "ids"] + extra
+            for C in levels:
+                out = os.path.join(REPO, OUT_DIRS[a.run_type], f"{ts}_textboundary_{label}_c{C}")
+                os.makedirs(out, exist_ok=True)
+                cmd[cmd.index("--log-dir") + 1] = os.path.join(out, "gateway_log")
+                log = open(os.path.join(out, "gateway.log"), "a", encoding="utf-8")
+                logs.append(log)
+                gw = subprocess.Popen(list(cmd), cwd=REPO, stdout=log, stderr=subprocess.STDOUT)
+                gws.append(gw)
+                wait_http(f"http://127.0.0.1:{gport}/health", 60)
+                meta = {"run_id": os.path.basename(out), "run_type": a.run_type, "label": label,
+                        "config": {**vars(a), "gateway_cmd": cmd, "concurrency": C, "prompt_len": None},
+                        "environment": env, "texts": TEXTS, "n_prompts": len(prompts)}
+                with open(os.path.join(out, "run.json"), "w", encoding="utf-8") as f:
+                    json.dump(meta, f, indent=2)
+
+                def one(k):
+                    prompt = prompts[k]
+                    t0 = time.monotonic()
+                    res = stream_via_gateway(f"http://127.0.0.1:{gport}",
+                                             {"model": a.model, "prompt": prompt, "max_tokens": a.max_tokens,
+                                              "temperature": 0.0, "seed": 1234, "ignore_eos": True})
+                    res["t_start_mono"] = t0
+                    ev = res["events"]
+                    ids = [t for e in ev for t in (e.get("ids") or [])]
+                    ref = in_context(url, a.model, prompt, ids)
+                    shown = raw_text(ev)
+                    equal = shown == ref or (ref.endswith("\ufffd") and shown.startswith(ref.rstrip("\ufffd")))
+                    rec = {"trial": k, "prompt_ids": prompt, "client": res, "delivery": delivery(ev),
+                           "text_check": {"equal": equal, "shown_chars": len(shown), "decoded_chars": len(ref)}}
+                    with open(os.path.join(out, f"trial_{k:03d}.json"), "w", encoding="utf-8") as f:
+                        json.dump(rec, f, indent=1)
+                    return equal, rec["delivery"]["exactly_once"]
+
+                with ThreadPoolExecutor(max_workers=C) as pool:
+                    results = list(pool.map(one, range(len(prompts))))
+                print(f"{label}, {C} in flight: text equals the in-context decoding in "
+                      f"{sum(r[0] for r in results)} of {len(results)}, exactly-once "
+                      f"{sum(r[1] for r in results)} of {len(results)}", flush=True)
+                gw.kill()
+                gw.wait()
     finally:
         for g in gws:
             g.kill()

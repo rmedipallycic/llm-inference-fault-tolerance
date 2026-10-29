@@ -74,8 +74,8 @@ shown in 25 of 30 vLLM and 24 of 30 SGLang trials; each engine's
 deterministic mode with recompute made recovery exact, at
 \TputDetMin--\TputDetMax$\times$ the default throughput under load. Second,
 a gateway that numbers output positions, logs them before release and
-resumes from the logged token ids delivered every output position exactly
-once, under stated assumptions, in all \GwKillTrials{} single-request failures
+resumes from the logged token ids delivered every output position (a token
+on vLLM, a stream chunk on SGLang) exactly once, under stated assumptions, in all \GwKillTrials{} single-request failures
 and all \PccRecords{} requests of failures with 4--32 requests in flight. The
 text a client displays is a separate property: vLLM repeated earlier text
 after a resume \RevRepeatRemoved{} times, which the gateway removed, and the
@@ -1602,11 +1602,13 @@ checkpointing only for tail latency.
     memory and is lost with the standby, it filled up at four concurrent
     requests, and a failure during prefill still forces a full recompute. A
     SIGKILL is detected at once; a hung GPU would add a detection timeout to
-    every mode. The gateway's text check recognises special tokens by their
-    text (\texttt{<|...|>}), not their id, so a model that writes such a
-    string as ordinary text inside the first entry after a resume could lose
-    it; and its fix for prompts that end inside a character was tested
-    against a mock engine only. The simulation of Section~\ref{sec:sim} is a first-order
+    every mode. In the measured runs the gateway's text check recognised
+    special tokens by their text (\texttt{<|...|>}), so a model that wrote
+    such a string as ordinary text inside the first entry after a resume could
+    have lost it; it now recognises them by id (a token that decodes on its
+    own to exactly that shape), with a unit test, but that version and its fix
+    for prompts that end inside a character were tested against a mock
+    engine only. The simulation of Section~\ref{sec:sim} is a first-order
     model with stated assumptions, and its conclusions are only as good as
     those assumptions.
 \end{itemize}
