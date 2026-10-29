@@ -1,0 +1,101 @@
+{
+  "run_id": "20261029T020829Z_ckptfo_none_L1024_k128_c32",
+  "run_type": "measured",
+  "label": "none",
+  "config": {
+    "run_type": "measured",
+    "label": "none",
+    "server_cmd": "vllm serve meta-llama/Llama-3.1-8B-Instruct --max-model-len 17000  --port {port}",
+    "model": "meta-llama/Llama-3.1-8B-Instruct",
+    "remote": "http://172.31.6.222:8000",
+    "remote_desc": "vllm 0.31.0, offload none, env: VLLM_USE_FLASHINFER_SAMPLER=0 HF_HUB_OFFLINE=1, cmd: vllm serve meta-llama/Llama-3.1-8B-Instruct --max-model-len 17000  --host 0.0.0.0 --port 8000",
+    "prompt_len": 1024,
+    "max_tokens": 256,
+    "kill_at": 128,
+    "trials": 3,
+    "concurrency": 32,
+    "seed": 1234,
+    "clear_cmd": "find /srv/kv -type f -name '*.bin*' -delete",
+    "pre_start_cmd": "rm -f /dev/shm/vllm_offload_*.mmap",
+    "port": 8000,
+    "gateway_port": 9000,
+    "ready_timeout": 900.0
+  },
+  "gateway_cmd": [
+    "/home/ubuntu/venv-vllm/bin/python",
+    "-m",
+    "gateway.server",
+    "--backends",
+    "http://127.0.0.1:8000,http://172.31.6.222:8000",
+    "--model",
+    "meta-llama/Llama-3.1-8B-Instruct",
+    "--port",
+    "9000",
+    "--log-dir",
+    "/home/ubuntu/llm-inference-fault-tolerance/experiments/20261029T020829Z_ckptfo_none_L1024_k128_c32/gateway_log",
+    "--mode",
+    "ids",
+    "--stall-timeout",
+    "120",
+    "--recovery-timeout",
+    "900.0"
+  ],
+  "environment": {
+    "packages": {
+      "vllm": "0.31.0",
+      "sglang": null,
+      "torch": "2.13.0",
+      "transformers": "5.17.0",
+      "requests": "2.34.2"
+    },
+    "gpu_count": 1,
+    "gpus": [
+      {
+        "index": "0",
+        "name": "NVIDIA A10G",
+        "memory_total": "23028 MiB",
+        "driver": "595.91.07"
+      }
+    ],
+    "git_commit": "1b978f275a2adb3297157160c6c126f32703f5cd",
+    "git_dirty": false,
+    "argv": [
+      "/home/ubuntu/llm-inference-fault-tolerance/harness/run_ckpt_failover.py",
+      "--run-type",
+      "measured",
+      "--label",
+      "none",
+      "--server-cmd",
+      "vllm serve meta-llama/Llama-3.1-8B-Instruct --max-model-len 17000  --port {port}",
+      "--model",
+      "meta-llama/Llama-3.1-8B-Instruct",
+      "--remote",
+      "http://172.31.6.222:8000",
+      "--remote-desc",
+      "vllm 0.31.0, offload none, env: VLLM_USE_FLASHINFER_SAMPLER=0 HF_HUB_OFFLINE=1, cmd: vllm serve meta-llama/Llama-3.1-8B-Instruct --max-model-len 17000  --host 0.0.0.0 --port 8000",
+      "--prompt-len",
+      "1024",
+      "--kill-at",
+      "128",
+      "--trials",
+      "3",
+      "--concurrency",
+      "32",
+      "--clear-cmd",
+      "find /srv/kv -type f -name '*.bin*' -delete",
+      "--pre-start-cmd",
+      "rm -f /dev/shm/vllm_offload_*.mmap"
+    ],
+    "engine_env": {
+      "VLLM_USE_FLASHINFER_SAMPLER": "0"
+    },
+    "python": "3.12.15 (main, Oct  9 2026, 15:22:32) [Clang 22.1.3 ]",
+    "platform": "Linux-7.0.0-1014-aws-x86_64-with-glibc2.43",
+    "hostname": "ip-172-31-5-141",
+    "started_utc": "2026-10-29T02:08:29.592750+00:00"
+  },
+  "initial_startup_s": 198.19472745599887,
+  "remote_version": {
+    "version": "0.31.0"
+  }
+}

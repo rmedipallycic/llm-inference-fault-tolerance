@@ -6,18 +6,32 @@ engines and failover between two machines on vLLM, 190 kill trials in all.
 Every number below is in [`experiments/gateway_summary.md`](../experiments/gateway_summary.md),
 which `python analysis/gateway_check.py` regenerates from the raw logs.
 
+> **Correction (October 29, 2026).** Recovery and first-token times through the
+> gateway were measured at the client, which, it turned out, saw each event only
+> when the next one arrived (requests' `iter_lines()` waits for 512 bytes on the
+> gateway's unchunked stream; fixed in commit 64c39ec). They are now taken from
+> the gateway log's timestamps (`analysis/gw_timing.py`, used by
+> `analysis/make_tables.py` for the paper's tables). Failover recovery is
+> **0.05-0.08 s** (was 0.16-0.17 s); the gateway adds **about 5 ms** before the
+> first token on vLLM and **under 1 ms** on SGLang (was 32-45 ms), and about
+> 0.2 ms per output token on vLLM. Restart recovery (minutes) and delivery
+> results are unchanged. The tables below keep the original client-side values,
+> with the corrected ones added.
+
 **Summary.**
 * Exactly-once delivery held in all 190 kill trials: 0 duplicated and 0
   missing output positions, every request completed.
 * With the engines' deterministic modes, restart recovery reproduced the
   failure-free text in 10 of 10 trials on each engine.
 * Failing over to a replica on a second machine cut recovery from 108-185 s
-  (engine restart) to 0.16-0.17 s (median per run).
+  (engine restart) to 0.05-0.08 s (median per run; 0.16-0.17 s as measured at the
+  client, see the correction above).
 * Exact text after failover needed more than the same software: with each
   machine's own compiled-kernel cache it matched in 0 of 20 batch-invariant
   trials; with the first machine's caches copied to the second, in 10 of 10.
 * The per-token cost of the gateway was below measurement resolution on SGLang
-  and +0.05 ms (0.15%) on vLLM; about 32-45 ms are added once per request.
+  and about +0.2 ms (0.5%) on vLLM; about 5 ms are added once per request on
+  vLLM and under 1 ms on SGLang (32-45 ms as measured at the client).
 
 ## Why a gateway
 
@@ -145,9 +159,13 @@ order; median of per-pair differences):
 
 | | without fsync | with fsync |
 | --- | --- | --- |
-| time to first token | +38.8 ms (40.8 -> 79.6 ms) | +44.8 ms (40.9 -> 85.6 ms) |
-| time per output token | +0.05 ms (33.11 -> 33.16 ms) | +0.06 ms (33.11 -> 33.17 ms) |
+| time to first token, from the gateway log | **+5.4 ms (40.8 -> 46.3 ms)** | **+8.6 ms (40.9 -> 49.5 ms)** |
+| time to first token, at the client (late, see correction) | +38.8 ms (40.8 -> 79.6 ms) | +44.8 ms (40.9 -> 85.6 ms) |
+| time per output token, from the gateway log | +0.18 ms (33.11 -> 33.29 ms) | +0.18 ms (33.11 -> 33.29 ms) |
 | end-to-end, 256 tokens | +0.05 s (8.48 -> 8.54 s) | +0.06 s (8.48 -> 8.54 s) |
+
+(SGLang, from the gateway log: +0.2 ms and +0.3 ms to first token, no measurable
+per-token difference.)
 
 The per-token cost is small, as the proposal's hypothesis expected. Most of
 the cost is paid once per request, before the first token: this
@@ -165,15 +183,15 @@ Run conditions that the records cannot capture themselves are listed in
 [`experiments/run_conditions.json`](../experiments/run_conditions.json), with
 evidence in `experiments/pip_freeze_machine1.txt` and `experiments/failover_machine2/`.
 
-| Run | Engine mode | Replica 1 setup | Exactly-once | Same text as failure-free | Recovery, median (range) |
-| --- | --- | --- | --- | --- | --- |
-| T = 0.0 | default | own cache, packages differ | 10/10 | 2/10 | 0.17 s (0.16-0.39) |
-| T = 0.8 | default | own cache, packages differ | 10/10 | 10/10 | 0.16 s (0.16-0.17) |
-| T = 0.0 | batch-invariant | own cache, packages differ | 10/10 | 0/10 | 0.17 s (0.16-0.41) |
-| T = 0.0 | batch-invariant | own cache, packages identical | 10/10 | 0/10 | 0.17 s (0.16-0.40) |
-| T = 0.0 | batch-invariant | machine 1's caches, packages identical | 10/10 | **10/10** | 0.17 s (0.16-0.41) |
+| Run | Engine mode | Replica 1 setup | Exactly-once | Same text as failure-free | Recovery (gateway log), median (range) | at the client |
+| --- | --- | --- | --- | --- | --- | --- |
+| T = 0.0 | default | own cache, packages differ | 10/10 | 2/10 | 0.05 s (0.05-0.39) | 0.17 s |
+| T = 0.8 | default | own cache, packages differ | 10/10 | 10/10 | 0.05 s (0.04-0.07) | 0.16 s |
+| T = 0.0 | batch-invariant | own cache, packages differ | 10/10 | 0/10 | 0.08 s (0.08-0.41) | 0.17 s |
+| T = 0.0 | batch-invariant | own cache, packages identical | 10/10 | 0/10 | 0.08 s (0.08-0.40) | 0.17 s |
+| T = 0.0 | batch-invariant | machine 1's caches, packages identical | 10/10 | **10/10** | 0.08 s (0.08-0.40) | 0.17 s |
 
-Recovery is kill to the next position at the client; no engine restart is on
+Recovery is kill to the gateway's commit of the next position; no engine restart is on
 the path, so it is the time to notice the broken stream, check the other
 replica's health and prefill the prompt plus the delivered tokens there.
 

@@ -1,0 +1,3390 @@
+{
+ "trial": 0,
+ "request": 11,
+ "concurrency": 32,
+ "run_id": "20261029T020829Z_ckptfo_none_L1024_k128_c32",
+ "prompt_len": 1024,
+ "kill_at": 128,
+ "delivered_at_kill": 128,
+ "t_kill": 1793239921.3574626,
+ "restarts": [
+  {
+   "t_start": 1793239921.524053,
+   "ready_s": 182.18427902199983
+  }
+ ],
+ "clear": {
+  "cmd": "find /srv/kv -type f -name '*.bin*' -delete",
+  "rc": 0,
+  "s": 0.019366176000403357,
+  "stderr": ""
+ },
+ "client": {
+  "reconnects": 0,
+  "finish_reason": "length",
+  "final": {
+   "attempts": 1,
+   "error": null
+  },
+  "error": null,
+  "req_id": "9f16d379bd05417887d6b5f2b2972604",
+  "events": [
+   {
+    "seq": 0,
+    "n": 2,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809,
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239912.0709977,
+    "t_mono": 10733.060662638
+   },
+   {
+    "seq": 2,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239912.5570195,
+    "t_mono": 10733.54668441
+   },
+   {
+    "seq": 3,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239913.0479827,
+    "t_mono": 10734.037647526
+   },
+   {
+    "seq": 4,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239913.5433123,
+    "t_mono": 10734.532977182
+   },
+   {
+    "seq": 5,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239914.0386124,
+    "t_mono": 10735.028277348
+   },
+   {
+    "seq": 6,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239914.5355375,
+    "t_mono": 10735.525202302
+   },
+   {
+    "seq": 7,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239915.0327055,
+    "t_mono": 10736.022370447
+   },
+   {
+    "seq": 8,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239915.5345066,
+    "t_mono": 10736.524171536
+   },
+   {
+    "seq": 9,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.0424798,
+    "t_mono": 10737.032144823
+   },
+   {
+    "seq": 10,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.3591976,
+    "t_mono": 10737.348862499
+   },
+   {
+    "seq": 11,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.3977108,
+    "t_mono": 10737.387375678
+   },
+   {
+    "seq": 12,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.4466522,
+    "t_mono": 10737.436317033
+   },
+   {
+    "seq": 13,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.4890602,
+    "t_mono": 10737.478725036
+   },
+   {
+    "seq": 14,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.533241,
+    "t_mono": 10737.522906017
+   },
+   {
+    "seq": 15,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.5804458,
+    "t_mono": 10737.570110713
+   },
+   {
+    "seq": 16,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.6243637,
+    "t_mono": 10737.614028582
+   },
+   {
+    "seq": 17,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.6698008,
+    "t_mono": 10737.659465448
+   },
+   {
+    "seq": 18,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.7112176,
+    "t_mono": 10737.700882489
+   },
+   {
+    "seq": 19,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.7554917,
+    "t_mono": 10737.745156652
+   },
+   {
+    "seq": 20,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.8022037,
+    "t_mono": 10737.791868502
+   },
+   {
+    "seq": 21,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.8461926,
+    "t_mono": 10737.835857492
+   },
+   {
+    "seq": 22,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.891616,
+    "t_mono": 10737.881280928
+   },
+   {
+    "seq": 23,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.9366522,
+    "t_mono": 10737.926317249
+   },
+   {
+    "seq": 24,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239916.9836838,
+    "t_mono": 10737.973348573
+   },
+   {
+    "seq": 25,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.0259316,
+    "t_mono": 10738.015596513
+   },
+   {
+    "seq": 26,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.069805,
+    "t_mono": 10738.059469801
+   },
+   {
+    "seq": 27,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.1143258,
+    "t_mono": 10738.103990577
+   },
+   {
+    "seq": 28,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.1624384,
+    "t_mono": 10738.152103303
+   },
+   {
+    "seq": 29,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.206457,
+    "t_mono": 10738.196121833
+   },
+   {
+    "seq": 30,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.2539444,
+    "t_mono": 10738.243609362
+   },
+   {
+    "seq": 31,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.2962208,
+    "t_mono": 10738.285885623
+   },
+   {
+    "seq": 32,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.343632,
+    "t_mono": 10738.33329674
+   },
+   {
+    "seq": 33,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.3880403,
+    "t_mono": 10738.377704945
+   },
+   {
+    "seq": 34,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.4325655,
+    "t_mono": 10738.422230561
+   },
+   {
+    "seq": 35,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.474853,
+    "t_mono": 10738.464518012
+   },
+   {
+    "seq": 36,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.5214324,
+    "t_mono": 10738.511097091
+   },
+   {
+    "seq": 37,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.5658975,
+    "t_mono": 10738.555562386
+   },
+   {
+    "seq": 38,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.6115682,
+    "t_mono": 10738.601233074
+   },
+   {
+    "seq": 39,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.657223,
+    "t_mono": 10738.646887873
+   },
+   {
+    "seq": 40,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.6993072,
+    "t_mono": 10738.688972091
+   },
+   {
+    "seq": 41,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.7474668,
+    "t_mono": 10738.737131548
+   },
+   {
+    "seq": 42,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.7884831,
+    "t_mono": 10738.778147965
+   },
+   {
+    "seq": 43,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.833809,
+    "t_mono": 10738.823473719
+   },
+   {
+    "seq": 44,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.8774529,
+    "t_mono": 10738.867117785
+   },
+   {
+    "seq": 45,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.924458,
+    "t_mono": 10738.914122818
+   },
+   {
+    "seq": 46,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239917.9682713,
+    "t_mono": 10738.957936226
+   },
+   {
+    "seq": 47,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.0167332,
+    "t_mono": 10739.006398116
+   },
+   {
+    "seq": 48,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.058266,
+    "t_mono": 10739.047930908
+   },
+   {
+    "seq": 49,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.1038084,
+    "t_mono": 10739.093473275
+   },
+   {
+    "seq": 50,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.148116,
+    "t_mono": 10739.137781219
+   },
+   {
+    "seq": 51,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.1923342,
+    "t_mono": 10739.181998861
+   },
+   {
+    "seq": 52,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.2382495,
+    "t_mono": 10739.227914223
+   },
+   {
+    "seq": 53,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.283911,
+    "t_mono": 10739.273575861
+   },
+   {
+    "seq": 54,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.3283763,
+    "t_mono": 10739.318041306
+   },
+   {
+    "seq": 55,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.3719246,
+    "t_mono": 10739.361589661
+   },
+   {
+    "seq": 56,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.4222126,
+    "t_mono": 10739.411877461
+   },
+   {
+    "seq": 57,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.4657,
+    "t_mono": 10739.455364675
+   },
+   {
+    "seq": 58,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.5077076,
+    "t_mono": 10739.497372593
+   },
+   {
+    "seq": 59,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.5560286,
+    "t_mono": 10739.545693401
+   },
+   {
+    "seq": 60,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.6004822,
+    "t_mono": 10739.590147186
+   },
+   {
+    "seq": 61,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.6461732,
+    "t_mono": 10739.635837975
+   },
+   {
+    "seq": 62,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.6925025,
+    "t_mono": 10739.682167341
+   },
+   {
+    "seq": 63,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.7336752,
+    "t_mono": 10739.72334024
+   },
+   {
+    "seq": 64,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.7826905,
+    "t_mono": 10739.772355406
+   },
+   {
+    "seq": 65,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.823371,
+    "t_mono": 10739.813035879
+   },
+   {
+    "seq": 66,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.872525,
+    "t_mono": 10739.862190006
+   },
+   {
+    "seq": 67,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.917707,
+    "t_mono": 10739.907372039
+   },
+   {
+    "seq": 68,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239918.9590764,
+    "t_mono": 10739.94874113
+   },
+   {
+    "seq": 69,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.00269,
+    "t_mono": 10739.992354895
+   },
+   {
+    "seq": 70,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.0527325,
+    "t_mono": 10740.042397293
+   },
+   {
+    "seq": 71,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.0962832,
+    "t_mono": 10740.085948018
+   },
+   {
+    "seq": 72,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.1391158,
+    "t_mono": 10740.128780645
+   },
+   {
+    "seq": 73,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.18736,
+    "t_mono": 10740.177024962
+   },
+   {
+    "seq": 74,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.2319782,
+    "t_mono": 10740.221643079
+   },
+   {
+    "seq": 75,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.2778888,
+    "t_mono": 10740.26755366
+   },
+   {
+    "seq": 76,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.320005,
+    "t_mono": 10740.309669789
+   },
+   {
+    "seq": 77,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.3654861,
+    "t_mono": 10740.355151105
+   },
+   {
+    "seq": 78,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.4143739,
+    "t_mono": 10740.40403873
+   },
+   {
+    "seq": 79,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.4582489,
+    "t_mono": 10740.447913778
+   },
+   {
+    "seq": 80,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.5031836,
+    "t_mono": 10740.492848518
+   },
+   {
+    "seq": 81,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.5512044,
+    "t_mono": 10740.540869353
+   },
+   {
+    "seq": 82,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.594659,
+    "t_mono": 10740.584323837
+   },
+   {
+    "seq": 83,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.6389322,
+    "t_mono": 10740.62859709
+   },
+   {
+    "seq": 84,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.6851728,
+    "t_mono": 10740.674837665
+   },
+   {
+    "seq": 85,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.729023,
+    "t_mono": 10740.718687843
+   },
+   {
+    "seq": 86,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.7787907,
+    "t_mono": 10740.768455477
+   },
+   {
+    "seq": 87,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.8220766,
+    "t_mono": 10740.811741519
+   },
+   {
+    "seq": 88,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.8703692,
+    "t_mono": 10740.860034077
+   },
+   {
+    "seq": 89,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.9141886,
+    "t_mono": 10740.903853355
+   },
+   {
+    "seq": 90,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239919.959115,
+    "t_mono": 10740.948779875
+   },
+   {
+    "seq": 91,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.0008054,
+    "t_mono": 10740.990470399
+   },
+   {
+    "seq": 92,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.0511143,
+    "t_mono": 10741.040779059
+   },
+   {
+    "seq": 93,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.096439,
+    "t_mono": 10741.086103584
+   },
+   {
+    "seq": 94,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.1380372,
+    "t_mono": 10741.127702097
+   },
+   {
+    "seq": 95,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.1820219,
+    "t_mono": 10741.171686817
+   },
+   {
+    "seq": 96,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.2325735,
+    "t_mono": 10741.22223831
+   },
+   {
+    "seq": 97,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.2759168,
+    "t_mono": 10741.265581633
+   },
+   {
+    "seq": 98,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.3218713,
+    "t_mono": 10741.311536134
+   },
+   {
+    "seq": 99,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.3637242,
+    "t_mono": 10741.35338923
+   },
+   {
+    "seq": 100,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.409902,
+    "t_mono": 10741.399567104
+   },
+   {
+    "seq": 101,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.4560494,
+    "t_mono": 10741.445714398
+   },
+   {
+    "seq": 102,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.5014079,
+    "t_mono": 10741.491072603
+   },
+   {
+    "seq": 103,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.5452971,
+    "t_mono": 10741.534962092
+   },
+   {
+    "seq": 104,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.5964916,
+    "t_mono": 10741.586156312
+   },
+   {
+    "seq": 105,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.6396523,
+    "t_mono": 10741.629317333
+   },
+   {
+    "seq": 106,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.6816356,
+    "t_mono": 10741.67130036
+   },
+   {
+    "seq": 107,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.7264953,
+    "t_mono": 10741.71616006
+   },
+   {
+    "seq": 108,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.774556,
+    "t_mono": 10741.764220705
+   },
+   {
+    "seq": 109,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.8171165,
+    "t_mono": 10741.806781288
+   },
+   {
+    "seq": 110,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.8626728,
+    "t_mono": 10741.852337976
+   },
+   {
+    "seq": 111,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.9119005,
+    "t_mono": 10741.901565174
+   },
+   {
+    "seq": 112,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.9535642,
+    "t_mono": 10741.943229098
+   },
+   {
+    "seq": 113,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239920.9983847,
+    "t_mono": 10741.988049547
+   },
+   {
+    "seq": 114,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239921.046551,
+    "t_mono": 10742.036215864
+   },
+   {
+    "seq": 115,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239921.0880923,
+    "t_mono": 10742.077757456
+   },
+   {
+    "seq": 116,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239921.137897,
+    "t_mono": 10742.127561881
+   },
+   {
+    "seq": 117,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239921.1826475,
+    "t_mono": 10742.172312469
+   },
+   {
+    "seq": 118,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239921.2253885,
+    "t_mono": 10742.215053565
+   },
+   {
+    "seq": 119,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239921.270434,
+    "t_mono": 10742.260098707
+   },
+   {
+    "seq": 120,
+    "n": 1,
+    "text": "",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239921.3171535,
+    "t_mono": 10742.306818537
+   },
+   {
+    "seq": 121,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239926.3559284,
+    "t_mono": 10747.345593244
+   },
+   {
+    "seq": 122,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239926.837566,
+    "t_mono": 10747.827230747
+   },
+   {
+    "seq": 123,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239927.3382723,
+    "t_mono": 10748.327937253
+   },
+   {
+    "seq": 124,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239927.8358266,
+    "t_mono": 10748.825491743
+   },
+   {
+    "seq": 125,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239928.3375857,
+    "t_mono": 10749.32725044
+   },
+   {
+    "seq": 126,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239928.8408918,
+    "t_mono": 10749.830556865
+   },
+   {
+    "seq": 127,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239929.344983,
+    "t_mono": 10750.334647948
+   },
+   {
+    "seq": 128,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239929.8558016,
+    "t_mono": 10750.845466616
+   },
+   {
+    "seq": 129,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.0315678,
+    "t_mono": 10751.021232613
+   },
+   {
+    "seq": 130,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.077109,
+    "t_mono": 10751.06677386
+   },
+   {
+    "seq": 131,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.1201718,
+    "t_mono": 10751.10983655
+   },
+   {
+    "seq": 132,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.1672964,
+    "t_mono": 10751.156961334
+   },
+   {
+    "seq": 133,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.2082748,
+    "t_mono": 10751.197939991
+   },
+   {
+    "seq": 134,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.2549624,
+    "t_mono": 10751.244627281
+   },
+   {
+    "seq": 135,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.3045094,
+    "t_mono": 10751.294174332
+   },
+   {
+    "seq": 136,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.3493333,
+    "t_mono": 10751.338998151
+   },
+   {
+    "seq": 137,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.3958726,
+    "t_mono": 10751.38553741
+   },
+   {
+    "seq": 138,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.4418406,
+    "t_mono": 10751.431505581
+   },
+   {
+    "seq": 139,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.482559,
+    "t_mono": 10751.472223875
+   },
+   {
+    "seq": 140,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.5310647,
+    "t_mono": 10751.520729715
+   },
+   {
+    "seq": 141,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.5748458,
+    "t_mono": 10751.564510513
+   },
+   {
+    "seq": 142,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.6202102,
+    "t_mono": 10751.609875168
+   },
+   {
+    "seq": 143,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.6630137,
+    "t_mono": 10751.652678434
+   },
+   {
+    "seq": 144,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.712293,
+    "t_mono": 10751.701957703
+   },
+   {
+    "seq": 145,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.7588763,
+    "t_mono": 10751.748541412
+   },
+   {
+    "seq": 146,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.8021963,
+    "t_mono": 10751.791861114
+   },
+   {
+    "seq": 147,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.8496127,
+    "t_mono": 10751.839277792
+   },
+   {
+    "seq": 148,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.8954756,
+    "t_mono": 10751.885140643
+   },
+   {
+    "seq": 149,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.9358454,
+    "t_mono": 10751.925510262
+   },
+   {
+    "seq": 150,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239930.9826453,
+    "t_mono": 10751.972310283
+   },
+   {
+    "seq": 151,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.0290432,
+    "t_mono": 10752.01870826
+   },
+   {
+    "seq": 152,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.0769,
+    "t_mono": 10752.066564913
+   },
+   {
+    "seq": 153,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.123057,
+    "t_mono": 10752.112721877
+   },
+   {
+    "seq": 154,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.1673298,
+    "t_mono": 10752.15699469
+   },
+   {
+    "seq": 155,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.2098954,
+    "t_mono": 10752.199560274
+   },
+   {
+    "seq": 156,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.254549,
+    "t_mono": 10752.244213711
+   },
+   {
+    "seq": 157,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.3034394,
+    "t_mono": 10752.293104176
+   },
+   {
+    "seq": 158,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.3470807,
+    "t_mono": 10752.336745572
+   },
+   {
+    "seq": 159,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.3953774,
+    "t_mono": 10752.385042229
+   },
+   {
+    "seq": 160,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.4384658,
+    "t_mono": 10752.428130809
+   },
+   {
+    "seq": 161,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.4861774,
+    "t_mono": 10752.47584232
+   },
+   {
+    "seq": 162,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.526869,
+    "t_mono": 10752.516534014
+   },
+   {
+    "seq": 163,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.5760827,
+    "t_mono": 10752.565747502
+   },
+   {
+    "seq": 164,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.619224,
+    "t_mono": 10752.608889042
+   },
+   {
+    "seq": 165,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.665198,
+    "t_mono": 10752.654863104
+   },
+   {
+    "seq": 166,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.714815,
+    "t_mono": 10752.704479896
+   },
+   {
+    "seq": 167,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.7595246,
+    "t_mono": 10752.749189514
+   },
+   {
+    "seq": 168,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.8032527,
+    "t_mono": 10752.792917721
+   },
+   {
+    "seq": 169,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.8508246,
+    "t_mono": 10752.840489591
+   },
+   {
+    "seq": 170,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.8977308,
+    "t_mono": 10752.887395553
+   },
+   {
+    "seq": 171,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.9400132,
+    "t_mono": 10752.929678074
+   },
+   {
+    "seq": 172,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239931.9849365,
+    "t_mono": 10752.974601444
+   },
+   {
+    "seq": 173,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.0309062,
+    "t_mono": 10753.020570996
+   },
+   {
+    "seq": 174,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.0793755,
+    "t_mono": 10753.069040556
+   },
+   {
+    "seq": 175,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.1196725,
+    "t_mono": 10753.109337564
+   },
+   {
+    "seq": 176,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.1702487,
+    "t_mono": 10753.159913448
+   },
+   {
+    "seq": 177,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.2155764,
+    "t_mono": 10753.205241132
+   },
+   {
+    "seq": 178,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.2565472,
+    "t_mono": 10753.246212169
+   },
+   {
+    "seq": 179,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.3045428,
+    "t_mono": 10753.294207513
+   },
+   {
+    "seq": 180,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.3495564,
+    "t_mono": 10753.339221454
+   },
+   {
+    "seq": 181,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.3962057,
+    "t_mono": 10753.385870514
+   },
+   {
+    "seq": 182,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.4439554,
+    "t_mono": 10753.433620335
+   },
+   {
+    "seq": 183,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.488107,
+    "t_mono": 10753.477771867
+   },
+   {
+    "seq": 184,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.5308452,
+    "t_mono": 10753.520510163
+   },
+   {
+    "seq": 185,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.5801904,
+    "t_mono": 10753.569855472
+   },
+   {
+    "seq": 186,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.6240656,
+    "t_mono": 10753.613730481
+   },
+   {
+    "seq": 187,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.6704352,
+    "t_mono": 10753.660100017
+   },
+   {
+    "seq": 188,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.71533,
+    "t_mono": 10753.704994667
+   },
+   {
+    "seq": 189,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.7628942,
+    "t_mono": 10753.752558857
+   },
+   {
+    "seq": 190,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.8064733,
+    "t_mono": 10753.796138052
+   },
+   {
+    "seq": 191,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.8549597,
+    "t_mono": 10753.844624422
+   },
+   {
+    "seq": 192,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.898014,
+    "t_mono": 10753.887678931
+   },
+   {
+    "seq": 193,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.944905,
+    "t_mono": 10753.934570034
+   },
+   {
+    "seq": 194,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239932.9899876,
+    "t_mono": 10753.979652506
+   },
+   {
+    "seq": 195,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.0362093,
+    "t_mono": 10754.02587414
+   },
+   {
+    "seq": 196,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.0796483,
+    "t_mono": 10754.069313074
+   },
+   {
+    "seq": 197,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.1264203,
+    "t_mono": 10754.116085135
+   },
+   {
+    "seq": 198,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.1732316,
+    "t_mono": 10754.162896506
+   },
+   {
+    "seq": 199,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.2144122,
+    "t_mono": 10754.204077225
+   },
+   {
+    "seq": 200,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.2598577,
+    "t_mono": 10754.249522521
+   },
+   {
+    "seq": 201,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.308391,
+    "t_mono": 10754.298056061
+   },
+   {
+    "seq": 202,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.35469,
+    "t_mono": 10754.344355007
+   },
+   {
+    "seq": 203,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.4019077,
+    "t_mono": 10754.391572632
+   },
+   {
+    "seq": 204,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.4470303,
+    "t_mono": 10754.436695085
+   },
+   {
+    "seq": 205,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.4912245,
+    "t_mono": 10754.480889367
+   },
+   {
+    "seq": 206,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.5400233,
+    "t_mono": 10754.52968807
+   },
+   {
+    "seq": 207,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.5827138,
+    "t_mono": 10754.572378766
+   },
+   {
+    "seq": 208,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.6305118,
+    "t_mono": 10754.620176718
+   },
+   {
+    "seq": 209,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.6773028,
+    "t_mono": 10754.666967689
+   },
+   {
+    "seq": 210,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.7205465,
+    "t_mono": 10754.71021152
+   },
+   {
+    "seq": 211,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.7696426,
+    "t_mono": 10754.759307537
+   },
+   {
+    "seq": 212,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.815385,
+    "t_mono": 10754.805049987
+   },
+   {
+    "seq": 213,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.8593311,
+    "t_mono": 10754.848995946
+   },
+   {
+    "seq": 214,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.906469,
+    "t_mono": 10754.896134201
+   },
+   {
+    "seq": 215,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.951196,
+    "t_mono": 10754.940860929
+   },
+   {
+    "seq": 216,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239933.995383,
+    "t_mono": 10754.98504791
+   },
+   {
+    "seq": 217,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.0440388,
+    "t_mono": 10755.033703591
+   },
+   {
+    "seq": 218,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.0860538,
+    "t_mono": 10755.075718859
+   },
+   {
+    "seq": 219,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.134501,
+    "t_mono": 10755.124165888
+   },
+   {
+    "seq": 220,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.1802146,
+    "t_mono": 10755.169879396
+   },
+   {
+    "seq": 221,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.228448,
+    "t_mono": 10755.218112863
+   },
+   {
+    "seq": 222,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.2742627,
+    "t_mono": 10755.263927722
+   },
+   {
+    "seq": 223,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.3195117,
+    "t_mono": 10755.309176445
+   },
+   {
+    "seq": 224,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.365479,
+    "t_mono": 10755.355143667
+   },
+   {
+    "seq": 225,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.4091182,
+    "t_mono": 10755.398783042
+   },
+   {
+    "seq": 226,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.4560175,
+    "t_mono": 10755.445682304
+   },
+   {
+    "seq": 227,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.498231,
+    "t_mono": 10755.487895853
+   },
+   {
+    "seq": 228,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.5487468,
+    "t_mono": 10755.538411565
+   },
+   {
+    "seq": 229,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.595229,
+    "t_mono": 10755.584893702
+   },
+   {
+    "seq": 230,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.6384182,
+    "t_mono": 10755.628083033
+   },
+   {
+    "seq": 231,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.6846867,
+    "t_mono": 10755.674351407
+   },
+   {
+    "seq": 232,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.732323,
+    "t_mono": 10755.721987707
+   },
+   {
+    "seq": 233,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.7762048,
+    "t_mono": 10755.765869755
+   },
+   {
+    "seq": 234,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.8254926,
+    "t_mono": 10755.815157634
+   },
+   {
+    "seq": 235,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.8707173,
+    "t_mono": 10755.860382237
+   },
+   {
+    "seq": 236,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.916059,
+    "t_mono": 10755.905724071
+   },
+   {
+    "seq": 237,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239934.9619503,
+    "t_mono": 10755.951615112
+   },
+   {
+    "seq": 238,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239935.0074072,
+    "t_mono": 10755.997072127
+   },
+   {
+    "seq": 239,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239935.0516174,
+    "t_mono": 10756.041282319
+   },
+   {
+    "seq": 240,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239935.1008608,
+    "t_mono": 10756.090525807
+   },
+   {
+    "seq": 241,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239935.1467013,
+    "t_mono": 10756.136366127
+   },
+   {
+    "seq": 242,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239935.1901066,
+    "t_mono": 10756.179771629
+   },
+   {
+    "seq": 243,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239935.2369616,
+    "t_mono": 10756.226626541
+   },
+   {
+    "seq": 244,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239935.4542644,
+    "t_mono": 10756.443929148
+   },
+   {
+    "seq": 245,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239935.7741575,
+    "t_mono": 10756.763822306
+   },
+   {
+    "seq": 246,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239935.8168738,
+    "t_mono": 10756.806538631
+   },
+   {
+    "seq": 247,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239936.3221712,
+    "t_mono": 10757.311835902
+   },
+   {
+    "seq": 248,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239936.462796,
+    "t_mono": 10757.452460856
+   },
+   {
+    "seq": 249,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239936.508247,
+    "t_mono": 10757.497911692
+   },
+   {
+    "seq": 250,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239936.550807,
+    "t_mono": 10757.540472045
+   },
+   {
+    "seq": 251,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239936.5976412,
+    "t_mono": 10757.587306026
+   },
+   {
+    "seq": 252,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239936.6342735,
+    "t_mono": 10757.623938604
+   },
+   {
+    "seq": 253,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239936.6766832,
+    "t_mono": 10757.666348095
+   },
+   {
+    "seq": 254,
+    "n": 1,
+    "text": "",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     5809
+    ],
+    "connection": 0,
+    "t_wall": 1793239936.716059,
+    "t_mono": 10757.705723753
+   },
+   {
+    "seq": 255,
+    "n": 1,
+    "text": "\ufffd_",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     62
+    ],
+    "connection": 0,
+    "t_wall": 1793239936.7558446,
+    "t_mono": 10757.745509616
+   }
+  ],
+  "t_start_mono": 10729.350943238
+ },
+ "delivery": {
+  "positions": 256,
+  "duplicated_positions": 0,
+  "missing_positions": 0,
+  "out_of_order_events": 0,
+  "exactly_once": true
+ },
+ "ttft_s": 3.7097193999998126,
+ "text_check": {
+  "shown_chars": 256,
+  "decoded_chars": 256,
+  "equal": true,
+  "error": null
+ },
+ "remote_metrics_before": {
+  "lines": [
+   "vllm:prefix_cache_queries_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 691425.0",
+   "vllm:prefix_cache_queries_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932297089081903e+09",
+   "vllm:prefix_cache_hits_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:prefix_cache_hits_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932297089082036e+09",
+   "vllm:external_prefix_cache_queries_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:external_prefix_cache_queries_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932297089082165e+09",
+   "vllm:external_prefix_cache_hits_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:external_prefix_cache_hits_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932297089082313e+09"
+  ]
+ },
+ "remote_metrics_after": {
+  "lines": [
+   "vllm:prefix_cache_queries_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 727976.0",
+   "vllm:prefix_cache_queries_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932297089081903e+09",
+   "vllm:prefix_cache_hits_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:prefix_cache_hits_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932297089082036e+09",
+   "vllm:external_prefix_cache_queries_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:external_prefix_cache_queries_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932297089082165e+09",
+   "vllm:external_prefix_cache_hits_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:external_prefix_cache_hits_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932297089082313e+09"
+  ]
+ },
+ "recovery_latency_s": 4.9984657764434814
+}

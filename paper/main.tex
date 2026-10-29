@@ -51,6 +51,7 @@
 \def\SimRows{\@@input tables/sim.tex }
 \def\PfbOvhRows{\@@input tables/p5b_ovh.tex }
 \def\PfbFoRows{\@@input tables/p5b_fo.tex }
+\def\PccRows{\@@input tables/p5b_cc.tex }
 \makeatother
 
 \input{tables/gw_macros.tex}
@@ -62,39 +63,30 @@
 
 
 \begin{abstract}
-LLM inference servers stream generated tokens to clients over requests that
-last seconds to minutes. When a serving process fails mid-generation, the
-client is left holding a partial response, and the recovery it performs
-determines what it ultimately shows a user or hands to a downstream agent.
-We built an open-source fault-injection harness that SIGKILLs an unmodified
-OpenAI-compatible server at a chosen stream chunk, and applied it to vLLM and
-SGLang serving Llama~3.1~8B~Instruct on A10G GPUs. In both engines' default
-configurations the failure-free output for a fixed prompt was not unique at
-temperature~0, so naive retry contradicted text the client had already
-displayed in 25 of 30 vLLM and 24 of 30 SGLang trials. Recompute, which
-resubmits the delivered text, never contradicted it, and with each engine's
-deterministic mode it reproduced the failure-free output exactly. Under
-concurrent load those modes kept the output unique at
-\TputDetMin--\TputDetMax$\times$ the default throughput; disabling vLLM's prefix
-cache, which had sufficed for sequential requests, did not. A gateway that
-numbers output positions, logs them before release, and resumes a failed
-request from the logged token ids delivered every output position exactly
-once, in order, in all \GwKillTrials{} injected failures on both engines, at
-+0.05\,ms per output token. Failing over to a replica on a second machine cut
-recovery from minutes of restart to \GwFailoverMin--\GwFailoverMax\,s; the
-failure-free text was reproduced after failover only once the first machine's
-compiled-kernel caches had been copied to the standby.
-Restoring a KV-cache copy from the standby was faster than recomputing it at
-every length from 512 to 32{,}768 tokens, and a simulation driven by these
-measurements found no benefit from an adaptive per-request checkpoint policy.
-Finally, vLLM's own KV offloading, writing to a directory the standby reads,
-cut recovery at 16K prompt tokens from \PfbSixteenNone\,s to
-\PfbSixteenAll--\PfbSixteenPrompt\,s, at under 1\% decoding cost but 5--9\%
-added time to first token. Positions were exactly-once in all \PfbTrials{}
-trials, but in \PfbEcho{} the resumed engine returned the decoded prompt and
-the delivered text as the text of one token, so the text a client displays was
-not; the gateway now derives resumed text from token ids. All raw logs and the
-table-generating scripts are public.
+LLM inference servers stream tokens to clients over requests lasting seconds
+to minutes; when a serving process fails mid-generation, the recovery decides
+what the client finally shows a user or hands to an agent. With an
+open-source fault-injection harness that SIGKILLs unmodified vLLM and SGLang
+servers (Llama~3.1~8B, A10G GPUs), we report three results. First, retry is
+not replay: in both engines' default configurations the failure-free output
+was not unique at temperature~0, so naive retry contradicted text already
+shown in 25 of 30 vLLM and 24 of 30 SGLang trials; each engine's
+deterministic mode with recompute made recovery exact, at
+\TputDetMin--\TputDetMax$\times$ the default throughput under load. Second,
+a gateway that numbers output positions, logs them before release and
+resumes from the logged token ids delivered every position exactly once, under
+stated assumptions, in all \GwKillTrials{} single-request failures and all
+\PccRecords{} requests of failures with 4--32 requests in flight, and removed
+text the engine repeated after a resume (\RevRepeatRemoved{} times), which
+would otherwise have duplicated what the client showed. Third, recovery time
+depends on where state is kept: a standby replica cut recovery from minutes
+to \GwFailoverMin--\GwFailoverMax\,s for a short prompt, and vLLM's own KV
+offloading to storage the standby reads cut it from \PfbSixteenNone\,s to
+\PfbSixteenPrompt\,s at 16K prompt tokens, and from a median of
+\PccThirtyTwoNone\,s to \PccThirtyTwoPrompt\,s with 32 requests in flight, for
+under 1\% decoding cost and 5--8\% later first tokens. A simulation driven by
+the measurements found no benefit from adaptive checkpoint policies. All raw
+logs and table-generating scripts are public.
 \end{abstract}
 
 \section{Introduction}
@@ -145,8 +137,9 @@ This paper makes four contributions:
   \item \textbf{Recovery and determinism, evaluated.} 190 injected failures
     through the gateway on both engines, including failover between two
     machines, where exact text needed matching compiled state in our runs
-    (Section~\ref{sec:gweval}), and the cost of the deterministic modes
-    under concurrent load (Section~\ref{sec:load}).
+    (Section~\ref{sec:gweval}); the cost of the deterministic modes under
+    concurrent load (Section~\ref{sec:load}); and failures with up to 32
+    requests in flight (Section~\ref{sec:live}).
   \item \textbf{KV-checkpoint analysis.} Measured recompute and KV-copy costs
     from 512 to 32{,}768 tokens (Section~\ref{sec:restore}); a simulation of
     checkpoint policies judged by a decision rule written before it ran
@@ -668,11 +661,13 @@ after the last entry it consumed. Under these assumptions:
   \item The continuation never contradicts delivered text, because the
     delivered tokens are its context. It reproduces the failure-free text only
     where the engine does (Section~\ref{sec:followup}).
-  \item In ids mode, the text of entries after a failure is derived from the
-    token ids rather than copied from the engine's stream, so the text a
-    client concatenates equals the decoding of the delivered ids. This was
-    added in version~3, after the engine's text was found to repeat delivered
-    text in Section~\ref{sec:live}.
+  \item In ids mode, the text of the first entries after a failure, and of
+    the first entries of a request whose prompt the client sent as token ids,
+    is checked against the decoding of the token ids, with the prompt as
+    context; text the engine repeated is removed. The text a client
+    concatenates then equals what the delivered ids add to the prompt's
+    decoding. This was added in version~3, after the engine's text was found
+    to repeat delivered text (Section~\ref{sec:live}).
 \end{itemize}
 
 \begin{figure*}[t]
@@ -719,9 +714,12 @@ engine as separate processes and SIGKILL them mid-stream: engine restart,
 failover, two failures in one request, temperature 0.8, text mode, client
 reconnect, gateway restart, and a negative control in which naive retry
 without the gateway repeats positions and the checker flags it. Version~3
-adds two fixes found during the runs of Section~\ref{sec:live}, to the event
-encoding and to the text of resumed entries, each with two further tests (16
-in all, including negative controls that fail on the old code).
+adds the fixes found during the runs of Section~\ref{sec:live}, each with a
+test that fails on the code before it: the event encoding, the text of
+resumed entries (repeated text, special tokens, characters split across the
+prompt and the output), and a killed engine's stream cut in the middle of a
+chunk; and a test with 64 clients connecting at once (which also passed
+before its fix, on one machine); 22 tests in all.
 
 \section{Gateway evaluation}
 \label{sec:gweval}
@@ -744,12 +742,27 @@ positions each client recorded (\texttt{gateway/check.py}); ``same text''
 means the client's final text equals one of the run's two failure-free
 references. Every table here is generated by \texttt{analysis/make\_tables.py}.
 
+\paragraph{How times through the gateway are measured.} Version~2 of this
+paper took recovery latency and time to first token through the gateway at
+the client. During the runs of Section~\ref{sec:live} we found that the
+measuring client read the gateway's stream with the Python
+\texttt{requests} library's \texttt{iter\_lines}, which waits for 512 bytes
+on a stream without chunked transfer encoding, as the gateway's is; the
+client therefore saw each event only when the next one arrived. Direct
+requests to the engines, whose streams are chunked, were not affected. All
+times through the gateway reported here are taken instead from the
+gateway's log, which stamps each entry when it is appended, just before it
+is written and released (\texttt{analysis/gw\_timing.py}); the client has
+since been fixed. This changes the failover and overhead figures of
+version~2, by up to about 0.1\,s and about 30\,ms respectively, and nothing
+else.
+
 \begin{table}[t]
 \centering\small
 \caption{Restart recovery through the gateway, 10 trials per row.
 Exactly-once: every position received once, request complete. Same text:
-final text equals either failure-free reference. Recovery: kill to the next
-position at the client, seconds, median (min--max).}
+final text equals either failure-free reference. Recovery: kill to the
+gateway's commit of the next position, seconds, median (min--max).}
 \label{tab:gwrestart}
 \setlength{\tabcolsep}{3pt}
 \fitcol{%
@@ -806,7 +819,8 @@ not from the gateway; we did not establish why.
 \caption{Failover between two machines (vLLM, kill after 128 positions, 10
 trials per row). Replica~1 setup: its own compiled-kernel caches or copies of
 replica~0's, and whether its Python packages were identical to replica~0's.
-Recovery in seconds, median (min--max).}
+Recovery: kill to the gateway's commit of the next position, seconds, median
+(min--max).}
 \label{tab:gwfailover}
 \begin{tabular}{@{}lrlccl@{}}
 \toprule
@@ -821,8 +835,11 @@ Mode & $T$ & Replica 1 setup & Exactly-once & Same text & Recovery s \\
 took \GwFailoverMin--\GwFailoverMax\,s (median per run;
 Table~\ref{tab:gwfailover}): detecting the broken stream, checking the other
 replica's health, and prefilling the prompt and the delivered tokens there.
-That is about three orders of magnitude faster than restart, with the same
-exactly-once delivery.
+That is more than three orders of magnitude faster than restart, with the
+same exactly-once delivery. (Measured at the client, version~2 reported
+\GwFailoverClientMin--\GwFailoverClientMax\,s; the difference is the client
+delay described above. The first trial of a run was occasionally slower, up
+to about 0.4\,s.)
 
 \paragraph{Exact text needed matching compiled state in our runs.} In batch-invariant
 mode each machine was repeatable on its own, but the second machine's
@@ -858,8 +875,10 @@ not show how much less.
 \centering\small
 \caption{Failure-free cost of the gateway: 30 requests direct to the engine
 and 30 through the gateway per row, alternating; medians, and the median of
-per-pair differences ($\Delta$). Direct requests send text without asking for
-token ids, as a client without the gateway would.}
+per-pair differences ($\Delta$). Through the gateway, time to first token and
+per output token from the gateway's log, end to end at the client. Direct
+requests send text without asking for token ids, as a client without the
+gateway would.}
 \label{tab:gwoverhead}
 \begin{tabular}{@{}llrrrrrrrrrr@{}}
 \toprule
@@ -872,16 +891,19 @@ Engine & fsync & Pairs & direct & gateway & $\Delta$ & direct & gateway & $\Delt
 \end{tabular}
 \end{table*}
 
-\paragraph{Overhead.} We expected, before these runs, that exactly-once delivery would cost
-little per token, since the log grows by one entry per step. That held (Table~\ref{tab:gwoverhead}): +0.05\,ms per output
-token on vLLM (0.15\%) and no measurable difference on SGLang, and
-end-to-end time within 0.06\,s on both. The cost was paid once per request,
-before the first token: 32--45\,ms, of which \texttt{fsync} accounted for
-3--6\,ms. This implementation makes extra round trips to the engine before
-generating (two health checks and, on vLLM, \texttt{/tokenize}); we did not
-measure how much of the added time each accounts for, and the figure is not a
-lower bound for exactly-once delivery. On SGLang the
-added time to first token did not show up end to end; we did not examine why.
+\paragraph{Overhead.} We expected, before these runs, that exactly-once
+delivery would cost little per token, since the log grows by one entry per
+step. That held (Table~\ref{tab:gwoverhead}): about +0.2\,ms per output token
+on vLLM (0.5\%), whose stream through the gateway also carries token ids, no
+measurable difference on SGLang, and end-to-end time within 0.06\,s on both.
+Before the first token the gateway added about 5\,ms on vLLM (9\,ms with
+\texttt{fsync}), where it makes extra round trips to the engine (two health
+checks and \texttt{/tokenize}), and under 1\,ms on SGLang. Version~2 reported
+32--45\,ms here, and could not explain why that did not show end to end on
+SGLang: it was the measuring client's delay of about one token, not the
+gateway. The log's timestamp precedes the write, the optional \texttt{fsync}
+and a local socket send, so these figures can be lower than a client would
+see by about a millisecond, plus the \texttt{fsync}.
 
 \section{The fixes under concurrent load}
 \label{sec:load}
@@ -1033,8 +1055,12 @@ building (\texttt{docs/phase5-plan.md}).
 
 \paragraph{Model.} Inputs read from logs: the recompute cost $R(n)$ and copy
 rates of Section~\ref{sec:restore}, the four-stream network rate, 33.1\,ms
-per output token from Section~\ref{sec:load}, and 0.125\,s of failover
-detection and switching from Section~\ref{sec:gweval}. Assumptions, swept or
+per output token from Section~\ref{sec:load}, and \SimDetect\,s of failover
+detection and switching from Section~\ref{sec:gweval} (the failover recovery
+there, minus the prefill it includes; version~3 reran the simulation with
+this input taken from the gateway's log instead of the client, which lowered
+it from 0.125\,s and lowered every simulated recovery time by about 0.09\,s,
+without changing any decision). Assumptions, swept or
 stated: the share $\beta\in\{0,0.1,0.5,1\}$ of a checkpoint's copy time that
 stalls decoding; a mean time between replica failures of 1~day, 1~hour or
 10~minutes, fail-stop and Poisson, with a first-order expected cost (at most
@@ -1082,7 +1108,7 @@ configuration, in any workload. At a failure every hour, a
 \SimMixedT\,s mixed request fails with probability of about 0.4\%, so even
 removing all recovery time saves at most a few milliseconds per request on
 average, while a checkpoint that stalls decoding for a tenth of its copy time
-already costs 0.21--0.25\% in this workload. Both adaptive rules work this out and stop
+already costs \SimOvhMin--\SimOvhMax\% in this workload. Both adaptive rules work this out and stop
 checkpointing as soon as checkpoints cost anything ($\beta\geq0.1$ at failure
 rates of an hour or rarer), so they match the best non-adaptive policy, which
 is then recompute, and cannot beat it (Table~\ref{tab:sim}). Adaptivity buys
@@ -1090,9 +1116,9 @@ nothing measurable in expected completion time, for the modeled workloads,
 policies and failure rates; we do not claim it for others.
 
 \paragraph{What checkpointing buys is tail latency.} For failures during
-decoding, every checkpointing policy cuts recovery sharply: p99 from about
-9.1\,s under recompute to about 1.06\,s with prompt-only and 0.40\,s with a
-checkpoint every 16 tokens. Prompt-only captures most of the gain for one
+decoding, every checkpointing policy cuts recovery sharply: p99 from
+\SimPninetynineRecompute\,s under recompute to \SimPninetyninePrompt\,s with prompt-only and
+\SimPninetynineFixed\,s with a checkpoint every 16 tokens. Prompt-only captures most of the gain for one
 copy per request. A failure during prefill (\SimPrefillShare\% of failure
 positions in the mixed workload) is still recovered by redoing the prefill
 under every policy. The simulation thus narrowed the live work to measuring
@@ -1156,90 +1182,159 @@ Mode & TTFT ms & TPOT ms & Rel.\ tok/s & TPOT ms & Rel.\ tok/s \\
 
 \begin{table*}[t]
 \centering\small
-\caption{Failover with a KV checkpoint (vLLM, kill after 128 positions, 5
-trials per row, commit \texttt{c1b065e}). Recovery: kill to the next position
-at the client, seconds, median (min--max). TTFT: median time to first token
-on replica~0. KV loaded: increase of the standby's
-\texttt{vllm:kv\_offload\_load\_bytes} during the trial, MB, median. Echo:
-trials in which the first resumed entry's text repeated the delivered text
-(Section~\ref{sec:live}).}
+\caption{Failover with a KV checkpoint, one request at a time (vLLM, kill
+after 128 positions, 5 trials per row, commit \texttt{1b978f2}). Text ok: the
+text the client concatenated equals the tokenizer's decoding of the delivered
+token ids, special tokens identified by id. Recovery: kill to the gateway's
+commit of the next position, s, median (min--max). TTFT: median time to first
+token on replica~0. KV loaded: increase of the standby's
+\texttt{vllm:kv\_offload\_load\_bytes} during the trial, MB, median. Repeats
+removed: trials in which the engine repeated earlier text after the resume
+and the gateway removed it.}
 \label{tab:pfbfo}
-\begin{tabular}{@{}rlccrrc@{}}
+\begin{tabular}{@{}rlccrrrc@{}}
 \toprule
-Prompt tokens & Mode & Positions exactly-once & Recovery s & TTFT s & KV loaded, MB & Echo \\
+Prompt tokens & Mode & Exactly-once & Text ok & Recovery s & TTFT s & KV loaded, MB & Repeats removed \\
 \midrule
 \PfbFoRows
 \bottomrule
 \end{tabular}
 \end{table*}
 
-\paragraph{Recovery.} Replica~0 was SIGKILLed once 128 output positions had
-reached the client, with prompts of 4{,}096 and 16{,}384 tokens
-(Table~\ref{tab:pfbfo}). All \PfbTrials{} trials delivered every position
-exactly once (for the text, see below). With a checkpoint the standby resumed in
-\PfbSixteenAll--\PfbSixteenPrompt\,s instead of \PfbSixteenNone\,s at 16K
-tokens, and in \PfbFourAll--\PfbFourPrompt\,s instead of \PfbFourNone\,s at
-4K. The standby demonstrably used the checkpoint: its loaded bytes rose by
-537\,MB at 4K and 2{,}147\,MB at 16K with \emph{prompt}, exactly the prompt's
-KV at 128\,KiB per token, and slightly more with \emph{all}, which also stores
-the decoded blocks; its log reported an external prefix-cache hit rate of
-98.8--99.8\%. \emph{All} was only slightly faster than \emph{prompt}, since
+\begin{table*}[t]
+\centering\small
+\caption{Failover with $C$ requests in flight (vLLM, 1{,}024-token prompts, 256
+output tokens, replica~0 killed once request~0 has received 128 positions, 3
+trials per row, one record per request, commit \texttt{1b978f2}). Columns as
+in Table~\ref{tab:pfbfo}; KV loaded is per trial (all requests together).}
+\label{tab:pfbcc}
+\begin{tabular}{@{}rlrccrrrc@{}}
+\toprule
+$C$ & Mode & Requests & Exactly-once & Text ok & Recovery s & TTFT s & KV loaded, MB & Repeats removed \\
+\midrule
+\PccRows
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\paragraph{Two sets of runs.} The failover runs were done twice. The first set,
+a week before the second, used the gateway as evaluated in
+Section~\ref{sec:gweval}, with one fix (the event encoding, below); it showed
+that the text a client concatenates could repeat earlier text, which the
+gateway then learned to remove. The second set (commit \texttt{1b978f2},
+Tables~\ref{tab:pfbfo} and~\ref{tab:pfbcc}) repeated the single-request
+trials with that fix, added a check of the client's text, and added failures
+with 4, 16 and 32 requests in flight; its first two attempts were discarded,
+one because the gateway lost requests (below) and one because two copies of
+the experiment ran on the same machines at once. Recovery figures of the
+first set, taken from the gateway's log, agree with the second within
+0.05\,s.
+
+\paragraph{Recovery, one request at a time.} Replica~0 was SIGKILLed once 128
+output positions had reached the client, with prompts of 4{,}096 and
+16{,}384 tokens (Table~\ref{tab:pfbfo}). All \PfbTrials{} trials delivered
+every position exactly once, and in all \PfbTextOk{} the client's text was
+right. With a checkpoint the standby resumed in
+\PfbSixteenPrompt--\PfbSixteenAll\,s instead of \PfbSixteenNone\,s at 16K
+tokens, and in \PfbFourPrompt\,s instead of \PfbFourNone\,s at 4K. The
+standby demonstrably used the checkpoint: its loaded bytes rose by 537\,MB at
+4K and 2{,}147\,MB at 16K with \emph{prompt}, exactly the prompt's KV at
+128\,KiB per token, and slightly more with \emph{all}, which also stores the
+decoded blocks; in the first set, its log reported an external prefix-cache
+hit rate of 98.8--99.8\%. \emph{All} was no faster than \emph{prompt}, since
 only 128 decoded tokens were at stake. We did not break the remaining
-0.2--0.7\,s down; it includes loading up to 2\,GB over NFS and recomputing
-what was not stored. At 4K, four of 15 trials were slower (0.56--0.60\,s with
-a checkpoint, 1.45\,s without); in every mode the first trial of the run was
-one of them, consistent with a first-use cost on the freshly started standby,
-and one further slow trial is unexplained.
+0.2--0.6\,s down; it includes loading up to 2\,GB over NFS and recomputing
+what was not stored. In both checkpoint modes, and in both sets of runs,
+the first 4K trial took 0.56--0.60\,s, against 0.20--0.24\,s for almost all
+the others, consistent with a first-use cost on the freshly started standby
+(the first set also had one later slow trial, and a slow first trial without
+a checkpoint).
+
+\paragraph{Recovery with many requests in flight.} With $C$ requests running
+when replica~0 died, every request was resumed on the standby
+(Table~\ref{tab:pfbcc}): all \PccRecords{} requests received every position
+exactly once. Without a checkpoint the standby must recompute all $C$
+requests at once, about 37{,}000 tokens of prompt and delivered output at
+$C{=}32$, so requests queue: median recovery rose from \PccFourNone\,s at
+$C{=}4$ to \PccSixteenNone\,s at 16 and \PccThirtyTwoNone\,s at 32, with the
+slowest request at \PccThirtyTwoNoneMax\,s. With \emph{prompt} the standby
+loaded the prompts instead (537\,MB at $C{=}4$, about 4.8\,GB at 32), and
+median recovery was \PccFourPrompt, \PccSixteenPrompt{} and
+\PccThirtyTwoPrompt\,s, the slowest \PccThirtyTwoPromptMax\,s; with
+\emph{all} at $C{=}16$ it was \PccSixteenAll\,s. The checkpoint's benefit
+therefore grows with the number of requests a failure interrupts, not only
+with their length. Time to first token in this table includes queueing on
+replica~0, which served all $C$ requests at once.
 
 \paragraph{The checkpoint is paid for on every request.} Time to first token
-on replica~0 rose from \PfbFourNoneTtft{} to \PfbFourPromptTtft\,s at 4K (9\%)
-and from \PfbSixteenNoneTtft{} to \PfbSixteenPromptTtft\,s at 16K (6\%). At
-16K a failure saves about 4.4\,s and every request pays about 0.33\,s, so in
-expected completion time the checkpoint pays off only if more than about one
-request in 13 meets a failure. The measured cost thus lands on the prefill,
-which the simulation did not model, rather than on decoding, which it did.
-The live measurements therefore support the simulation's qualitative
-conclusion, that checkpointing buys tail recovery latency rather than average
-speed, but they do not validate its quantitative predictions: its overhead
-column assumed a decode stall, and the first-token cost actually measured is
-outside its model.
+on replica~0 rose from \PfbFourNoneTtft{} to \PfbFourPromptTtft\,s at 4K
+(8\%) and from \PfbSixteenNoneTtft{} to \PfbSixteenPromptTtft\,s at 16K (5\%),
+consistent with the 5\% of the serving-cost runs. At 16K a failure saves about
+4.5\,s and every request pays about 0.3\,s, so in expected completion time the
+checkpoint pays off only if more than about one request in 15 meets a failure.
+The measured cost thus lands on the prefill, which the simulation did not
+model, rather than on decoding, which it did. The live measurements therefore
+support the simulation's qualitative conclusion, that checkpointing buys tail
+recovery latency rather than average speed, but they do not validate its
+quantitative predictions: its overhead column assumed a decode stall, and the
+first-token cost actually measured is outside its model.
 
-\paragraph{Positions were exactly-once; the text was not.} In \PfbEcho{} of
-the \PfbTrials{} failover trials (column ``Echo'' in Table~\ref{tab:pfbfo}),
-the first entry after the resume carried as its text 24{,}000--97{,}000
-characters: the whole decoded prompt, then the text already delivered, then the
-new token's text. The token ids were correct and every position arrived once,
-but a client that concatenates the text, as streaming clients do, would have
-displayed the prompt and repeated what it had already shown: duplication at
-the level a user sees. The 9 cases are exactly the trials in which the last
-delivered token streamed with empty text, as a token holding only part of a
-UTF-8 character does (the random-token prompts make the model emit such
-tokens), and none of the other 21 trials; so a resume whose token-id prompt
-ends inside a character made vLLM's streamed text start from the beginning of
-the sequence. We did not trace this inside vLLM. None of the 190 trials of
+\paragraph{Positions were exactly-once; the text, at first, was not.} In the
+first set of runs, in \PfbEcho{} of \PfbOldTrials{} trials, the first entry
+after the resume carried as its text 24{,}000--97{,}000 characters: the whole
+decoded prompt, then the text already delivered, then the new token's text.
+The token ids were correct and every position arrived once, but a client that
+concatenates the text, as streaming clients do, would have displayed the
+prompt and repeated what it had already shown: duplication at the level a
+user sees. The 9 cases were exactly the trials in which the last delivered
+token streamed with empty text, as a token holding only part of a UTF-8
+character does (the random-token prompts make the model emit such tokens),
+and none of the other 21; so a resume whose token-id prompt ends inside a
+character made vLLM's streamed text start from the beginning of the sequence.
+We did not trace this inside vLLM. None of the 190 trials of
 Section~\ref{sec:gweval}, with natural-language text, showed it, but a kill
 inside a multi-byte character (an emoji, CJK text) could. The gateway now
-derives the text of resumed entries from token ids: it asks the engine to
-detokenize the delivered ids plus the new ones, releases only the text beyond
-what it has released, holds back a token whose decoding ends in an incomplete
-character, and returns to the engine's text once the two agree. A regression
-test against a mock engine that imitates the behaviour checks that the
-concatenated client text equals the failure-free text after a failover, and a
-negative control with the old behaviour fails it. The fix has not yet been
-run against vLLM on a GPU; it relies on vLLM's \texttt{/detokenize} endpoint
-and on the decoding of output ids alone matching the decoding in context,
-which holds for Llama~3's byte-level tokenizer.
+checks the first entries after a resume against the decoding of the token ids
+(\texttt{/detokenize} of prompt plus delivered plus new ids, minus that of
+prompt plus delivered ids), holds back a token whose decoding ends in an
+incomplete character, removes text the engine repeated, and otherwise keeps
+the engine's text, which omits special tokens that \texttt{/detokenize}
+shows. In the second set the engine repeated earlier text after a resume
+\RevRepeatRemoved{} times in \RevRecords{} requests, and the gateway removed it
+every time. The client's text was right in \RevTextOk{} of \RevRecords{}
+requests (\texttt{analysis/recheck\_text.py}, with the model's tokenizer). The
+3 exceptions, at $C{=}32$, involved no failure: each was a request whose
+token-id prompt ended inside a character that the first output token
+completed. vLLM repeated the prompt as that token's text, and the gateway,
+which then decoded the output ids without the prompt, did not recognise the
+repetition and passed it on. Decoding with the prompt as context fixes this
+(commit \texttt{852962e}, with a test against a mock engine that imitates
+it); that fix has not been run on a GPU. A text prompt, which the gateway
+tokenizes itself, ends on a whole character and cannot trigger the case.
 
-\paragraph{An event-stream bug.} In one interrupted run, such a text contained the character
-U+0085. The gateway sent its event stream without a charset, so the Python
-\texttt{requests} library decoded it as Latin-1, and splitting the decoded
-text into lines treated U+0085 as a line break, cutting one event in two; the
-client's checker reported a missing position. The gateway now escapes every
-non-ASCII character in its JSON events, declares UTF-8, and its client splits
-lines as bytes (commit \texttt{c1b065e}, two regression tests that fail on the
-old code). Every result in this section used the fixed gateway, and the
-interrupted run is excluded. The 190 trials of Section~\ref{sec:gweval} ran
-on the earlier code; none of them hit either problem.
+\paragraph{Problems found by the concurrent runs.} Three faults in our own
+code surfaced only with many requests in flight; all are fixed. The gateway's HTTP server kept Python's default
+backlog of five pending connections, so when 32 clients connected at once,
+three connections were reset and those requests never started; the backlog
+is now 1{,}024, and the client chooses the request id, so that a submission
+whose connection failed is resumed if the gateway started it and submitted
+again if not. The client delay described in Section~\ref{sec:gweval} was
+found while checking the kill timing of these runs. And the reader that
+replaced \texttt{iter\_lines} did not translate the error raised when a
+killed engine's chunked stream is cut, so requests ended at the kill instead
+of failing over; this was caught in the first trials and fixed before the
+runs reported here.
+
+\paragraph{An event-stream bug.} In the first set of runs, one interrupted run
+had a repeated text containing the character U+0085. The gateway sent its
+event stream without a charset, so the Python \texttt{requests} library
+decoded it as Latin-1, and splitting the decoded text into lines treated
+U+0085 as a line break, cutting one event in two; the client's checker
+reported a missing position. The gateway now escapes every non-ASCII
+character in its JSON events, declares UTF-8, and its client splits lines as
+bytes (commit \texttt{c1b065e}). The 190 trials of Section~\ref{sec:gweval}
+ran on the earlier code; none of them hit any of the problems in this
+section.
 
 \section{Discussion}
 
@@ -1288,7 +1383,8 @@ remove contradictions without the operator enabling a deterministic mode,
 and left every client to implement recompute and deduplication correctly.
 The gateway makes exactly-once delivery a property of the serving layer:
 every position once, in order, for unmodified clients and engines, in every
-trial we ran, at a per-token cost below 0.2\%. What it cannot add is
+trial we ran, including with 32 requests in flight, at a per-token cost below
+1\%. What it cannot add is
 determinism. Whether the recovered text equals a failure-free run is still
 decided by the engine: its deterministic mode, its sampler, and, after
 failover, whether the standby matches the failed replica's compiled state,
@@ -1303,11 +1399,13 @@ not available.
 this study: from minutes, when a crashed engine had to restart, to
 \GwFailoverMin--\GwFailoverMax\,s with a standby for a short prompt, and, with
 a KV checkpoint on the standby, to under a second for long prompts as well
-(\PfbSixteenAll--\PfbSixteenPrompt\,s instead of \PfbSixteenNone\,s at 16K
-tokens). The checkpoint needed no engine change, only vLLM's offloading
-pointed at shared storage, and the gateway still delivered every position
-exactly once, although the text needed the fix of Section~\ref{sec:live}. Its price was not where we expected it: decoding was not slowed,
-but every request's first token came 5--9\% later. Measured and simulated
+(\PfbSixteenPrompt\,s instead of \PfbSixteenNone\,s at 16K tokens), and to
+\PccThirtyTwoPrompt\,s instead of \PccThirtyTwoNone\,s (median) when 32
+requests fail together. The checkpoint needed no engine change, only vLLM's
+offloading pointed at shared storage, and the gateway delivered every
+position exactly once throughout, although the text needed the fixes of
+Section~\ref{sec:live}. Its price was not where we expected it: decoding was
+not slowed, but every request's first token came 5--8\% later. Measured and simulated
 results agree on the economics: at plausible failure rates no checkpoint pays
 for itself in average completion time, and a per-request adaptive policy has
 nothing to gain. The case for a checkpoint is a target for worst-case
@@ -1317,7 +1415,7 @@ checkpointing captures most of that gain (Figure~\ref{fig:recovery}).
 \begin{figure}[t]
 \centering
 \begin{tikzpicture}
-\begin{axis}[xbar, xmode=log, scale only axis, width=0.33\columnwidth, height=5cm,
+\begin{axis}[xbar, xmode=log, scale only axis, width=0.31\columnwidth, height=5cm,
   xmin=0.05, xmax=2000, log origin=infty, bar width=6pt, enlarge y limits=0.08,
   xlabel={Measured recovery latency, s (log scale)}, xlabel style={font=\footnotesize},
   ytick={1,...,7}, y dir=reverse, yticklabel style={font=\scriptsize, align=right},
@@ -1335,12 +1433,13 @@ checkpointing captures most of that gain (Figure~\ref{fig:recovery}).
   (\PfbSixteenAll,7) [\PfbSixteenAll]};
 \end{axis}
 \end{tikzpicture}
-\caption{Measured recovery latency (kill to the next position at the
-client) by mechanism, vLLM; no simulated values. Restart and the short-prompt failover are medians per run
+\caption{Measured recovery latency (kill to the gateway's commit of the
+next position) by mechanism, vLLM, one request at a time; no simulated
+values. Restart and the short-prompt failover are medians per run
 from Section~\ref{sec:gweval} (bar at the lowest run median); 4K and 16K
 are medians over five trials from Section~\ref{sec:live}. Serving cost:
 none for restart and recompute failover; for the KV checkpoint, under 1\% in
-decoding and 5--9\% in time to first token.}
+decoding and 5--8\% in time to first token.}
 \label{fig:recovery}
 \end{figure}
 
@@ -1420,11 +1519,17 @@ checkpointing only for tail latency.
     (Section~\ref{sec:followup}): re-tokenization matched in all 10 trials
     checked, at the 128-chunk kill on the main prompt. Other prompts or
     kill points could tokenize differently at the boundary.
-  \item \textbf{Fault injection was sequential.} Every fault-injection
-trial issued one request at a time. Section~\ref{sec:load} measured
-throughput and output uniqueness at up to 32 concurrent requests, and
-Section~\ref{sec:live} the offloading cost at up to four, but no failure was
-injected under concurrent load.
+  \item \textbf{Concurrent failures, narrowly.} Failures with requests in
+    flight were injected only in Section~\ref{sec:live}: one prompt length
+    (1{,}024 random token ids), 4, 16 and 32 requests, three trials per cell,
+    the kill timed on one request, default mode only. Exact text under
+    concurrent failure in a deterministic mode was not tested.
+  \item \textbf{Times through the gateway.} These come from the gateway's log
+    (Section~\ref{sec:gweval}), stamped when an entry is appended, before it
+    is written, optionally fsynced and sent; a client on the same machine
+    sees it about a millisecond later, plus the \texttt{fsync}. Version~2's
+    client-side figures were too long, by up to about one inter-token
+    interval, or about 0.1\,s after a failover.
 \item \textbf{Fail-stop only; latency includes restart.} \texttt{SIGKILL}
     is a clean crash; GPU hangs and silent corruption are not modeled. With
     a single instance, recovery includes model reload; a warm standby would
@@ -1435,7 +1540,7 @@ injected under concurrent load.
     finding rests on three batch-invariant runs on that pair, and which
     cache matters was not isolated. The gateway's own durability was tested
     only by killing its process with the log on local disk; a lost disk, a
-    replicated gateway, and concurrent requests were not tested. Recovery
+    replicated gateway, and a gateway restart under concurrent requests were not tested. Recovery
     times below one second are bounded by health-check polling. Its
     overhead is that of this implementation.
 \item \textbf{Generalizability.} Every measurement used one model
@@ -1456,7 +1561,11 @@ injected under concurrent load.
     memory and is lost with the standby, it filled up at four concurrent
     requests, and a failure during prefill still forces a full recompute. A
     SIGKILL is detected at once; a hung GPU would add a detection timeout to
-    every mode. The simulation of Section~\ref{sec:sim} is a first-order
+    every mode. The gateway's text check recognises special tokens by their
+    text (\texttt{<|...|>}), not their id, so a model that writes such a
+    string as ordinary text inside the first entry after a resume could lose
+    it; and its fix for prompts that end inside a character was tested
+    against a mock engine only. The simulation of Section~\ref{sec:sim} is a first-order
     model with stated assumptions, and its conclusions are only as good as
     those assumptions.
 \end{itemize}
@@ -1477,9 +1586,10 @@ unique at about half the throughput; disabling vLLM's prefix cache did not.
 A gateway that numbers and logs output positions and resumes from the logged
 token ids delivered every position exactly once in all \GwKillTrials{}
 injected failures on both engines, for unmodified clients that keep their
-position, at a per-token cost below 0.2\%;
-with a standby replica on a second machine it recovered in under 0.2\,s
-instead of minutes. Exact text after recovery remained the engine's
+position, at a per-token cost below 1\%, and in all \PccRecords{} requests
+of failures with up to 32 requests in flight; with a standby replica on a
+second machine it recovered in under 0.1\,s instead of minutes. After a
+resume, vLLM sometimes repeated earlier text; the gateway removes it. Exact text after recovery remained the engine's
 property: it held in deterministic mode after restart, and after failover
 only once the failed replica's compiled-kernel caches had been copied to the
 standby; which artifact matters is not identified.
@@ -1489,14 +1599,15 @@ length measured, so the question became how often to checkpoint. A
 simulation driven by the measurements, judged by a rule fixed in advance,
 found no value in an adaptive per-request policy. Measured live, vLLM's own
 KV offloading to storage the standby can read cut recovery at 16K tokens by a
-factor of seven, with every position delivered exactly once, no measurable
-decoding cost, and
-5--9\% later first tokens: a tool for bounding worst-case recovery, not for
+factor of eight, and by a factor of three when 32 requests failed together,
+with every position delivered exactly once, no measurable decoding cost, and
+5--8\% later first tokens: a tool for bounding worst-case recovery, not for
 average speed.
 
 Next stages: (1) isolate which compiled artifact makes identical machines
-differ, and whether autotuning is the cause; (2) inject failures under
-concurrent load, through the gateway and with checkpoints; (3) checkpoint a
+differ, and whether autotuning is the cause; (2) concurrent failures in
+deterministic mode, with natural-language prompts and a replicated gateway;
+(3) checkpoint a
 long prefill in chunks as it is computed, and keep the store somewhere that
 survives the standby; (4) other models, GPUs and tensor-parallel serving.
 

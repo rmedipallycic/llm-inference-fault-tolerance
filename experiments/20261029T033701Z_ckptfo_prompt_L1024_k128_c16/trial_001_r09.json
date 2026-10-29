@@ -1,0 +1,3766 @@
+{
+ "trial": 1,
+ "request": 9,
+ "concurrency": 16,
+ "run_id": "20261029T033701Z_ckptfo_prompt_L1024_k128_c16",
+ "prompt_len": 1024,
+ "kill_at": 128,
+ "delivered_at_kill": 128,
+ "t_kill": 1793245277.8318279,
+ "restarts": [
+  {
+   "t_start": 1793245277.9968493,
+   "ready_s": 112.11520973400002
+  }
+ ],
+ "clear": {
+  "cmd": "find /srv/kv -type f -name '*.bin*' -delete",
+  "rc": 0,
+  "s": 7.260544621998633,
+  "stderr": ""
+ },
+ "client": {
+  "reconnects": 0,
+  "finish_reason": "length",
+  "final": {
+   "attempts": 1,
+   "error": null
+  },
+  "error": null,
+  "req_id": "d51997f201e34ccd96402bba9428938e",
+  "events": [
+   {
+    "seq": 0,
+    "n": 1,
+    "text": " ",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     220
+    ],
+    "connection": 0,
+    "t_wall": 1793245271.5498152,
+    "t_mono": 16092.539480249
+   },
+   {
+    "seq": 1,
+    "n": 1,
+    "text": "1",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     16
+    ],
+    "connection": 0,
+    "t_wall": 1793245272.0315592,
+    "t_mono": 16093.021224132
+   },
+   {
+    "seq": 2,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245272.52109,
+    "t_mono": 16093.510755107
+   },
+   {
+    "seq": 3,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.0068932,
+    "t_mono": 16093.996558118
+   },
+   {
+    "seq": 4,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.057504,
+    "t_mono": 16094.047168814
+   },
+   {
+    "seq": 5,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.0927114,
+    "t_mono": 16094.082376401
+   },
+   {
+    "seq": 6,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.1363058,
+    "t_mono": 16094.125970785
+   },
+   {
+    "seq": 7,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.1750228,
+    "t_mono": 16094.164687824
+   },
+   {
+    "seq": 8,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.2133071,
+    "t_mono": 16094.202971936
+   },
+   {
+    "seq": 9,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.2552233,
+    "t_mono": 16094.244888222
+   },
+   {
+    "seq": 10,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.2941751,
+    "t_mono": 16094.283840172
+   },
+   {
+    "seq": 11,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.3375478,
+    "t_mono": 16094.327212664
+   },
+   {
+    "seq": 12,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.3772547,
+    "t_mono": 16094.366919554
+   },
+   {
+    "seq": 13,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.4169948,
+    "t_mono": 16094.406659654
+   },
+   {
+    "seq": 14,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.4560397,
+    "t_mono": 16094.445704615
+   },
+   {
+    "seq": 15,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.4956703,
+    "t_mono": 16094.485335284
+   },
+   {
+    "seq": 16,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.5384827,
+    "t_mono": 16094.528147559
+   },
+   {
+    "seq": 17,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.578277,
+    "t_mono": 16094.5679421
+   },
+   {
+    "seq": 18,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.617304,
+    "t_mono": 16094.606969091
+   },
+   {
+    "seq": 19,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.6592898,
+    "t_mono": 16094.648954707
+   },
+   {
+    "seq": 20,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.6977103,
+    "t_mono": 16094.687375202
+   },
+   {
+    "seq": 21,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.7369578,
+    "t_mono": 16094.726622406
+   },
+   {
+    "seq": 22,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.7765234,
+    "t_mono": 16094.766188094
+   },
+   {
+    "seq": 23,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.8169603,
+    "t_mono": 16094.806625122
+   },
+   {
+    "seq": 24,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.8560324,
+    "t_mono": 16094.845697084
+   },
+   {
+    "seq": 25,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.8966453,
+    "t_mono": 16094.886310324
+   },
+   {
+    "seq": 26,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.937288,
+    "t_mono": 16094.926952834
+   },
+   {
+    "seq": 27,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245273.9785492,
+    "t_mono": 16094.968214101
+   },
+   {
+    "seq": 28,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.0186298,
+    "t_mono": 16095.008294705
+   },
+   {
+    "seq": 29,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.0595367,
+    "t_mono": 16095.049201608
+   },
+   {
+    "seq": 30,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.0999224,
+    "t_mono": 16095.089587325
+   },
+   {
+    "seq": 31,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.1403034,
+    "t_mono": 16095.129968112
+   },
+   {
+    "seq": 32,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.1803334,
+    "t_mono": 16095.169998296
+   },
+   {
+    "seq": 33,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.219168,
+    "t_mono": 16095.208832925
+   },
+   {
+    "seq": 34,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.2612658,
+    "t_mono": 16095.250930642
+   },
+   {
+    "seq": 35,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.301626,
+    "t_mono": 16095.291290659
+   },
+   {
+    "seq": 36,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.3412268,
+    "t_mono": 16095.330891687
+   },
+   {
+    "seq": 37,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.3813267,
+    "t_mono": 16095.370991361
+   },
+   {
+    "seq": 38,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.4234476,
+    "t_mono": 16095.413112418
+   },
+   {
+    "seq": 39,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.46324,
+    "t_mono": 16095.452904809
+   },
+   {
+    "seq": 40,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.5025537,
+    "t_mono": 16095.492218434
+   },
+   {
+    "seq": 41,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.5444887,
+    "t_mono": 16095.534153679
+   },
+   {
+    "seq": 42,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.583017,
+    "t_mono": 16095.572682095
+   },
+   {
+    "seq": 43,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.6244812,
+    "t_mono": 16095.614146185
+   },
+   {
+    "seq": 44,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.6642992,
+    "t_mono": 16095.653964236
+   },
+   {
+    "seq": 45,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.7047536,
+    "t_mono": 16095.694418614
+   },
+   {
+    "seq": 46,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.7457063,
+    "t_mono": 16095.735371118
+   },
+   {
+    "seq": 47,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.7857654,
+    "t_mono": 16095.775430321
+   },
+   {
+    "seq": 48,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.8273787,
+    "t_mono": 16095.817043683
+   },
+   {
+    "seq": 49,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.8685246,
+    "t_mono": 16095.858189559
+   },
+   {
+    "seq": 50,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.908234,
+    "t_mono": 16095.897898788
+   },
+   {
+    "seq": 51,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.94908,
+    "t_mono": 16095.938745051
+   },
+   {
+    "seq": 52,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245274.989213,
+    "t_mono": 16095.978877825
+   },
+   {
+    "seq": 53,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.0300636,
+    "t_mono": 16096.019728588
+   },
+   {
+    "seq": 54,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.0694256,
+    "t_mono": 16096.059090653
+   },
+   {
+    "seq": 55,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.1093931,
+    "t_mono": 16096.099058206
+   },
+   {
+    "seq": 56,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.1520975,
+    "t_mono": 16096.141762439
+   },
+   {
+    "seq": 57,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.1921356,
+    "t_mono": 16096.181800432
+   },
+   {
+    "seq": 58,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.2317472,
+    "t_mono": 16096.221412021
+   },
+   {
+    "seq": 59,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.2732127,
+    "t_mono": 16096.26287767
+   },
+   {
+    "seq": 60,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.3124242,
+    "t_mono": 16096.302089104
+   },
+   {
+    "seq": 61,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.352973,
+    "t_mono": 16096.342637894
+   },
+   {
+    "seq": 62,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.3933325,
+    "t_mono": 16096.38299735
+   },
+   {
+    "seq": 63,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.4359746,
+    "t_mono": 16096.425639453
+   },
+   {
+    "seq": 64,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.475651,
+    "t_mono": 16096.465316012
+   },
+   {
+    "seq": 65,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.5169148,
+    "t_mono": 16096.506579859
+   },
+   {
+    "seq": 66,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.5566223,
+    "t_mono": 16096.546287329
+   },
+   {
+    "seq": 67,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.5969455,
+    "t_mono": 16096.586610216
+   },
+   {
+    "seq": 68,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.6366086,
+    "t_mono": 16096.626273495
+   },
+   {
+    "seq": 69,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.6776156,
+    "t_mono": 16096.667280489
+   },
+   {
+    "seq": 70,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.7178068,
+    "t_mono": 16096.707471824
+   },
+   {
+    "seq": 71,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.7596276,
+    "t_mono": 16096.749292467
+   },
+   {
+    "seq": 72,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.7990222,
+    "t_mono": 16096.788687084
+   },
+   {
+    "seq": 73,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.8397965,
+    "t_mono": 16096.829461456
+   },
+   {
+    "seq": 74,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.8809109,
+    "t_mono": 16096.870575581
+   },
+   {
+    "seq": 75,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.9223573,
+    "t_mono": 16096.912022231
+   },
+   {
+    "seq": 76,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245275.9623215,
+    "t_mono": 16096.951986373
+   },
+   {
+    "seq": 77,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.003992,
+    "t_mono": 16096.993656845
+   },
+   {
+    "seq": 78,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.0425453,
+    "t_mono": 16097.032210301
+   },
+   {
+    "seq": 79,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.084807,
+    "t_mono": 16097.07447193
+   },
+   {
+    "seq": 80,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.1253164,
+    "t_mono": 16097.114981189
+   },
+   {
+    "seq": 81,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.1647282,
+    "t_mono": 16097.154392826
+   },
+   {
+    "seq": 82,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.2052765,
+    "t_mono": 16097.194941355
+   },
+   {
+    "seq": 83,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.247789,
+    "t_mono": 16097.237453516
+   },
+   {
+    "seq": 84,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.2880445,
+    "t_mono": 16097.277709502
+   },
+   {
+    "seq": 85,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.3281403,
+    "t_mono": 16097.317805196
+   },
+   {
+    "seq": 86,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.368966,
+    "t_mono": 16097.358631068
+   },
+   {
+    "seq": 87,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.4093685,
+    "t_mono": 16097.399033346
+   },
+   {
+    "seq": 88,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.4507349,
+    "t_mono": 16097.440399675
+   },
+   {
+    "seq": 89,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.4899154,
+    "t_mono": 16097.479580358
+   },
+   {
+    "seq": 90,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.530762,
+    "t_mono": 16097.520427141
+   },
+   {
+    "seq": 91,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.573201,
+    "t_mono": 16097.562865842
+   },
+   {
+    "seq": 92,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.611202,
+    "t_mono": 16097.600866882
+   },
+   {
+    "seq": 93,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.653452,
+    "t_mono": 16097.643116991
+   },
+   {
+    "seq": 94,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.6945708,
+    "t_mono": 16097.684235736
+   },
+   {
+    "seq": 95,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.7346804,
+    "t_mono": 16097.724345231
+   },
+   {
+    "seq": 96,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.7756073,
+    "t_mono": 16097.765272264
+   },
+   {
+    "seq": 97,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.816063,
+    "t_mono": 16097.805727722
+   },
+   {
+    "seq": 98,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.8566897,
+    "t_mono": 16097.846354712
+   },
+   {
+    "seq": 99,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.8966386,
+    "t_mono": 16097.886303704
+   },
+   {
+    "seq": 100,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.9374223,
+    "t_mono": 16097.927087376
+   },
+   {
+    "seq": 101,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245276.9781435,
+    "t_mono": 16097.967808328
+   },
+   {
+    "seq": 102,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.0181644,
+    "t_mono": 16098.007829291
+   },
+   {
+    "seq": 103,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.0609603,
+    "t_mono": 16098.050625136
+   },
+   {
+    "seq": 104,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.101414,
+    "t_mono": 16098.091078704
+   },
+   {
+    "seq": 105,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.14208,
+    "t_mono": 16098.131744824
+   },
+   {
+    "seq": 106,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.182835,
+    "t_mono": 16098.172500086
+   },
+   {
+    "seq": 107,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.2238388,
+    "t_mono": 16098.213503661
+   },
+   {
+    "seq": 108,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.2639356,
+    "t_mono": 16098.253600344
+   },
+   {
+    "seq": 109,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.3056722,
+    "t_mono": 16098.295337147
+   },
+   {
+    "seq": 110,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.3452685,
+    "t_mono": 16098.334933245
+   },
+   {
+    "seq": 111,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.3862598,
+    "t_mono": 16098.375924579
+   },
+   {
+    "seq": 112,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.425878,
+    "t_mono": 16098.415542808
+   },
+   {
+    "seq": 113,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.4675567,
+    "t_mono": 16098.45722164
+   },
+   {
+    "seq": 114,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.5080547,
+    "t_mono": 16098.497719779
+   },
+   {
+    "seq": 115,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.5476372,
+    "t_mono": 16098.537302126
+   },
+   {
+    "seq": 116,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.5883315,
+    "t_mono": 16098.577996377
+   },
+   {
+    "seq": 117,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.6308122,
+    "t_mono": 16098.620477098
+   },
+   {
+    "seq": 118,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.6713073,
+    "t_mono": 16098.660972157
+   },
+   {
+    "seq": 119,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.710477,
+    "t_mono": 16098.700142021
+   },
+   {
+    "seq": 120,
+    "n": 1,
+    "text": ".",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.7516499,
+    "t_mono": 16098.741314926
+   },
+   {
+    "seq": 121,
+    "n": 1,
+    "text": "0",
+    "attempt": 0,
+    "backend": 0,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245277.7922347,
+    "t_mono": 16098.781899737
+   },
+   {
+    "seq": 122,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245278.784869,
+    "t_mono": 16099.774534093
+   },
+   {
+    "seq": 123,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245278.8053722,
+    "t_mono": 16099.79503705
+   },
+   {
+    "seq": 124,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245278.8532066,
+    "t_mono": 16099.842871374
+   },
+   {
+    "seq": 125,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245278.8883233,
+    "t_mono": 16099.87798826
+   },
+   {
+    "seq": 126,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245278.925177,
+    "t_mono": 16099.914841876
+   },
+   {
+    "seq": 127,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245278.9652445,
+    "t_mono": 16099.95490932
+   },
+   {
+    "seq": 128,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.0076067,
+    "t_mono": 16099.99727168
+   },
+   {
+    "seq": 129,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.0483305,
+    "t_mono": 16100.037995282
+   },
+   {
+    "seq": 130,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.0904005,
+    "t_mono": 16100.080065538
+   },
+   {
+    "seq": 131,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.1299806,
+    "t_mono": 16100.119645706
+   },
+   {
+    "seq": 132,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.1694174,
+    "t_mono": 16100.159082443
+   },
+   {
+    "seq": 133,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.209927,
+    "t_mono": 16100.199592081
+   },
+   {
+    "seq": 134,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.2517798,
+    "t_mono": 16100.241444696
+   },
+   {
+    "seq": 135,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.293607,
+    "t_mono": 16100.28327196
+   },
+   {
+    "seq": 136,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.3350422,
+    "t_mono": 16100.324707009
+   },
+   {
+    "seq": 137,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.3751624,
+    "t_mono": 16100.364827283
+   },
+   {
+    "seq": 138,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.4164648,
+    "t_mono": 16100.406129781
+   },
+   {
+    "seq": 139,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.456162,
+    "t_mono": 16100.445826831
+   },
+   {
+    "seq": 140,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.4970515,
+    "t_mono": 16100.486716184
+   },
+   {
+    "seq": 141,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.5391827,
+    "t_mono": 16100.528847461
+   },
+   {
+    "seq": 142,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.580757,
+    "t_mono": 16100.570421882
+   },
+   {
+    "seq": 143,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.6189637,
+    "t_mono": 16100.608628515
+   },
+   {
+    "seq": 144,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.6618204,
+    "t_mono": 16100.651485161
+   },
+   {
+    "seq": 145,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.7028818,
+    "t_mono": 16100.692546596
+   },
+   {
+    "seq": 146,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.7418258,
+    "t_mono": 16100.731490696
+   },
+   {
+    "seq": 147,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.784455,
+    "t_mono": 16100.77412011
+   },
+   {
+    "seq": 148,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.8237145,
+    "t_mono": 16100.813379434
+   },
+   {
+    "seq": 149,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.8641953,
+    "t_mono": 16100.853860242
+   },
+   {
+    "seq": 150,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.9052663,
+    "t_mono": 16100.894931158
+   },
+   {
+    "seq": 151,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.9462245,
+    "t_mono": 16100.935889162
+   },
+   {
+    "seq": 152,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245279.9881618,
+    "t_mono": 16100.977826637
+   },
+   {
+    "seq": 153,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.0301769,
+    "t_mono": 16101.019841563
+   },
+   {
+    "seq": 154,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.070792,
+    "t_mono": 16101.060456823
+   },
+   {
+    "seq": 155,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.1111462,
+    "t_mono": 16101.10081122
+   },
+   {
+    "seq": 156,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.151993,
+    "t_mono": 16101.141657913
+   },
+   {
+    "seq": 157,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.1947079,
+    "t_mono": 16101.184372667
+   },
+   {
+    "seq": 158,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.2339215,
+    "t_mono": 16101.223586441
+   },
+   {
+    "seq": 159,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.2753313,
+    "t_mono": 16101.26499631
+   },
+   {
+    "seq": 160,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.3160427,
+    "t_mono": 16101.305707481
+   },
+   {
+    "seq": 161,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.3552167,
+    "t_mono": 16101.344881594
+   },
+   {
+    "seq": 162,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.3977506,
+    "t_mono": 16101.387415307
+   },
+   {
+    "seq": 163,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.4393785,
+    "t_mono": 16101.429043428
+   },
+   {
+    "seq": 164,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.480149,
+    "t_mono": 16101.46981378
+   },
+   {
+    "seq": 165,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.5208342,
+    "t_mono": 16101.510499261
+   },
+   {
+    "seq": 166,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.560015,
+    "t_mono": 16101.549679694
+   },
+   {
+    "seq": 167,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.6027076,
+    "t_mono": 16101.592372578
+   },
+   {
+    "seq": 168,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.644296,
+    "t_mono": 16101.63396073
+   },
+   {
+    "seq": 169,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.685082,
+    "t_mono": 16101.674746662
+   },
+   {
+    "seq": 170,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.7258537,
+    "t_mono": 16101.715518543
+   },
+   {
+    "seq": 171,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.7669017,
+    "t_mono": 16101.756566628
+   },
+   {
+    "seq": 172,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.8073728,
+    "t_mono": 16101.797037777
+   },
+   {
+    "seq": 173,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.8467324,
+    "t_mono": 16101.836397242
+   },
+   {
+    "seq": 174,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.8896744,
+    "t_mono": 16101.879339429
+   },
+   {
+    "seq": 175,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.9306345,
+    "t_mono": 16101.920299403
+   },
+   {
+    "seq": 176,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245280.9702175,
+    "t_mono": 16101.959882241
+   },
+   {
+    "seq": 177,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.0109265,
+    "t_mono": 16102.000591492
+   },
+   {
+    "seq": 178,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.052653,
+    "t_mono": 16102.042317895
+   },
+   {
+    "seq": 179,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.092693,
+    "t_mono": 16102.082357889
+   },
+   {
+    "seq": 180,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.1363614,
+    "t_mono": 16102.126026314
+   },
+   {
+    "seq": 181,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.1767006,
+    "t_mono": 16102.166365641
+   },
+   {
+    "seq": 182,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.2180645,
+    "t_mono": 16102.207729499
+   },
+   {
+    "seq": 183,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.2577121,
+    "t_mono": 16102.247377168
+   },
+   {
+    "seq": 184,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.299595,
+    "t_mono": 16102.289259993
+   },
+   {
+    "seq": 185,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.3408952,
+    "t_mono": 16102.330560171
+   },
+   {
+    "seq": 186,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.3808148,
+    "t_mono": 16102.370479863
+   },
+   {
+    "seq": 187,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.4246233,
+    "t_mono": 16102.41428835
+   },
+   {
+    "seq": 188,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.4638214,
+    "t_mono": 16102.453486093
+   },
+   {
+    "seq": 189,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.5068135,
+    "t_mono": 16102.496478281
+   },
+   {
+    "seq": 190,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.54585,
+    "t_mono": 16102.535515112
+   },
+   {
+    "seq": 191,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.5881445,
+    "t_mono": 16102.577809582
+   },
+   {
+    "seq": 192,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.6285899,
+    "t_mono": 16102.61825486
+   },
+   {
+    "seq": 193,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.6705832,
+    "t_mono": 16102.660248196
+   },
+   {
+    "seq": 194,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.7118099,
+    "t_mono": 16102.701474743
+   },
+   {
+    "seq": 195,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.750543,
+    "t_mono": 16102.740208121
+   },
+   {
+    "seq": 196,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.7926722,
+    "t_mono": 16102.782337089
+   },
+   {
+    "seq": 197,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.8340201,
+    "t_mono": 16102.823684967
+   },
+   {
+    "seq": 198,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.874841,
+    "t_mono": 16102.864505989
+   },
+   {
+    "seq": 199,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.915911,
+    "t_mono": 16102.905575685
+   },
+   {
+    "seq": 200,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.9579203,
+    "t_mono": 16102.947585171
+   },
+   {
+    "seq": 201,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245281.9989734,
+    "t_mono": 16102.988638416
+   },
+   {
+    "seq": 202,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.0397062,
+    "t_mono": 16103.029370997
+   },
+   {
+    "seq": 203,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.0809462,
+    "t_mono": 16103.070611104
+   },
+   {
+    "seq": 204,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.1212478,
+    "t_mono": 16103.110912661
+   },
+   {
+    "seq": 205,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.1631439,
+    "t_mono": 16103.152808986
+   },
+   {
+    "seq": 206,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.2045987,
+    "t_mono": 16103.194263845
+   },
+   {
+    "seq": 207,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.2434068,
+    "t_mono": 16103.233071694
+   },
+   {
+    "seq": 208,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.2851734,
+    "t_mono": 16103.274838528
+   },
+   {
+    "seq": 209,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.3282123,
+    "t_mono": 16103.317877156
+   },
+   {
+    "seq": 210,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.369287,
+    "t_mono": 16103.358951751
+   },
+   {
+    "seq": 211,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.409735,
+    "t_mono": 16103.399399849
+   },
+   {
+    "seq": 212,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.4508753,
+    "t_mono": 16103.440540395
+   },
+   {
+    "seq": 213,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.4923627,
+    "t_mono": 16103.482027605
+   },
+   {
+    "seq": 214,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.5335798,
+    "t_mono": 16103.523244752
+   },
+   {
+    "seq": 215,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.574154,
+    "t_mono": 16103.563818932
+   },
+   {
+    "seq": 216,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.6140501,
+    "t_mono": 16103.603714913
+   },
+   {
+    "seq": 217,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.6567714,
+    "t_mono": 16103.646436218
+   },
+   {
+    "seq": 218,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.6976461,
+    "t_mono": 16103.687310921
+   },
+   {
+    "seq": 219,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.739825,
+    "t_mono": 16103.729489849
+   },
+   {
+    "seq": 220,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.7804325,
+    "t_mono": 16103.770097389
+   },
+   {
+    "seq": 221,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.8217225,
+    "t_mono": 16103.811387617
+   },
+   {
+    "seq": 222,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.8625972,
+    "t_mono": 16103.85226205
+   },
+   {
+    "seq": 223,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.9048698,
+    "t_mono": 16103.894534639
+   },
+   {
+    "seq": 224,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.9460332,
+    "t_mono": 16103.935697945
+   },
+   {
+    "seq": 225,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245282.9874072,
+    "t_mono": 16103.977071934
+   },
+   {
+    "seq": 226,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.0263965,
+    "t_mono": 16104.016061245
+   },
+   {
+    "seq": 227,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.0697842,
+    "t_mono": 16104.059448837
+   },
+   {
+    "seq": 228,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.108888,
+    "t_mono": 16104.09855258
+   },
+   {
+    "seq": 229,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.1505868,
+    "t_mono": 16104.140251812
+   },
+   {
+    "seq": 230,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.1927726,
+    "t_mono": 16104.18243762
+   },
+   {
+    "seq": 231,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.2337794,
+    "t_mono": 16104.223444235
+   },
+   {
+    "seq": 232,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.2753215,
+    "t_mono": 16104.264986466
+   },
+   {
+    "seq": 233,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.3169324,
+    "t_mono": 16104.306597127
+   },
+   {
+    "seq": 234,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.3565793,
+    "t_mono": 16104.346244266
+   },
+   {
+    "seq": 235,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.3975477,
+    "t_mono": 16104.38721263
+   },
+   {
+    "seq": 236,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.439776,
+    "t_mono": 16104.429441029
+   },
+   {
+    "seq": 237,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.4807932,
+    "t_mono": 16104.470458243
+   },
+   {
+    "seq": 238,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.5211012,
+    "t_mono": 16104.5107661
+   },
+   {
+    "seq": 239,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.5635514,
+    "t_mono": 16104.553216271
+   },
+   {
+    "seq": 240,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.6040292,
+    "t_mono": 16104.593694109
+   },
+   {
+    "seq": 241,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.6465676,
+    "t_mono": 16104.636232702
+   },
+   {
+    "seq": 242,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.6880403,
+    "t_mono": 16104.677705062
+   },
+   {
+    "seq": 243,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.7285972,
+    "t_mono": 16104.718261951
+   },
+   {
+    "seq": 244,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.7699494,
+    "t_mono": 16104.759614259
+   },
+   {
+    "seq": 245,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.8121667,
+    "t_mono": 16104.801831698
+   },
+   {
+    "seq": 246,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.8534813,
+    "t_mono": 16104.843145956
+   },
+   {
+    "seq": 247,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.8934722,
+    "t_mono": 16104.883136979
+   },
+   {
+    "seq": 248,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.935397,
+    "t_mono": 16104.925061844
+   },
+   {
+    "seq": 249,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245283.9766018,
+    "t_mono": 16104.966266741
+   },
+   {
+    "seq": 250,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245284.0153785,
+    "t_mono": 16105.005043409
+   },
+   {
+    "seq": 251,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245284.0540106,
+    "t_mono": 16105.043675536
+   },
+   {
+    "seq": 252,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245284.090209,
+    "t_mono": 16105.079873865
+   },
+   {
+    "seq": 253,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245284.1286259,
+    "t_mono": 16105.1182907
+   },
+   {
+    "seq": 254,
+    "n": 1,
+    "text": ".",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     13
+    ],
+    "connection": 0,
+    "t_wall": 1793245284.1649508,
+    "t_mono": 16105.15461562
+   },
+   {
+    "seq": 255,
+    "n": 1,
+    "text": "0",
+    "attempt": 1,
+    "backend": 1,
+    "ids": [
+     15
+    ],
+    "connection": 0,
+    "t_wall": 1793245284.2030506,
+    "t_mono": 16105.192715311
+   }
+  ],
+  "t_start_mono": 16089.998231344
+ },
+ "delivery": {
+  "positions": 256,
+  "duplicated_positions": 0,
+  "missing_positions": 0,
+  "out_of_order_events": 0,
+  "exactly_once": true
+ },
+ "ttft_s": 2.54124890499952,
+ "text_check": {
+  "shown_chars": 256,
+  "decoded_chars": 256,
+  "equal": true,
+  "error": null
+ },
+ "remote_metrics_before": {
+  "lines": [
+   "vllm:kv_offload_total_bytes_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 1.7179869184e+10",
+   "vllm:kv_offload_total_bytes_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 6.03979776e+08",
+   "vllm:kv_offload_total_bytes_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 1.7932431578059354e+09",
+   "vllm:kv_offload_total_bytes_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 1.7932431578060024e+09",
+   "vllm:kv_offload_total_time_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 1.3762385120391847",
+   "vllm:kv_offload_total_time_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 0.04658982408046722",
+   "vllm:kv_offload_total_time_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 1.7932431578059442e+09",
+   "vllm:kv_offload_total_time_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 1.7932431578060086e+09",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"5e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"2e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"4e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"6e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"8e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1.5e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 28.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"2e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 28.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 38.0",
+   "vllm:kv_offload_size_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 38.0",
+   "vllm:kv_offload_size_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 1.7179869184e+10",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"5e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"2e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 38.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"4e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 38.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"6e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 38.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"8e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 38.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 38.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1.5e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 38.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"2e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 38.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 38.0",
+   "vllm:kv_offload_size_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 38.0",
+   "vllm:kv_offload_size_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 6.03979776e+08",
+   "vllm:kv_offload_size_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 1.7932431578058712e+09",
+   "vllm:kv_offload_size_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 1.793243157805955e+09",
+   "vllm:kv_offload_cpu_cache_usage_perc{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_cpu_cache_write_usage_perc{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_cpu_cache_read_usage_perc{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"1.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8192.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"4.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8192.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"16.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8230.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"64.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8230.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"256.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8230.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"1024.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8230.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"4096.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8230.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"16384.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8230.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"65536.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8230.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"262144.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8230.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8230.0",
+   "vllm:kv_offload_cpu_allocation_size_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8230.0",
+   "vllm:kv_offload_cpu_allocation_size_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8480.0",
+   "vllm:kv_offload_cpu_allocation_size_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431915050611e+09",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"1e-05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8478.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"5e-05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8480.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.0001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8480.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.0005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8480.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8480.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8480.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.01\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8480.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8480.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.1\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8480.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.5\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8480.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"1.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8480.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8480.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8480.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 0.0022408239674405195",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"1e-05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8208.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"5e-05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8225.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.0001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8225.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.0005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.01\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.1\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.5\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"1.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.007251147908391431",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 1.793243191505496e+09",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.7932431915057936e+09",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.0001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.0005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1117.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.01\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 2130.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.1\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.5\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"1.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"5.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"10.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 134.15911327895628",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.7932431915061362e+09",
+   "vllm:kv_offload_tiering_read_bytes_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.7179869184e+10",
+   "vllm:kv_offload_tiering_read_bytes_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.7932431916035714e+09",
+   "vllm:kv_offload_tiering_read_time_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 4.288375429990992",
+   "vllm:kv_offload_tiering_read_time_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.7932431916035812e+09",
+   "vllm:kv_offload_tiering_write_bytes_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 6.03979776e+08",
+   "vllm:kv_offload_tiering_write_bytes_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.793243192071009e+09",
+   "vllm:kv_offload_tiering_write_time_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.6362822099927143",
+   "vllm:kv_offload_tiering_write_time_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.793243192071022e+09",
+   "vllm:kv_offload_tiering_chunk_queries_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 8480.0",
+   "vllm:kv_offload_tiering_chunk_queries_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8230.0",
+   "vllm:kv_offload_tiering_chunk_queries_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 1.7932431915054376e+09",
+   "vllm:kv_offload_tiering_chunk_queries_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.7932431915054471e+09",
+   "vllm:kv_offload_tiering_chunk_hits_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8192.0",
+   "vllm:kv_offload_tiering_chunk_hits_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.7932431915060887e+09",
+   "vllm:kv_offload_tiering_primary_write_usage_perc{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_tiering_primary_read_usage_perc{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_tiering_active_promotion_jobs{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_tiering_active_cascade_jobs{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_load_bytes_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7179869184e+10",
+   "vllm:kv_offload_load_bytes_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431916462455e+09",
+   "vllm:kv_offload_load_time_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.3762385120391847",
+   "vllm:kv_offload_load_time_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431916462615e+09",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"1e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"5e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"1e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"2e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"4e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"6e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"8e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"1e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"1.5e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 28.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"2e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 28.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_load_size_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_load_size_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7179869184e+10",
+   "vllm:kv_offload_load_size_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.793243191646288e+09",
+   "vllm:kv_offload_store_bytes_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 6.03979776e+08",
+   "vllm:kv_offload_store_bytes_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431920706272e+09",
+   "vllm:kv_offload_store_time_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.04658982408046722",
+   "vllm:kv_offload_store_time_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431920706441e+09",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"1e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"5e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"1e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"2e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"4e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"6e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"8e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"1e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"1.5e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"2e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_store_size_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_store_size_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 6.03979776e+08",
+   "vllm:kv_offload_store_size_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431920706666e+09",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"1e-05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"5e-05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.0001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 36.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.0005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 424.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 443.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1089.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.01\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1091.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1096.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.1\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1096.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.5\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1096.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"1.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1096.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1096.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1096.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.97959783198894",
+   "vllm:kv_offload_lookup_sync_delay_seconds_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431915049102e+09",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.0001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.0005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.01\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 10.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.1\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 19.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.5\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"1.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"5.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"10.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 38.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 5.478529771995454",
+   "vllm:kv_offload_lookup_async_delay_seconds_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.793243191603513e+09",
+   "vllm:prefix_cache_queries_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 135893.0",
+   "vllm:prefix_cache_queries_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431578066978e+09",
+   "vllm:prefix_cache_hits_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:prefix_cache_hits_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431578067124e+09",
+   "vllm:external_prefix_cache_queries_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 135893.0",
+   "vllm:external_prefix_cache_queries_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.793243157806726e+09",
+   "vllm:external_prefix_cache_hits_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 131072.0",
+   "vllm:external_prefix_cache_hits_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431578067386e+09"
+  ]
+ },
+ "remote_metrics_after": {
+  "lines": [
+   "vllm:kv_offload_total_bytes_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 1.9327352832e+10",
+   "vllm:kv_offload_total_bytes_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 8.40957952e+08",
+   "vllm:kv_offload_total_bytes_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 1.7932431578059354e+09",
+   "vllm:kv_offload_total_bytes_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 1.7932431578060024e+09",
+   "vllm:kv_offload_total_time_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 1.562382543563843",
+   "vllm:kv_offload_total_time_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 0.06483151996135711",
+   "vllm:kv_offload_total_time_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 1.7932431578059442e+09",
+   "vllm:kv_offload_total_time_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 1.7932431578060086e+09",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"5e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"2e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"4e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"6e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"8e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1.5e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 44.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"2e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 44.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 54.0",
+   "vllm:kv_offload_size_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 54.0",
+   "vllm:kv_offload_size_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 1.9327352832e+10",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"5e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 0.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"2e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 54.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"4e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 54.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"6e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 54.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"8e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 54.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 54.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"1.5e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 54.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"2e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 54.0",
+   "vllm:kv_offload_size_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 54.0",
+   "vllm:kv_offload_size_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 54.0",
+   "vllm:kv_offload_size_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 8.40957952e+08",
+   "vllm:kv_offload_size_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"CPU_to_GPU\"} 1.7932431578058712e+09",
+   "vllm:kv_offload_size_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",transfer_type=\"GPU_to_CPU\"} 1.793243157805955e+09",
+   "vllm:kv_offload_cpu_cache_usage_perc{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_cpu_cache_write_usage_perc{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_cpu_cache_read_usage_perc{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"1.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 9216.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"4.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 9216.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"16.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 9270.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"64.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 9270.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"256.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 9270.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"1024.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 9270.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"4096.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 9270.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"16384.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 9270.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"65536.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 9270.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"262144.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 9270.0",
+   "vllm:kv_offload_cpu_allocation_size_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 9270.0",
+   "vllm:kv_offload_cpu_allocation_size_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 9270.0",
+   "vllm:kv_offload_cpu_allocation_size_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 9617.0",
+   "vllm:kv_offload_cpu_allocation_size_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431915050611e+09",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"1e-05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9615.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"5e-05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9617.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.0001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9617.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.0005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9617.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9617.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9617.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.01\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9617.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9617.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.1\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9617.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.5\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9617.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"1.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9617.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9617.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9617.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 0.002571741975771147",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"1e-05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9246.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"5e-05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9264.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.0001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9264.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.0005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9269.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9269.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.01\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.1\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.5\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"1.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.010815746947628213",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 1.793243191505496e+09",
+   "vllm:kv_offload_tiering_lookup_sync_delay_seconds_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.7932431915057936e+09",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.0001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.0005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1182.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.01\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 2260.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9059.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.1\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.5\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"1.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"5.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"10.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 163.12380408394165",
+   "vllm:kv_offload_tiering_lookup_async_delay_seconds_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.7932431915061362e+09",
+   "vllm:kv_offload_tiering_read_bytes_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.9327352832e+10",
+   "vllm:kv_offload_tiering_read_bytes_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.7932431916035714e+09",
+   "vllm:kv_offload_tiering_read_time_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 5.19304758198632",
+   "vllm:kv_offload_tiering_read_time_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.7932431916035812e+09",
+   "vllm:kv_offload_tiering_write_bytes_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 8.40957952e+08",
+   "vllm:kv_offload_tiering_write_bytes_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.793243192071009e+09",
+   "vllm:kv_offload_tiering_write_time_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.8134013959952426",
+   "vllm:kv_offload_tiering_write_time_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.793243192071022e+09",
+   "vllm:kv_offload_tiering_chunk_queries_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 9617.0",
+   "vllm:kv_offload_tiering_chunk_queries_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9270.0",
+   "vllm:kv_offload_tiering_chunk_queries_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"0:primary\"} 1.7932431915054376e+09",
+   "vllm:kv_offload_tiering_chunk_queries_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.7932431915054471e+09",
+   "vllm:kv_offload_tiering_chunk_hits_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 9216.0",
+   "vllm:kv_offload_tiering_chunk_hits_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 1.7932431915060887e+09",
+   "vllm:kv_offload_tiering_primary_write_usage_perc{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_tiering_primary_read_usage_perc{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_tiering_active_promotion_jobs{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_tiering_active_cascade_jobs{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\",tier=\"1:fs\"} 0.0",
+   "vllm:kv_offload_load_bytes_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.9327352832e+10",
+   "vllm:kv_offload_load_bytes_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431916462455e+09",
+   "vllm:kv_offload_load_time_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.562382543563843",
+   "vllm:kv_offload_load_time_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431916462615e+09",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"1e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"5e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"1e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"2e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"4e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"6e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"8e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"1e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"1.5e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 44.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"2e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 44.0",
+   "vllm:kv_offload_load_size_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_load_size_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_load_size_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.9327352832e+10",
+   "vllm:kv_offload_load_size_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.793243191646288e+09",
+   "vllm:kv_offload_store_bytes_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8.40957952e+08",
+   "vllm:kv_offload_store_bytes_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431920706272e+09",
+   "vllm:kv_offload_store_time_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.06483151996135711",
+   "vllm:kv_offload_store_time_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431920706441e+09",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"1e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"5e+06\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"1e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"2e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"4e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"6e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"8e+07\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"1e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"1.5e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"2e+08\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_store_size_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_store_size_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_store_size_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 8.40957952e+08",
+   "vllm:kv_offload_store_size_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431920706666e+09",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"1e-05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"5e-05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.0001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 43.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.0005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 469.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 493.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1154.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.01\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1161.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1166.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.1\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1166.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"0.5\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1166.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"1.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1166.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1166.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1166.0",
+   "vllm:kv_offload_lookup_sync_delay_seconds_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.0470076139936282",
+   "vllm:kv_offload_lookup_sync_delay_seconds_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431915049102e+09",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.0001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.0005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.001\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.005\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.01\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.05\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 12.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.1\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 21.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"0.5\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"1.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"5.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"10.0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_bucket{engine=\"0\",le=\"+Inf\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_count{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 54.0",
+   "vllm:kv_offload_lookup_async_delay_seconds_sum{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 7.485192248994281",
+   "vllm:kv_offload_lookup_async_delay_seconds_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.793243191603513e+09",
+   "vllm:prefix_cache_queries_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 154239.0",
+   "vllm:prefix_cache_queries_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431578066978e+09",
+   "vllm:prefix_cache_hits_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 0.0",
+   "vllm:prefix_cache_hits_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431578067124e+09",
+   "vllm:external_prefix_cache_queries_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 154239.0",
+   "vllm:external_prefix_cache_queries_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.793243157806726e+09",
+   "vllm:external_prefix_cache_hits_total{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 147456.0",
+   "vllm:external_prefix_cache_hits_created{engine=\"0\",model_name=\"/home/ubuntu/.cache/huggingface/hub/models--meta-llama--Llama-3.1-8B-Instruct/snapshots/0e9e39f249a16976918f6564b8830bc894c89659\"} 1.7932431578067386e+09"
+  ]
+ },
+ "recovery_latency_s": 0.9530410766601562
+}

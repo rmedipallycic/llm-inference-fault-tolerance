@@ -141,6 +141,15 @@ def sim(out, mac, path=os.path.join("simulation", "results.json")):
             f.write(f"{p} & {c['mean_checkpoints']:.1f} & " + " & ".join(ovh)
                     + f" & {c['decode_recovery_mean']:.2f} / {c['decode_recovery_p99']:.2f} \\\\\n")
     mac["SimMixedT"] = f"{ff0:.1f}"
+    for pol, tag in (("recompute", "Recompute"), ("prompt-only", "Prompt"), ("fixed-16", "Fixed")):
+        mac[f"SimPninetynine{tag}"] = f"{cell[(w, 0.1, mt, pol)]['decode_recovery_p99']:.2f}"
+    ovh = [(cell[(w, 0.1, mt, q)]["mean_failure_free_T"] / ff0 - 1) * 100 for q in order[1:6]]
+    mac["SimOvhMin"], mac["SimOvhMax"] = f"{min(ovh):.2f}", f"{max(ovh):.2f}"
+    with open(os.path.join("simulation", "results.json"), encoding="utf-8") as f:
+        meta = json.load(f)["meta"]
+    d = (meta.get("measured_inputs") or {}).get("detect_s")
+    if d is not None:
+        mac["SimDetect"] = f"{d:.3f}"
     mac["SimPrefillShare"] = f"{cell[(w, 0.1, mt, 'recompute')]['share_in_prefill'] * 100:.1f}"
 
 
@@ -166,26 +175,63 @@ def p5b(root, out, mac):
                 f.write(f"{m} & {rng([x[0] for x in c1])} & {rng([x[1] for x in c1], '{:.2f}')} "
                         f"& {rng([x[3] for x in c1], '{:.3f}')} & {rng([x[1] for x in c4], '{:.2f}')} "
                         f"& {rng([x[3] for x in c4], '{:.3f}')} \\\\\n")
-    fo = [r for r in phase5b.failover(root) if r["C"] == 1]
+    allfo = phase5b.failover(root)
+    REV = "1b978f2"                       # the revised gateway (Phase 5B rerun)
+
+    def mb(r):
+        x = [v for v in r["loaded_mb"] if v is not None]
+        return f"{statistics.median(x):,.0f}".replace(",", "{,}") if x and r["mode"] != "none" else "--"
+
+    def tok(r):
+        return f"{sum(1 for x in r['text_ok'] if x)}/{len(r['text_ok'])}" if r["text_ok"] else "--"
+    old = [r for r in allfo if r["C"] == 1 and r["commit"] != REV]
+    fo = sorted((r for r in allfo if r["C"] == 1 and r["commit"] == REV),
+                key=lambda r: (r["L"], phase5b.MODES.index(r["mode"])))
     if fo:
-        fo = sorted(fo, key=lambda r: (r["L"], phase5b.MODES.index(r["mode"])))
         with open(os.path.join(out, "p5b_fo.tex"), "w", encoding="utf-8") as f:
             f.write(HDR)
             for r in fo:
-                mbs = [x for x in r["loaded_mb"] if x is not None]
                 f.write(f"{r['L']:,}".replace(",", "{,}") + f" & {r['mode']} & {r['exactly_once']}/{r['trials']} "
-                        f"& {med_rng(r['rec'])} & {statistics.median(r['ttft']):.2f} "
-                        f"& {f'{statistics.median(mbs):,.0f}'.replace(',', '{,}') if mbs and r['mode'] != 'none' else '--'} "
-                        f"& {r['echo']}/{r['trials']} \\\\\n")
+                        f"& {tok(r)} & {med_rng(r['rec'])} & {statistics.median(r['ttft']):.2f} "
+                        f"& {mb(r)} & {r['repeat_removed']} \\\\\n")
         mac["PfbTrials"] = str(sum(r["trials"] for r in fo))
         mac["PfbExactlyOnce"] = str(sum(r["exactly_once"] for r in fo))
-        mac["PfbEcho"] = str(sum(r["echo"] for r in fo))
+        mac["PfbTextOk"] = str(sum(sum(1 for x in r["text_ok"] if x) for r in fo))
+        mac["PfbRepeatRemoved"] = str(sum(r["repeat_removed"] for r in fo))
         get = {(r["L"], r["mode"]): r for r in fo}
         for L, tag in ((4096, "Four"), (16384, "Sixteen")):
             for m in phase5b.MODES:
                 if (L, m) in get:
                     mac[f"Pfb{tag}{m.capitalize()}"] = f"{statistics.median(get[(L, m)]['rec']):.2f}"
                     mac[f"Pfb{tag}{m.capitalize()}Ttft"] = f"{statistics.median(get[(L, m)]['ttft']):.2f}"
+    if old:
+        mac["PfbOldTrials"] = str(sum(r["trials"] for r in old))
+        mac["PfbEcho"] = str(sum(r["echo"] for r in old))
+        mac["PfbOldExactlyOnce"] = str(sum(r["exactly_once"] for r in old))
+    cc = sorted((r for r in allfo if r["C"] > 1 and r["commit"] == REV),
+                key=lambda r: (r["C"], phase5b.MODES.index(r["mode"])))
+    if cc:
+        with open(os.path.join(out, "p5b_cc.tex"), "w", encoding="utf-8") as f:
+            f.write(HDR)
+            for r in cc:
+                f.write(f"{r['C']} & {r['mode']} & {r['trials']} & {r['exactly_once']}/{r['trials']} & {tok(r)} "
+                        f"& {med_rng(r['rec'])} & {statistics.median(r['ttft']):.2f} & {mb(r)} "
+                        f"& {r['repeat_removed']} \\\\\n")
+        mac["PccRecords"] = str(sum(r["trials"] for r in cc))
+        mac["PccExactlyOnce"] = str(sum(r["exactly_once"] for r in cc))
+        mac["PccTextOk"] = str(sum(sum(1 for x in r["text_ok"] if x) for r in cc))
+        mac["PccRepeatRemoved"] = str(sum(r["repeat_removed"] for r in cc))
+        g = {(r["C"], r["mode"]): r for r in cc}
+        for C, tag in ((4, "Four"), (16, "Sixteen"), (32, "ThirtyTwo")):
+            for m in phase5b.MODES:
+                if (C, m) in g:
+                    mac[f"Pcc{tag}{m.capitalize()}"] = f"{statistics.median(g[(C, m)]['rec']):.2f}"
+                    mac[f"Pcc{tag}{m.capitalize()}Max"] = f"{max(x for x in g[(C, m)]['rec'] if x is not None):.1f}"
+    allrev = fo + cc
+    mac["RevRecords"] = str(sum(r["trials"] for r in allrev))
+    mac["RevTextOk"] = str(sum(sum(1 for x in r["text_ok"] if x) for r in allrev))
+    mac["RevRepeatRemoved"] = str(sum(r["repeat_removed"] for r in allrev))
+    mac["RevExactlyOnce"] = str(sum(r["exactly_once"] for r in allrev))
 
 
 def write(root, out):

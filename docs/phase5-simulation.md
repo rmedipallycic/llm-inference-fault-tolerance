@@ -8,6 +8,13 @@ stated there. Full tables: [`simulation/summary.md`](../simulation/summary.md);
 raw output: [`simulation/results.json`](../simulation/results.json); rerun with
 `python -m policies.run_sim` (about 4 minutes, no GPU).
 
+> **Rerun (October 29, 2026).** One input, the failover detection and switch time
+> D, was taken from Phase 3 recovery latencies measured at the client, which saw
+> events late (see [gateway.md](gateway.md)). With D from the gateway's log
+> (0.038 s instead of 0.125 s) the simulation was rerun at commit 3b1deee: no
+> decision changes, and every simulated recovery time drops by about 0.09 s.
+> Numbers below are from the rerun.
+
 ## Decision: no-go for an adaptive policy
 
 By the rule written beforehand, neither adaptive policy won a single
@@ -42,27 +49,27 @@ after the run, outside the decision rule):
 
 | Policy | Failure-free overhead, beta 0.1 / 0.5 / 1 | Recovery after a decode failure, mean / p99 |
 |---|---|---|
-| recompute | 0 | 0.98 / 9.08 |
-| prompt-only | 0.21% / 1.07% / 2.14% | 0.26 / 1.04-1.07 |
-| fixed-16 | 0.25% / 1.23% / 2.47% | 0.17-0.20 / 0.40-0.51 |
-| fixed-1024 | 0.22% / 1.11% / 2.22% | 0.25 / 0.76-0.78 |
+| recompute | 0 | 0.89 / 9.00 |
+| prompt-only | 0.21% / 1.07% / 2.14% | 0.17 / 0.95-0.98 |
+| fixed-16 | 0.25% / 1.23% / 2.47% | 0.08-0.11 / 0.31-0.43 |
+| fixed-1024 | 0.22% / 1.11% / 2.22% | 0.16 / 0.68-0.69 |
 
-For long requests alone, recompute's p99 is 10.5 s. This is a tail-latency
+For long requests alone, recompute's p99 is 10.4 s. This is a tail-latency
 argument, not an average-cost one: a deployment with a latency target for
 recovery, not just for average completion, would checkpoint, and **prompt-only
-captures most of the gain** (p99 from 9.1 s to about 1.05 s) for one copy per
+captures most of the gain** (p99 from 9.0 s to about 0.97 s) for one copy per
 request. A fixed interval adds the rest.
 
 Two limits on that gain, both visible in the simulation:
 
 * **Failures during prefill** (3.8% of failure positions in the mixed workload,
   11.1% in long) are recovered by redoing the prefill under every policy, so the
-  pre-registered p99 over all failure positions barely moves (9.3 s for
-  recompute, 6.1-7.0 s with checkpoints). Checkpointing chunks of a long prefill
+  pre-registered p99 over all failure positions barely moves (9.2 s for
+  recompute, 6.0-6.9 s with checkpoints). Checkpointing chunks of a long prefill
   as they are computed would address this; no policy here does.
 * **The prompt's checkpoint takes seconds to copy** for long prompts (about 3 s
   for 28,000 tokens at 9.9 Gbit/s), and a failure before it completes still
-  needs a full recompute. That is why the long-workload p99 stays at 2.6-7.9 s
+  needs a full recompute. That is why the long-workload p99 stays at 2.5-7.8 s
   even with checkpoints.
 
 ## What this does and does not show

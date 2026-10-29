@@ -115,6 +115,13 @@ def text_ok(d, trials):
     return [t["text_check"]["equal"] for t in trials if t.get("text_check")]
 
 
+def gw_source(d, t, resumed):
+    for e in gw_timing.tokens(gw_timing.entries(d, t["client"].get("req_id"))):
+        if bool(e.get("attempt")) == resumed and e.get("text_source"):
+            return e["text_source"]
+    return ""
+
+
 def gw_rec(d, t):
     x = gw_timing.recovery_s(gw_timing.entries(d, t["client"].get("req_id")), t.get("t_kill"))
     return x if x is not None else t.get("recovery_latency_s")
@@ -147,6 +154,10 @@ def failover(root):
                      "exactly_once": eo,
                      "echo": sum(1 for t in trials if echoed(t)),
                      "C": run["config"].get("concurrency", 1),
+                     # records where the gateway removed text the engine repeated after a
+                     # resume (text_source in the gateway log; revised gateway only)
+                     "repeat_removed": sum(1 for t in trials if gw_source(run["_dir"], t, resumed=True)
+                                           .startswith("detokenized")),
                      "text_ok": text_ok(run["_dir"], trials),
                      "commit": run["environment"].get("git_commit", "")[:7],
                      # recovery and first token from the gateway's log (analysis/gw_timing.py);
