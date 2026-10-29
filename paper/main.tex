@@ -414,7 +414,9 @@ Config & Strategy & $T$ & Kill (chunks) & $|D|$ (chars) & Contradicts $D$ & $F{=
 \end{tabular}
 \end{table*}
 
-\paragraph{vLLM: naive retry contradicted the client.} The restarted server is
+\paragraph{vLLM: naive retry contradicted the client.} Counts such as
+``25 of 30'' below are observed trial outcomes, not estimates of how often
+this happens in production (Section~\ref{sec:threats}). The restarted server is
 always in the state that produced $G$, and the replay equaled $G$ in all
 30 naive-retry trials (Table~\ref{tab:anomalies}). The text the client had
 already shown, $D$, came from a warm server and followed $G'$. Wherever the
@@ -624,8 +626,12 @@ measured in Section~\ref{sec:load}.
 The measurements above leave recovery to the client, which then has to
 resubmit, splice and deduplicate. The gateway (\texttt{gateway/}, about 650
 lines of Python with no dependencies beyond \texttt{requests}) moves that work
-to a process in front of unmodified engine replicas. A client uses the usual
-OpenAI-compatible streaming API and needs no recovery code.
+to a process in front of unmodified engine replicas. An ordinary streaming
+client works unchanged: it uses the usual OpenAI-compatible API and needs no
+recovery code for engine failures, which the gateway handles. Only for the
+client's own connection to the gateway, or a gateway restart, does the
+end-to-end guarantee below ask more of the client: remembering the last
+position it consumed and reconnecting from there.
 
 \paragraph{Protocol.} (1) \emph{Numbering}: every streamed entry carries
 \texttt{seq}, the position of its first output token, and \texttt{n}, the
@@ -658,6 +664,15 @@ after the last entry it consumed. Under these assumptions:
     guarantee therefore reaches an application end to end only if the client
     keeps that position durably together with what it consumed; acknowledged
     delivery is not part of the protocol.
+  \item \emph{Durability boundary.} An entry is committed when it is written to
+    the log file. Without \texttt{--fsync}, as in all kill trials of this paper,
+    the write survives a crash of the gateway or engine process, because it is
+    already in the operating system's page cache, but not a crash of the
+    operating system or a power loss. With \texttt{--fsync}, each entry is
+    flushed to the storage device before release (about 3\,ms more before the
+    first token on vLLM, Table~\ref{tab:gwoverhead}), which extends the
+    guarantee to those failures as far as the device honours the flush. A lost
+    disk is outside both.
   \item A \emph{position} is a token with vLLM (ids mode) and a stream chunk
     with SGLang (text mode, below), so the SGLang guarantee is per chunk, and
     its recovery re-tokenizes the delivered text.
@@ -679,7 +694,7 @@ after the last entry it consumed. Under these assumptions:
   box/.style={draw, thick, rounded corners=2pt, align=center, inner sep=4pt, minimum height=1.25cm},
   lab/.style={font=\scriptsize, align=center, inner sep=1.5pt},
   num/.style={circle, draw, fill=white, inner sep=1pt, font=\footnotesize\bfseries}]
-\node[box, minimum width=2.6cm, text width=2.4cm] (client) at (-0.5,0) {\textbf{Client}\\[2pt]\footnotesize keeps its last consumed position};
+\node[box, minimum width=2.6cm] (client) at (-0.5,0) {\textbf{Client}\\[2pt]\footnotesize keeps its last\\\footnotesize consumed position};
 \node[box, minimum width=3.2cm] (gw) at (5.3,0) {\textbf{Gateway}\\[2pt]\footnotesize numbers positions,\\\footnotesize commits, then releases};
 \node[box, minimum width=2.3cm, minimum height=0.9cm] (log) at (5.3,-2.5) {Token log\\\footnotesize (durable)};
 \node[box, minimum width=2.8cm] (r0) at (10.0,1.7) {\textbf{Replica 0}\\[2pt]\footnotesize machine 1};
@@ -957,7 +972,10 @@ relative cost shrank slightly with load. Both gave exactly one output per
 prompt in every run, across about 37 requests per prompt at up to 32 in
 flight. The property that made recovery exact in
 Sections~\ref{sec:followup} and~\ref{sec:gweval} therefore holds under
-batching; recovery itself was not injected under load.
+batching. This section tests output uniqueness without failures; failures
+with requests in flight are injected in Section~\ref{sec:live}, in the
+engine's default mode only, so exact text after a failure under concurrent
+load was not tested.
 
 \paragraph{Disabling the prefix cache did not survive batching.} Without
 prefix caching vLLM lost no throughput on this workload, but under load it
@@ -1393,9 +1411,11 @@ output per prompt, but recovery was not injected under load.
 remove contradictions without the operator enabling a deterministic mode,
 and left every client to implement recompute and deduplication correctly.
 The gateway makes exactly-once delivery a property of the serving layer:
-every position once, in order, for unmodified clients and engines, in every
-trial we ran, including with 32 requests in flight, at a per-token cost below
-1\%. What it cannot add is
+every position once, in order, for unmodified engines and for ordinary
+streaming clients when an engine fails, in every trial we ran, including with
+32 requests in flight, at a per-token cost below 1\%. (A client that must
+survive losing its own connection additionally keeps its position and
+reconnects from it.) What it cannot add is
 determinism. Whether the recovered text equals a failure-free run is still
 decided by the engine: its deterministic mode, its sampler, and, after
 failover, whether the standby matches the failed replica's compiled state,
@@ -1457,9 +1477,18 @@ decoding and 5--8\% in time to first token.}
 \section{Related work}
 
 \textbf{Fault-tolerant LLM serving.} D\'ej\`aVu \cite{strati2024dejavu}
-streams and replicates KV cache to recover from failures and reports
-server-side recovery time; it does not characterize what streaming clients
-receive. SpotServe \cite{miao2024spotserve} migrates in-flight context when
+is the closest work: it streams and replicates KV cache inside a modified
+serving system so that generation can resume after a failure, and evaluates
+server-side recovery time and throughput. This paper differs in four ways.
+It measures what a streaming \emph{client} receives when unmodified engines
+fail, and shows that retry contradicts displayed text in two engines; it
+defines a delivery guarantee (each output position exactly once, with the
+displayed text checked separately) and evaluates a protocol for it in front
+of unmodified engines; it compares two engines' behaviour, including
+determinism after recovery and its dependence on compiled state; and it
+obtains its KV checkpoint from an engine's existing offloading interface,
+measuring the trade-off between first-token cost and recovery latency
+rather than building a new replication mechanism. SpotServe \cite{miao2024spotserve} migrates in-flight context when
 preemptible instances are reclaimed with warning, and Llumnix
 \cite{sun2024llumnix} live-migrates requests for load balancing. Both handle
 planned moves; this study targets unplanned fail-stop crashes.
@@ -1488,6 +1517,7 @@ request and finds that, at plausible failure rates, the balance favours
 checkpointing only for tail latency.
 
 \section{Threats to validity}
+\label{sec:threats}
 
 \begin{itemize}
   \item \textbf{Trials are not independent samples.} In vLLM, output was
@@ -1596,8 +1626,9 @@ unique at about half the throughput; disabling vLLM's prefix cache did not.
 
 A gateway that numbers and logs output positions and resumes from the logged
 token ids delivered every position exactly once in all \GwKillTrials{}
-injected failures on both engines, for unmodified clients that keep their
-position, at a per-token cost below 1\%, and in all \PccRecords{} requests
+injected failures on both engines, for ordinary streaming clients (a client
+that must survive losing its own connection also keeps its position), at a
+per-token cost below 1\%, and in all \PccRecords{} requests
 of failures with up to 32 requests in flight; with a standby replica on a
 second machine it recovered in under 0.1\,s instead of minutes. After a
 resume, vLLM sometimes repeated earlier text; the gateway removes it. Exact text after recovery remained the engine's

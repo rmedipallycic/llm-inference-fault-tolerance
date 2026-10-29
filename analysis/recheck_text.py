@@ -34,7 +34,8 @@ def main():
     a = p.parse_args()
     from transformers import AutoTokenizer
     tok = AutoTokenizer.from_pretrained(a.model)
-    for d in sorted(glob.glob(os.path.join(a.root, "*_ckptfo_*"))):
+    for d in sorted(glob.glob(os.path.join(a.root, "*_ckptfo_*"))
+                    + glob.glob(os.path.join(a.root, "*_textboundary_*"))):
         out, n_ok, n = {}, 0, 0
         for f in sorted(glob.glob(os.path.join(d, "trial_*.json"))):
             with open(f, encoding="utf-8") as fh:
