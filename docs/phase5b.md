@@ -156,9 +156,25 @@ text was right in 387 of 390. The 3 exceptions (C=32) involved no failure: a
 token-id prompt ending inside a character that the first output token
 completed; vLLM repeated the prompt, and the gateway, which then decoded the
 output ids without the prompt, did not recognise it. Decoding with the prompt
-as context fixes this (commit 852962e, tested against the mock engine, not yet
-on a GPU). Text prompts, tokenized by the gateway, end on a whole character
+as context fixes this (commit 852962e; checked on vLLM below). Text prompts, tokenized by the gateway, end on a whole character
 and cannot trigger it.
+
+**Targeted check of that fix (29 October, commit 4e2441c, one machine, no
+failures).** `scripts/run_text_boundary.sh` cuts eight multi-byte texts (CJK,
+emoji, accented Latin, Cyrillic, Devanagari, Arabic) wherever the token prefix
+decodes to an unfinished character: 11 prompts (Llama 3 encodes most such
+characters as whole tokens). Each goes through the fixed gateway and, as a
+control, a gateway that releases the engine's text, with 1 and with 16
+requests in flight; text checked with the tokenizer (`analysis/recheck_text.py`).
+
+| Gateway | 1 in flight | 16 in flight |
+|---|---|---|
+| with the text check | 11/11 text right (repetition removed in 10) | 11/11 (removed in 10) |
+| control (engine text) | 1/11 | 1/11 |
+
+Every position was exactly once in all 44 requests. The 387/390 of the rerun
+stays as measured; this shows the fix on the case behind its 3 exceptions, on
+a small sample. Runs: `experiments/20261029T212043Z_textboundary_*`.
 
 **The harness's own text check** first removed anything shaped like `<|...|>`
 from the decoding; that misfired when the model wrote

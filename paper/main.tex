@@ -79,9 +79,11 @@ on vLLM, a stream chunk on SGLang) exactly once, under stated assumptions, in al
 and all \PccRecords{} requests of failures with 4--32 requests in flight. The
 text a client displays is a separate property: vLLM repeated earlier text
 after a resume \RevRepeatRemoved{} times, which the gateway removed, and the
-client's text was correct in \RevTextOk{} of \RevRecords{} requests; the three
-exceptions, first tokens of prompts sent as token ids, are fixed but not yet
-re-measured. Third, recovery time
+client's text was correct in \RevTextOk{} of \RevRecords{} requests. The three
+exceptions, first tokens of prompts sent as token ids, were fixed afterwards;
+a targeted check on vLLM with \TbPrompts{} such prompts found the fixed
+gateway's text correct in all of them, with 1 and 16 requests in flight.
+Third, recovery time
 depends on where state is kept: a standby replica cut recovery from minutes
 to \GwFailoverMin--\GwFailoverMax\,s for a short prompt, and vLLM's own KV
 offloading to storage the standby reads cut it from \PfbSixteenNone\,s to
@@ -1338,8 +1340,28 @@ completed. vLLM repeated the prompt as that token's text, and the gateway,
 which then decoded the output ids without the prompt, did not recognise the
 repetition and passed it on. Decoding with the prompt as context fixes this
 (commit \texttt{852962e}, with a test against a mock engine that imitates
-it); that fix has not been run on a GPU. A text prompt, which the gateway
-tokenizes itself, ends on a whole character and cannot trigger the case.
+it). A text prompt, which the gateway tokenizes itself, ends on a whole
+character and cannot trigger the case.
+
+\paragraph{A targeted check of the fix.} Because the case is rare in random
+prompts, we then provoked it on purpose (\texttt{harness/run\_text\_boundary.py},
+commit \texttt{4e2441c}, one machine, no failures): eight texts with
+multi-byte characters (Chinese, Japanese, Korean, accented Latin, emoji,
+Cyrillic, Devanagari, Arabic) were tokenized by vLLM and cut wherever the
+token prefix decoded to an unfinished character. That gave only \TbPrompts{}
+prompts, because Llama~3 encodes most of these characters as whole tokens.
+Each was sent, 32 output tokens, through the fixed gateway and, as a control,
+through a gateway that releases the engine's text, once with one request in
+flight and once with 16. With the control, the client's text was right in
+\TbEngineOneOk{} of \TbPrompts{} at both levels: vLLM repeated the prompt in
+the others. With the fix, it was right in \TbDeriveOneOk{} of \TbPrompts{}
+with one request and \TbDeriveSixteenOk{} of \TbPrompts{} with 16, the gateway
+having removed the repetition in \TbDeriveOneRemoved{} and
+\TbDeriveSixteenRemoved{} of them; every position was exactly once in all 44
+requests. Text was checked with the model's tokenizer, decoding the output
+with the prompt as context and leaving out special tokens by id. The 387 of
+390 above stays as measured; this check shows the fix works on the case that
+caused its 3 exceptions, on a small sample.
 
 \paragraph{Problems found by the concurrent runs.} Three faults in our own
 code surfaced only with many requests in flight; all are fixed. The gateway's HTTP server kept Python's default
@@ -1606,9 +1628,10 @@ checkpointing only for tail latency.
     special tokens by their text (\texttt{<|...|>}), so a model that wrote
     such a string as ordinary text inside the first entry after a resume could
     have lost it; it now recognises them by id (a token that decodes on its
-    own to exactly that shape), with a unit test, but that version and its fix
-    for prompts that end inside a character were tested against a mock
-    engine only. The simulation of Section~\ref{sec:sim} is a first-order
+    own to exactly that shape), with a unit test. That version ran on vLLM
+    only in the targeted check of Section~\ref{sec:live}, \TbPrompts{} prompts
+    of 32 output tokens with no failure injected, which did not exercise
+    special tokens or a resume. The simulation of Section~\ref{sec:sim} is a first-order
     model with stated assumptions, and its conclusions are only as good as
     those assumptions.
 \end{itemize}

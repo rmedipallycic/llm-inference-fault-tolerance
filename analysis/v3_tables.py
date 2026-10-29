@@ -234,8 +234,41 @@ def p5b(root, out, mac):
     mac["RevExactlyOnce"] = str(sum(r["exactly_once"] for r in allrev))
 
 
+def text_boundary(root, mac):
+    """Targeted check: token-id prompts that end inside a character
+    (harness/run_text_boundary.py), with and without the gateway's text check."""
+    import glob
+    runs = {}
+    for d in sorted(glob.glob(os.path.join(root, "*_textboundary_*_c*"))):
+        rp = os.path.join(d, "text_recheck.json")
+        if not os.path.exists(rp):
+            continue
+        with open(rp, encoding="utf-8") as f:
+            rec = json.load(f)["records"]
+        removed = 0
+        for name in rec:
+            with open(os.path.join(d, name), encoding="utf-8") as f:
+                t = json.load(f)
+            log = os.path.join(d, "gateway_log", f"{t['client']['req_id']}.jsonl")
+            with open(log, encoding="utf-8") as f:
+                removed += any(json.loads(x).get("text_source", "").startswith("detokenized") for x in f)
+        label = os.path.basename(d).split("_textboundary_")[1]
+        runs[label] = (sum(v["equal"] for v in rec.values()), len(rec), removed)
+    if not runs:
+        return
+    mac["TbPrompts"] = str(next(iter(runs.values()))[1])
+    names = {"c1": "One", "c16": "Sixteen"}
+    for k, (ok, n, removed) in runs.items():
+        label, level = k.rsplit("_", 1)
+        tag = ("Derive" if label == "derive" else "Engine") + names.get(level, level)
+        mac[f"Tb{tag}Ok"] = str(ok)
+        if label == "derive":
+            mac[f"Tb{tag}Removed"] = str(removed)
+
+
 def write(root, out):
     mac = {}
+    text_boundary(root, mac)
     tput(root, out, mac)
     restore(root, out, mac)
     sim(out, mac)
