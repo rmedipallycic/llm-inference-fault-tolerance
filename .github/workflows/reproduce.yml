@@ -1,0 +1,24 @@
+name: Reproduce paper tables
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: pip install -r requirements.txt
+      - name: Regenerate every paper table from the committed logs
+        run: |
+          python analysis/make_tables.py
+          python analysis/phase5b.py --out experiments/phase5b_summary.md
+      - name: The regenerated files must equal the committed ones
+        run: git diff --exit-code paper/tables experiments/phase5b_summary.md
+      - name: Gateway tests (mock engine, no GPU)
+        run: python -m unittest discover -s tests -v

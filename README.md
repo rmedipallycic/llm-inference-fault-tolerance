@@ -1,12 +1,13 @@
 # Fault-Tolerant LLM Inference Systems
 
-**A fault-injection study of what a streaming client sees when an LLM server (vLLM, SGLang) crashes mid-generation, an exactly-once token gateway, and measurements of when a KV-cache checkpoint beats recomputing it. An adaptive checkpoint policy is the next phase (see the phase table below).**
+**A fault-injection study of what a streaming client sees when an LLM server (vLLM, SGLang) crashes mid-generation, an exactly-once token gateway, and measurements of when a KV-cache checkpoint shortens recovery, including a live checkpoint inside vLLM with failures of up to 32 requests in flight.**
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23377448.svg)](https://doi.org/10.5281/zenodo.23377448)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23781214.svg)](https://doi.org/10.5281/zenodo.23781214)
+[![Reproduce paper tables](https://github.com/rmedipallycic/llm-inference-fault-tolerance/actions/workflows/reproduce.yml/badge.svg)](https://github.com/rmedipallycic/llm-inference-fault-tolerance/actions/workflows/reproduce.yml)
 
-**Paper (preprint):** Medipally, R. (2026). *What Does a Streaming Client See When an LLM Server Crashes? A Fault-Injection Study of Client-Visible Token Anomalies in vLLM and SGLang.* Zenodo. https://doi.org/10.5281/zenodo.23377448
+**Paper (preprint, version 3):** Medipally, R. (2026). *Retry Is Not Replay: Exactly-Once Recovery for Streaming LLM Inference.* Zenodo. https://doi.org/10.5281/zenodo.23781214 (all versions: [10.5281/zenodo.23377447](https://doi.org/10.5281/zenodo.23377447); version 1, Phase 1 only: [10.5281/zenodo.23377448](https://doi.org/10.5281/zenodo.23377448))
 
-> **Status (October 29, 2026):** Phases 1-5 measured on vLLM 0.31.0 and SGLang 0.5.21 (AWS g5.xlarge, one A10G each, Llama 3.1 8B Instruct). Phase 1: 86 runs, 430 fault-injection trials ([paper](paper/main.pdf), version 3 covers Phases 1-5, [DOI 10.5281/zenodo.23377448](https://doi.org/10.5281/zenodo.23377448)); Phase 2 follow-up: throughput of the fixes under load ([results](docs/throughput.md)); Phase 3: an exactly-once gateway, 190 of 190 kill trials ([results](docs/gateway.md), paper version 2); Phase 4: recompute versus KV checkpoint ([results](docs/checkpoint.md)); Phase 5: a simulation, clearly separated from measurements ([results](docs/phase5-simulation.md)), then a live KV checkpoint inside vLLM, with failures of up to 32 requests in flight ([results](docs/phase5b.md)). Raw logs are in [`experiments/`](experiments/).
+> **Status (October 29, 2026):** Phases 1-5 measured on vLLM 0.31.0 and SGLang 0.5.21 (AWS g5.xlarge, one A10G each, Llama 3.1 8B Instruct). Phase 1: 86 runs, 430 fault-injection trials ([paper](paper/main.pdf), version 3 covers Phases 1-5, [DOI 10.5281/zenodo.23781214](https://doi.org/10.5281/zenodo.23781214)); Phase 2 follow-up: throughput of the fixes under load ([results](docs/throughput.md)); Phase 3: an exactly-once gateway, 190 of 190 kill trials ([results](docs/gateway.md), paper version 2); Phase 4: recompute versus KV checkpoint ([results](docs/checkpoint.md)); Phase 5: a simulation, clearly separated from measurements ([results](docs/phase5-simulation.md)), then a live KV checkpoint inside vLLM, with failures of up to 32 requests in flight ([results](docs/phase5b.md)). Raw logs are in [`experiments/`](experiments/).
 
 ---
 
@@ -221,20 +222,35 @@ python analysis/gateway_check.py                 # summary from the raw logs
 
 ## Citation
 
-The paper is published as a preprint on Zenodo ([DOI 10.5281/zenodo.23377448](https://doi.org/10.5281/zenodo.23377448)); its source is in [`paper/`](paper/main.pdf). To cite it:
+The paper is published as a preprint on Zenodo ([DOI 10.5281/zenodo.23781214](https://doi.org/10.5281/zenodo.23781214), version 3; [all versions](https://doi.org/10.5281/zenodo.23377447)); its source is in [`paper/`](paper/main.pdf), and [`CITATION.cff`](CITATION.cff) has the same entry for GitHub's "Cite this repository". To cite it:
 
 ```bibtex
-@misc{medipally2026llmft,
+@misc{medipally2026retry,
   author       = {Medipally, Rajshekar},
-  title        = {What Does a Streaming Client See When an {LLM} Server Crashes? A Fault-Injection Study of Client-Visible Token Anomalies in {vLLM} and {SGLang}},
+  title        = {Retry Is Not Replay: Exactly-Once Recovery for Streaming {LLM} Inference},
   year         = {2026},
   publisher    = {Zenodo},
-  version      = {v0.3.2},
-  doi          = {10.5281/zenodo.23377448},
-  url          = {https://doi.org/10.5281/zenodo.23377448},
+  version      = {3},
+  doi          = {10.5281/zenodo.23781214},
+  url          = {https://doi.org/10.5281/zenodo.23781214},
   note         = {Preprint. Code and data: \url{https://github.com/rmedipallycic/llm-inference-fault-tolerance}}
 }
 ```
+
+## Reproducing the paper's tables
+
+Every table and in-text number in the paper is generated from the committed raw
+logs in `experiments/`; no GPU is needed to check them:
+
+```bash
+pip install -r requirements.txt
+python analysis/make_tables.py                     # writes paper/tables/*.tex
+python analysis/phase5b.py --out experiments/phase5b_summary.md
+git diff --exit-code paper/tables experiments/phase5b_summary.md   # no output: identical
+python -m unittest discover -s tests               # gateway tests against a mock engine
+```
+
+The workflow [`reproduce.yml`](.github/workflows/reproduce.yml) runs exactly this on every push.
 
 ## Author
 
