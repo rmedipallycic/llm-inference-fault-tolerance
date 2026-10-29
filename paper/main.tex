@@ -5,7 +5,7 @@
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{tikz}
-\usetikzlibrary{positioning,arrows.meta}
+\usetikzlibrary{positioning,arrows.meta,calc}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.16}
 % shrink a table to the column width only if it is wider
@@ -74,11 +74,14 @@ shown in 25 of 30 vLLM and 24 of 30 SGLang trials; each engine's
 deterministic mode with recompute made recovery exact, at
 \TputDetMin--\TputDetMax$\times$ the default throughput under load. Second,
 a gateway that numbers output positions, logs them before release and
-resumes from the logged token ids delivered every position exactly once, under
-stated assumptions, in all \GwKillTrials{} single-request failures and all
-\PccRecords{} requests of failures with 4--32 requests in flight, and removed
-text the engine repeated after a resume (\RevRepeatRemoved{} times), which
-would otherwise have duplicated what the client showed. Third, recovery time
+resumes from the logged token ids delivered every output position exactly
+once, under stated assumptions, in all \GwKillTrials{} single-request failures
+and all \PccRecords{} requests of failures with 4--32 requests in flight. The
+text a client displays is a separate property: vLLM repeated earlier text
+after a resume \RevRepeatRemoved{} times, which the gateway removed, and the
+client's text was correct in \RevTextOk{} of \RevRecords{} requests; the three
+exceptions, first tokens of prompts sent as token ids, are fixed but not yet
+re-measured. Third, recovery time
 depends on where state is kept: a standby replica cut recovery from minutes
 to \GwFailoverMin--\GwFailoverMax\,s for a short prompt, and vLLM's own KV
 offloading to storage the standby reads cut it from \PfbSixteenNone\,s to
@@ -672,33 +675,38 @@ after the last entry it consumed. Under these assumptions:
 
 \begin{figure*}[t]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tikzpicture}[font=\small,
-  box/.style={draw, rounded corners=2pt, align=center, minimum width=2.6cm, minimum height=1.15cm, inner sep=4pt},
-  lab/.style={font=\footnotesize, align=center, fill=white, inner sep=1.5pt},
-  >={Stealth[length=2.2mm]}]
-\node[box] (client) at (0,0) {Client\\[1pt]\footnotesize keeps its last position};
-\node[box, minimum width=3.4cm] (gw) at (7.2,0) {Gateway\\[1pt]\footnotesize numbers positions,\\\footnotesize commits, resumes};
-\node[box, minimum width=2.4cm, minimum height=0.8cm] (log) at (7.2,-2.4) {Token log\\\footnotesize (local disk)};
-\node[box] (r0) at (14,1.9) {Replica 0\\[1pt]\footnotesize vLLM / SGLang, machine 1};
-\node[box] (r1) at (14,-1.9) {Standby (replica 1)\\[1pt]\footnotesize machine 2};
-\node[box, dashed, minimum width=2.4cm] (kv) at (19.8,0) {KV-block store\\\footnotesize RAM disk on machine 2,\\\footnotesize NFS on machine 1};
-\draw[<->, thick] (client) -- node[lab, above=3pt]{stream of entries (seq, n, text)} node[lab, below=3pt]{reconnect: from\_seq} (gw);
-\draw[->] (gw) -- node[lab, right=3pt]{commit before release} (log);
-\draw[->, thick] (gw.east) -- node[lab, above, sloped, pos=0.5]{(1) prompt token ids} (r0.west);
-\draw[->, thick, dashed] (gw.east) -- node[lab, below, sloped, pos=0.5]{(3) prompt + delivered ids} (r1.west);
-\node[font=\footnotesize, text=black] at (14,3.0) {(2) SIGKILL};
-\draw[->, dashed] (r0.east) -- node[lab, above, sloped]{write blocks} (kv.north);
-\draw[->, dashed] (kv.south) -- node[lab, below, sloped]{read blocks} (r1.east);
-\end{tikzpicture}}
-\caption{The serving path evaluated in this paper. The gateway numbers every
-output position and commits each entry to its log before releasing it to the
-client; a client that reconnects names the position it needs. When the serving
-replica fails (2), the gateway resumes the request on a restarted replica or on
-the standby (3) with the prompt and the delivered token ids. In
-Section~\ref{sec:live} (dashed store), both replicas also offload KV-cache
-blocks to a store the standby can read, so it loads them instead of
-recomputing them.}
+\begin{tikzpicture}[font=\small, >={Stealth[length=2.4mm]},
+  box/.style={draw, thick, rounded corners=2pt, align=center, inner sep=4pt, minimum height=1.25cm},
+  lab/.style={font=\scriptsize, align=center, inner sep=1.5pt},
+  num/.style={circle, draw, fill=white, inner sep=1pt, font=\footnotesize\bfseries}]
+\node[box, minimum width=2.6cm, text width=2.4cm] (client) at (-0.5,0) {\textbf{Client}\\[2pt]\footnotesize keeps its last consumed position};
+\node[box, minimum width=3.2cm] (gw) at (5.3,0) {\textbf{Gateway}\\[2pt]\footnotesize numbers positions,\\\footnotesize commits, then releases};
+\node[box, minimum width=2.3cm, minimum height=0.9cm] (log) at (5.3,-2.5) {Token log\\\footnotesize (durable)};
+\node[box, minimum width=2.8cm] (r0) at (10.0,1.7) {\textbf{Replica 0}\\[2pt]\footnotesize machine 1};
+\node[box, minimum width=2.8cm] (r1) at (10.0,-1.7) {\textbf{Standby}\\[2pt]\footnotesize machine 2};
+\node[box, dashed, minimum width=2.3cm] (kv) at (13.95,0) {KV-block store\\\footnotesize machine 2,\\\footnotesize NFS mount};
+\draw[->, thick] ([yshift=3.5mm]gw.west) -- node[lab, above]{entries $(seq, n, text)$} ([yshift=3.5mm]client.east);
+\draw[->, thick] ([yshift=-3.5mm]client.east) -- node[lab, below]{reconnect from $seq$} ([yshift=-3.5mm]gw.west);
+\draw[->, thick] (gw.south) -- node[lab, left]{commit\\before release} (log.north);
+\coordinate (split) at (7.15,0);
+\draw[thick] (gw.east) -- (split);
+\draw[->, thick] (split) |- node[lab, pos=0.72, above]{prompt ids} (r0.west);
+\draw[->, thick, dashed] ([xshift=-4mm]gw.south east) |- node[lab, pos=0.8, above]{prompt +\\delivered ids} (r1.west);
+\draw[->, dashed] (r0.east) -| node[lab, pos=0.3, above]{write blocks} (kv.north);
+\draw[->, dashed] (kv.south) |- node[lab, pos=0.7, below]{read blocks} (r1.east);
+\node[num] at ($(client.east)!0.5!(gw.west)+(0,0.95)$) {1};
+\node[num] at (r0.north east) {2};
+\node[font=\scriptsize, anchor=south] at (r0.north) {SIGKILL};
+\node[num] at ($([xshift=-4mm]gw.south east)+(0.35,-0.25)$) {3};
+\node[num] at (kv.north east) {4};
+\end{tikzpicture}
+\caption{The serving path evaluated in this paper. (1) The gateway numbers
+every output position and commits each entry to its log before releasing it
+to the client; a client that reconnects names the position it needs. (2) When
+the serving replica fails, (3) the gateway resumes the request on the standby
+(or on the restarted replica) with the prompt and the delivered token ids.
+(4) In Section~\ref{sec:live}, both replicas also offload KV-cache blocks to a
+store the standby can read, so it loads them instead of recomputing them.}
 \label{fig:arch}
 \end{figure*}
 
@@ -1263,7 +1271,10 @@ median recovery was \PccFourPrompt, \PccSixteenPrompt{} and
 \PccThirtyTwoPrompt\,s, the slowest \PccThirtyTwoPromptMax\,s; with
 \emph{all} at $C{=}16$ it was \PccSixteenAll\,s. The checkpoint's benefit
 therefore grows with the number of requests a failure interrupts, not only
-with their length. Time to first token in this table includes queueing on
+with their length. These results hold for the conditions tested: one prompt
+length (1{,}024 random token ids), vLLM's default mode, one kill per trial
+timed on one request, three trials per cell and one pair of machines; they
+do not establish behaviour under arbitrary workloads. Time to first token in this table includes queueing on
 replica~0, which served all $C$ requests at once.
 
 \paragraph{The checkpoint is paid for on every request.} Time to first token
