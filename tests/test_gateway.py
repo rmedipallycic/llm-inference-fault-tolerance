@@ -293,22 +293,30 @@ class GatewayTests(unittest.TestCase):
     # but the text a client concatenates did not. The mock's --resume-echo
     # imitates that; the gateway now derives resumed text from the token ids.
 
-    def _kill_on_pending(self, engines):
+    @staticmethod
+    def _resumed_after(res):
+        """Id of the last token delivered before the first resumed entry."""
+        ev = res["events"]
+        i = next(k for k, e in enumerate(ev) if e["attempt"])
+        return ev[i - 1]["ids"][-1]
+
+    def _kill_on_pending(self, engines, min_seq=10):
         state = {}
 
         def hook(e):
             ids = e.get("ids") or []
-            if not state and e["seq"] >= 10 and ids and ids[-1] % 7 == 3:
+            if not state and e["seq"] >= min_seq and ids and ids[-1] % 7 == 3:
                 state["t_kill"] = time.time()
                 engines[e["backend"]].kill()
         return hook, state
 
     def test_client_visible_text_after_resume_equals_failure_free(self):
-        engines, gw, gw_url, urls = self.setup(2, engine_args=("--resume-echo",))
+        engines, gw, gw_url, urls = self.setup(2, engine_args=("--resume-echo", "--delay", "0.05"))
         expected = direct(urls[1])
         hook, st = self._kill_on_pending(engines)
         res = stream_via_gateway(gw_url, self.body(), on_event=hook)
         self.assertIn("t_kill", st)
+        self.assertEqual(self._resumed_after(res) % 7, 3)      # the kill hit a pending token
         self.assert_exactly_once(res)
         self.assertEqual(raw_text(res["events"]), expected)      # what a naive client shows
         self.assertEqual(text_of(res["events"]), expected)
@@ -317,7 +325,7 @@ class GatewayTests(unittest.TestCase):
         # no failure: the echo can also happen on the first attempt when the client
         # sends a token-id prompt that ends in a pending token
         from harness.mock_engine import detokenize
-        engines, gw, gw_url, urls = self.setup(1, engine_args=("--resume-echo",))
+        engines, gw, gw_url, urls = self.setup(1, engine_args=("--resume-echo", "--delay", "0.05"))
         prompt = [500, 11, 12, 13, 17]               # 17 % 7 == 3: pending
         res = stream_via_gateway(gw_url, {**self.body(), "prompt": prompt})
         self.assert_exactly_once(res)
@@ -325,13 +333,43 @@ class GatewayTests(unittest.TestCase):
         self.assertEqual(raw_text(res["events"]).rstrip("\ufffd"), detokenize(ids, True).rstrip("\ufffd")[:len(raw_text(res["events"]).rstrip("\ufffd"))])
         self.assertLess(len(raw_text(res["events"])), len(detokenize(ids, True)) + 16)
 
+    def test_special_tokens_are_not_shown_after_resume(self):
+        # /detokenize shows special tokens (<|eot_id|>), the engine's stream does not;
+        # the gateway must not release them (Phase 5B rerun, 32 concurrent requests)
+        engines, gw, gw_url, urls = self.setup(2, engine_args=("--resume-echo", "--special-tokens", "--delay", "0.05"))
+        expected = direct(urls[1])
+        hook, st = self._kill_on_pending(engines, min_seq=28)   # after a special token
+        res = stream_via_gateway(gw_url, self.body(), on_event=hook)
+        self.assertIn("t_kill", st)
+        self.assertEqual(self._resumed_after(res) % 7, 3)
+        self.assert_exactly_once(res)
+        self.assertNotIn("<|", raw_text(res["events"]))
+        self.assertEqual(raw_text(res["events"]), expected)
+
+    def test_burst_of_clients_all_delivered(self):
+        # 64 clients at once: none may be lost (Phase 5B: the default listen backlog
+        # reset connections, and those requests never started)
+        engines, gw, gw_url, _ = self.setup(1)
+        results = [None] * 64
+
+        def one(j):
+            results[j] = stream_via_gateway(gw_url, self.body(max_tokens=20))
+        ts = [threading.Thread(target=one, args=(j,)) for j in range(64)]
+        for t in ts:
+            t.start()
+        for t in ts:
+            t.join()
+        for res in results:
+            self.assert_exactly_once(res, positions=20)
+
     def test_negative_control_engine_text_after_resume(self):
-        engines, gw, gw_url, urls = self.setup(2, engine_args=("--resume-echo",),
+        engines, gw, gw_url, urls = self.setup(2, engine_args=("--resume-echo", "--delay", "0.05"),
                                                gw_args=("--engine-text-after-resume",))
         expected = direct(urls[1])
         hook, st = self._kill_on_pending(engines)
         res = stream_via_gateway(gw_url, self.body(), on_event=hook)
         self.assertIn("t_kill", st)
+        self.assertEqual(self._resumed_after(res) % 7, 3)      # the kill hit a pending token
         self.assert_exactly_once(res)                             # positions still fine
         self.assertNotEqual(raw_text(res["events"]), expected)    # text is not
         self.assertGreater(len(raw_text(res["events"])), len(expected))

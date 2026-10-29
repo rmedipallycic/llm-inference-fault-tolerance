@@ -74,10 +74,16 @@ def decoded_text(url, model, ids):
         return {"error": str(e)}
 
 
+SPECIAL_TOKEN = re.compile(r"<\|[A-Za-z0-9_]+\|>")
+
+
 def same_text(shown, decoded):
-    """Client text equals the decoding of the delivered ids. If the output ends in an
-    incomplete character, decoding gives U+FFFD where the engine may have flushed
-    something else; only the text before it is compared then."""
+    """Client text equals the decoding of the delivered ids. /detokenize shows special
+    tokens (Llama 3: <|eot_id|>, <|start_header_id|>, ...) that the engine's stream
+    omits, so they are removed first. If the output ends in an incomplete character,
+    decoding gives U+FFFD where the engine may have flushed something else; only the
+    text before it is compared then."""
+    decoded = SPECIAL_TOKEN.sub("", decoded)
     if shown == decoded:
         return True
     d = decoded.rstrip("\ufffd")

@@ -183,17 +183,24 @@ class Generation:
         return None
 
     def _accept(self, text, ids, backend, final):
-        """Commit one engine event, deriving its text from token ids after a failure.
+        """Commit one engine event; on the first event(s) of a resumed attempt, remove
+        text the engine repeats.
 
-        On a resumed attempt (ids mode), and on the first attempt of a request whose
-        prompt the client sent as token ids, the text released for new tokens is
-        detokenize(delivered ids + new ids) minus the text already released. Tokens
-        whose decoding ends in an incomplete character (U+FFFD) are held back, not
-        committed, until it completes or the request ends; a held-back token that is
-        lost in a further failure was never released and is simply regenerated. Once
-        an event's engine text equals the derived text, the engine is trusted again
-        for the rest of the attempt. If /detokenize fails or the derived text does
-        not extend what was released, the engine's text is used and the entry says so.
+        Applies on a resumed attempt (ids mode), and on the first attempt of a request
+        whose prompt the client sent as token ids. The new tokens' text is derived as
+        detokenize(delivered + new ids) minus detokenize(delivered ids) (without a
+        trailing incomplete character, U+FFFD). Then:
+          * derived text ends in U+FFFD: the new tokens hold part of a character; hold
+            them back (not committed, not released) until it completes or the request
+            ends; held tokens lost in a further failure are simply regenerated;
+          * engine text equals the derived text: release it;
+          * engine text is longer and ends with the derived text: the engine repeated
+            earlier text (vLLM 0.31 returned the decoded prompt and delivered text);
+            release only the derived text;
+          * otherwise release the engine's text, which, unlike /detokenize, omits
+            special tokens such as <|eot_id|>.
+        After that first commit the engine's text is used for the rest of the attempt.
+        If /detokenize fails, the engine's text is used and the entry says so.
         """
         derive = (self.gw.mode == "ids" and self.gw.derive_text and not self._engine_text_ok
                   and (self.attempt >= 1 or self.ids_from_client))
@@ -206,25 +213,30 @@ class Generation:
             self._pending_text += text
         if not self._pending_ids:
             return
-        released = self.delivered_text()
         try:
-            full = self.gw.detokenize(backend, self.delivered_ids() + self._pending_ids)
+            done = self.delivered_ids()
+            base = self.gw.detokenize(backend, done).rstrip("\ufffd") if done else ""
+            full = self.gw.detokenize(backend, done + self._pending_ids)
         except (requests.RequestException, KeyError, ValueError):
-            full = None
-        if full is None or not full.startswith(released):
-            self._commit(self._pending_text, self._pending_ids, backend,
-                         text_source="engine (derivation failed)")
-            self._pending_ids, self._pending_text, self._engine_text_ok = [], "", True
-            return
-        delta = full[len(released):]
-        if delta.endswith("\ufffd") and not final:
-            return                                   # incomplete character: hold back
-        same = delta == self._pending_text
-        self._commit(delta, self._pending_ids, backend,
-                     text_source="engine" if same else "detokenized",
-                     engine_text_chars=None if same else len(self._pending_text))
-        self._pending_ids, self._pending_text = [], ""
-        self._engine_text_ok = same
+            full = base = None
+        engine = self._pending_text
+        if full is None or not full.startswith(base):
+            self._commit(engine, self._pending_ids, backend, text_source="engine (derivation failed)")
+        else:
+            delta = full[len(base):]
+            if delta.endswith("\ufffd") and not final:
+                return                               # incomplete character: hold back
+            if engine == delta:
+                self._commit(engine, self._pending_ids, backend, text_source="engine")
+            elif len(engine) > len(delta) and engine.endswith(delta):
+                self._commit(delta, self._pending_ids, backend,
+                             text_source="detokenized (engine repeated earlier text)",
+                             engine_text_chars=len(engine))
+            else:
+                self._commit(engine, self._pending_ids, backend,
+                             text_source="engine (differs from detokenized)",
+                             detokenized_chars=len(delta))
+        self._pending_ids, self._pending_text, self._engine_text_ok = [], "", True
 
     def _commit(self, text, ids, backend, **extra):
         n = len(ids) if ids is not None else 1
@@ -411,6 +423,13 @@ def sse_chunk(gen, e=None, finish_reason=None):
     return "data: " + json.dumps(out, ensure_ascii=True) + "\n\n"
 
 
+class GatewayHTTPServer(ThreadingHTTPServer):
+    # The default listen backlog of 5 reset connections when 32 clients connected at
+    # once (Phase 5B, concurrent failover trials); those requests were never started.
+    request_queue_size = 1024
+    daemon_threads = True
+
+
 def make_handler(gw):
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.0"     # stream until close; no chunked encoding needed
@@ -511,8 +530,7 @@ def main():
     resumed = gw.recover_unfinished()
     if resumed:
         print(f"resuming {len(resumed)} unfinished request(s) from {a.log_dir}", flush=True)
-    srv = ThreadingHTTPServer((a.host, a.port), make_handler(gw))
-    srv.daemon_threads = True
+    srv = GatewayHTTPServer((a.host, a.port), make_handler(gw))
     print(f"gateway on http://{a.host}:{a.port} -> {', '.join(gw.backends)} "
           f"(mode {a.mode}, fsync {a.fsync})", flush=True)
     srv.serve_forever()

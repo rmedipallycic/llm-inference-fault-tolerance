@@ -4,26 +4,52 @@ stream_via_gateway() records every event the client receives, with the
 gateway's position fields, so that delivery can be checked afterwards
 (gateway/check.py). If the connection to the gateway breaks before [DONE],
 it reconnects to GET /v1/streams/<req_id>?from_seq=<next position> and
-continues; this exercises the client-resume path.
+continues; this exercises the client-resume path. The client picks the request
+id itself, so a submission that failed before the gateway answered is retried
+under the same id (resumed if the gateway had started it, submitted otherwise).
 """
 import json
 import time
+import uuid
 
 import requests
 
 
 def sse_lines(resp):
-    """Lines of a server-sent-event stream, split on \\n / \\r only.
+    """Lines of a server-sent-event stream, split on \\n / \\r only, as they arrive.
 
     Splitting the raw bytes matters: decoded text would be split by
     str.splitlines() on U+0085, U+2028 and other characters too, and requests
     decodes a text/event-stream without a charset as Latin-1, which turns some
     UTF-8 bytes into U+0085. Either cuts a JSON event in two and loses it
     (found in Phase 5 Option B with random-token prompts).
+
+    Reading with read1 matters too: requests' iter_lines() waits for 512 bytes
+    on a stream without chunked transfer encoding (the gateway's), so an event
+    was seen only when the next one arrived, one token late (found in the Phase 5B
+    rerun; vLLM's chunked stream was not affected).
     """
-    for raw in resp.iter_lines():
-        if raw:
-            yield raw.decode("utf-8", errors="replace")
+    raw = resp.raw
+    if not hasattr(raw, "read1"):                    # very old urllib3
+        for line in resp.iter_lines(chunk_size=1):
+            if line:
+                yield line.decode("utf-8", errors="replace")
+        return
+    buf = b""
+    while True:
+        data = raw.read1(65536)
+        if not data:
+            break
+        buf += data
+        while True:
+            i = buf.find(b"\n")
+            if i < 0:
+                break
+            line, buf = buf[:i].rstrip(b"\r"), buf[i + 1:]
+            if line:
+                yield line.decode("utf-8", errors="replace")
+    if buf.strip():
+        yield buf.rstrip(b"\r").decode("utf-8", errors="replace")
 
 
 def _events(resp):
@@ -52,13 +78,24 @@ def stream_via_gateway(base_url, body, req_id=None, on_event=None, max_reconnect
     """
     base = base_url.rstrip("/")
     events, out = [], {"reconnects": 0, "finish_reason": None, "final": None, "error": None}
-    headers = {"X-Request-Id": req_id} if req_id else {}
-    conn, next_seq, dropped = 0, 0, False
+    # The client chooses the request id, so a submission whose connection failed can
+    # be retried safely: if the gateway started it, the stream is resumed; if not,
+    # it is submitted again (Phase 5B: connections reset under a burst of clients).
+    req_id = req_id or uuid.uuid4().hex
+    headers = {"X-Request-Id": req_id}
+    conn, next_seq, dropped, accepted = 0, 0, False, False
     while True:
         try:
-            if conn == 0:
-                r = requests.post(base + "/v1/completions", json={**body, "stream": True},
-                                  headers=headers, stream=True, timeout=timeout_s)
+            if not accepted:
+                g = requests.get(f"{base}/v1/streams/{req_id}", params={"from_seq": next_seq},
+                                 stream=True, timeout=timeout_s) if conn > 0 else None
+                if g is not None and g.status_code == 200:
+                    r = g
+                else:
+                    if g is not None:
+                        g.close()
+                    r = requests.post(base + "/v1/completions", json={**body, "stream": True},
+                                      headers=headers, stream=True, timeout=timeout_s)
             else:
                 r = requests.get(f"{base}/v1/streams/{req_id}", params={"from_seq": next_seq},
                                  stream=True, timeout=timeout_s)
@@ -66,7 +103,7 @@ def stream_via_gateway(base_url, body, req_id=None, on_event=None, max_reconnect
                 if r.status_code != 200:
                     out["error"] = f"HTTP {r.status_code}: {r.text[:200]}"
                     break
-                req_id = req_id or r.headers.get("X-Gateway-Request-Id")
+                accepted = True
                 for ev in _events(r):
                     if ev is None:
                         out["req_id"] = req_id
@@ -93,7 +130,7 @@ def stream_via_gateway(base_url, body, req_id=None, on_event=None, max_reconnect
             raise ConnectionResetError("stream ended without [DONE]")
         except (requests.RequestException, ConnectionResetError) as e:
             out["error"] = f"{type(e).__name__}: {e}"
-            if req_id is None or conn >= max_reconnects:
+            if conn >= max_reconnects:
                 break
             conn += 1
             out["reconnects"] = conn

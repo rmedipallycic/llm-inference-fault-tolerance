@@ -19,6 +19,9 @@ per chunk, like vLLM and SGLang, so that tests can kill it mid-stream:
     empty text and its text arrives with the next token, and /detokenize of ids
     ending in one decodes it as U+FFFD; and a request whose token-id prompt ends
     in a pending token returns the whole decoded prompt as its first token's text;
+  * --special-tokens makes ids with id % 50 == 7 special: streamed text omits them
+    (like skip_special_tokens) while /detokenize shows them as "<|s7|>", as vLLM's
+    /detokenize shows Llama 3's <|eot_id|>;
   * /detokenize is supported.
 
   python -m harness.mock_engine --port 8100 --delay 0.01
@@ -44,18 +47,30 @@ def tokenize(text):
     return ids
 
 
+SPECIAL = {"on": False}
+
+
+def special(tok):
+    return SPECIAL["on"] and tok % 50 == 7
+
+
 def surface(tok):
-    return "" if tok == BOS else f" w{tok}"
+    return "" if tok == BOS or special(tok) else f" w{tok}"
+
+
+def shown(tok):
+    """What /detokenize shows for a token: special tokens appear."""
+    return f"<|s{tok}|>" if special(tok) else surface(tok)
 
 
 def pending(tok):
-    return tok % 7 == 3
+    return tok % 7 == 3 and not special(tok)
 
 
 def detokenize(ids, echo):
-    out = "".join(surface(t) for t in ids)
-    if echo and ids and pending(ids[-1]):
-        out = out[:-len(surface(ids[-1]))] + "\ufffd"
+    out = "".join(shown(t) for t in ids)
+    if echo and ids and pending(ids[-1]) and not special(ids[-1]):
+        out = out[:-len(shown(ids[-1]))] + "\ufffd"
     return out
 
 
@@ -141,7 +156,9 @@ def main():
     p.add_argument("--model", default="mock")
     p.add_argument("--tricky-text", action="store_true")
     p.add_argument("--resume-echo", action="store_true")
+    p.add_argument("--special-tokens", action="store_true")
     a = p.parse_args()
+    SPECIAL["on"] = a.special_tokens
     state = {"model": a.model, "delay": a.delay, "history": a.history_dependent, "served": 0,
              "tricky": a.tricky_text, "echo": a.resume_echo}
     srv = ThreadingHTTPServer(("127.0.0.1", a.port), make_handler(state))
