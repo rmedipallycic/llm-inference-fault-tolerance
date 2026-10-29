@@ -26,6 +26,10 @@ import glob
 import json
 import os
 import statistics
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import gw_timing  # noqa: E402
 
 MODES = ("none", "prompt", "all")
 
@@ -99,6 +103,28 @@ def echoed(trial):
     return bool(before) and len(t) > len(before) + 64 and before in t
 
 
+def text_ok(d, trials):
+    """Per record: client text equals the reference decoding. From text_recheck.json
+    (analysis/recheck_text.py, special tokens by id) when present, else from the
+    harness's own check."""
+    p = os.path.join(d, "text_recheck.json")
+    if os.path.exists(p):
+        with open(p, encoding="utf-8") as f:
+            rec = json.load(f)["records"]
+        return [rec[t["_file"]]["equal"] for t in trials if t["_file"] in rec]
+    return [t["text_check"]["equal"] for t in trials if t.get("text_check")]
+
+
+def gw_rec(d, t):
+    x = gw_timing.recovery_s(gw_timing.entries(d, t["client"].get("req_id")), t.get("t_kill"))
+    return x if x is not None else t.get("recovery_latency_s")
+
+
+def gw_ttft(d, t):
+    x = gw_timing.ttft_s(gw_timing.entries(d, t["client"].get("req_id")), t["client"])
+    return x if x is not None else t.get("ttft_s")
+
+
 def failover(root):
     rows = []
     for run in load_runs(root, "*_ckptfo_*"):
@@ -106,6 +132,7 @@ def failover(root):
         for tp in sorted(glob.glob(os.path.join(run["_dir"], "trial_*.json"))):
             with open(tp, encoding="utf-8") as f:
                 trials.append(json.load(f))
+            trials[-1]["_file"] = os.path.basename(tp)
         if not trials:
             continue
         loaded = []
@@ -120,10 +147,13 @@ def failover(root):
                      "exactly_once": eo,
                      "echo": sum(1 for t in trials if echoed(t)),
                      "C": run["config"].get("concurrency", 1),
-                     "text_ok": [t["text_check"]["equal"] for t in trials if t.get("text_check")],
+                     "text_ok": text_ok(run["_dir"], trials),
                      "commit": run["environment"].get("git_commit", "")[:7],
-                     "rec": [t["recovery_latency_s"] for t in trials],
-                     "ttft": [t["ttft_s"] for t in trials],
+                     # recovery and first token from the gateway's log (analysis/gw_timing.py);
+                     # client-side figures kept for comparison
+                     "rec": [gw_rec(run["_dir"], t) for t in trials],
+                     "ttft": [gw_ttft(run["_dir"], t) for t in trials],
+                     "rec_client": [t["recovery_latency_s"] for t in trials],
                      "loaded_mb": [x / 1e6 if x is not None else None for x in loaded]})
     return rows
 
