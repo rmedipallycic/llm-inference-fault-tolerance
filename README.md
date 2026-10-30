@@ -104,7 +104,7 @@ Each question has a stated hypothesis in [`docs/proposal.md`](docs/proposal.md) 
 
 **Provenance rules (apply to everything in this repo)**
 
-1. Every reported number links to a raw log in `experiments/` plus the command and commit hash that produced it.
+1. Every reported number links to a raw log in `experiments/` plus the command and commit hash that produced it. Commit hashes recorded before 30 October 2026 are mapped to current ones in [`docs/commit-map.md`](docs/commit-map.md).
 2. No hardcoded outcome parameters. Any simulation lives in a separate, labeled directory and is never mixed with measured results.
 3. All statistics come from one script that reads raw logs and that anyone can re-run.
 4. Planned work is never described in past tense.
@@ -251,6 +251,10 @@ python -m unittest discover -s tests               # gateway tests against a moc
 ```
 
 The workflow [`reproduce.yml`](.github/workflows/reproduce.yml) runs exactly this on every push.
+
+The paper and the logs' `git_commit` fields cite commit hashes from before a
+metadata-only history rewrite on 30 October 2026; [`docs/commit-map.md`](docs/commit-map.md)
+gives the current commit for each.
 
 ## Author
 
